@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 02:01 IST - Deployment verification
+
+Codex verified Vercel READY, successful GitHub API/web CI for `17e7aef`, and the live Clerk sign-in modal. Updated README evidence. Human review and completed user-session testing remain pending; provider credentials are still missing. No credentials were committed.
+
 ## 2026-10-11 01:56 IST - Authentication and backend hosting
 
 Codex used existing Clerk login and a user-completed Render CLI login to provision the kootu authentication app and free backend service. Automatic review initially blocked uploading the Clerk secret; explicit user approval then authorized Vercel/Render credential storage. Keys/passwords remained outside Git and browser code. Verified Clerk RSA JWKS, authenticated CLI linking, local auth-enabled build, Render blueprint validation and live health/readiness. Preserved a teammate's newly pushed route-grouping commit by fast-forward. Provider dashboards require user login; provider usage and full signed-in rides remain unverified. Human review pending.

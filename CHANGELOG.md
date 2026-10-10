@@ -1,5 +1,10 @@
 # Change log
 
+## 2026-10-11 02:01 IST - Hosted deployment verification
+
+- Verified Vercel auth-enabled deployment READY and its stable public alias; live passenger sign-in opens the kootu Clerk modal with Google/email options. GitHub CI run 38083829579 passed API and web jobs for checkpoint `17e7aef`. Render initial deployment remains live.
+- Recorded evidence in README. Human sign-in, operator identity and provider credentials remain pending; no full live booking claim is made.
+
 ## 2026-10-11 01:56 IST - Hosted API and Clerk connection
 
 - Created/linked a dedicated kootu Clerk app, pulled local development keys, verified RSA JWKS, and saved keys in Vercel after explicit credential-transfer approval. Enabled local sign-in and built successfully. Production Vercel settings now target the real API and enable sign-in; previews stay disabled under the backend's exact-origin policy.
