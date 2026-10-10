@@ -15,3 +15,5 @@ Visit `/dashboard` for the supplied App1 workspace dashboard: sample statistics,
 The dashboard header has a light/dark mode toggle. It follows your system preference until you choose a mode, then remembers that choice in browser storage. The theme covers the chart and mobile sidebar and is scoped to `/dashboard`.
 
 The request workspace uses the dashboard's blue/neutral theme, responsive sidebar and header, and shared light/dark preference. Its chat, ticket upload controls and saved journey list follow the active theme.
+
+The chat composer includes “Record voice”: allow microphone access, record up to 30 seconds, then play back, discard or re-record. Audio remains local and does not fill answers or upload to the backend. Requires a MediaRecorder-capable browser on HTTPS or localhost.

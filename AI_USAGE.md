@@ -1,5 +1,10 @@
 # AI usage record
 
+## 2026-10-11 05:15 IST - Chat voice recording
+
+Codex added browser microphone recording to the existing request-chat composer, with a 30-second limit, permission/error handling, playback/discard and resource cleanup. Kept recording local under the user's UI-only scope; no transcription or backend upload added. Frontend lint/typecheck run; no tests or microphone/browser checks run. Human review pending.
+
+
 ## 2026-10-11 05:13 IST - Request page dashboard theme
 
 Codex reused the dashboard theme preference and layout components for the request page, styled its chat/composer/journey list in both themes, added mobile navigation, and corrected the passenger sign-in return path. Existing flight → arrival date → drop-off preview behavior retained. Frontend lint/typecheck run; no tests or browser checks run. Human review pending.

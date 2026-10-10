@@ -1,5 +1,13 @@
 # Change log
 
+## 2026-10-11 05:15 IST - Chat voice recording
+
+- Changed: Added a microphone action beside the request chat input, with permission handling, stop control, 30-second limit, local audio preview, discard/re-record controls and microphone/object URL cleanup. Checkpoint includes the existing three-question request preview and `/request` route that host the control.
+- Why: User asked for a record voice button in the chatbox.
+- Validation: Frontend lint/typecheck run. No tests or microphone/browser checks run.
+- Limitations: Local recording only; audio is not sent, transcribed or used to fill answers. Microphone access requires permission and HTTPS or localhost.
+
+
 ## 2026-10-11 05:13 IST - Request page dashboard theme
 
 - Changed: Applied the dashboard palette to `/request`, with matching responsive sidebar, sticky header, light/dark toggle, bordered cards, chat bubbles, composer, ticket upload and journey list styling. Reused the saved theme preference. Corrected the passenger sign-in return destination to `/request`.

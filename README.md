@@ -193,3 +193,5 @@ Dashboard preview: `/dashboard` now displays the supplied workspace UI with samp
 The `/dashboard` preview supports light and dark themes using the header toggle, with a saved browser preference and system-theme default.
 
 The `/request` workspace now shares the dashboard's light/dark theme and responsive navigation while keeping its existing three-question ride preview.
+
+The `/request` chat includes a local voice recorder with playback and discard controls. Recordings are not uploaded or transcribed.
