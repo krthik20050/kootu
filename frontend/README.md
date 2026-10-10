@@ -7,3 +7,7 @@ Run `npm ci`, copy `.env.example` to `.env.local`, fill browser-safe settings an
 Do not edit `src/lib/api/generated.ts` manually; regenerate it using `backend/export_contracts.py`. Vercel's project root is `frontend`. Do not put database passwords or provider secrets in this folder's browser code.
 
 Authentication uses dedicated `/sign-in` and `/sign-up` pages with opaque Clerk forms, Google/email options, and allowlisted return destinations for passenger, driver and operator workspaces. The provider sets explicit colors and the global CSS supplies shadcn card/popover/input tokens. Existing Clerk names prefill the passenger name when no saved profile name exists. Run `npx next typegen` before typecheck after moving routes to refresh `.next` generated types.
+
+### Dashboard preview
+
+Visit `/dashboard` for the supplied App1 workspace dashboard: sample statistics, a task chart, project progress and activity. Sidebar navigation works on mobile and desktop, and the search button filters projects. All dashboard data is static sample content, separate from ride records. UI components live in `src/components/ui`, with sample data and navigation in `app-1-utils`. Radix UI, Lucide, CVA and Recharts support the supplied component; Recharts 2.15.4 is pinned for its v2 chart API compatibility.

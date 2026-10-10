@@ -1,5 +1,13 @@
 # Change log
 
+## 2026-10-11 05:06 IST - Supplied dashboard UI
+
+- Changed: Integrated the user-supplied App1 React dashboard at `/dashboard`, its shadcn UI components, sample datasets, responsive sidebar, chart, project search and notification disclosure. Added Radix UI, Lucide, CVA and Recharts dependencies; scoped the neutral dashboard palette.
+- Why: Match the dashboard component in the user's attachment.
+- Validation: Frontend typecheck passed; lint corrected two issues in pasted source and rerun. No tests or browser checks run.
+- Limitations: All dashboard metrics, projects and activity are explicitly sample data; no backend integration. Recharts 2.15.4 matches the supplied chart API but is a deprecated major version. npm reports five high-severity advisories in the dependency tree.
+
+
 ## 2026-10-11 02:51 IST - Destination clusters and concurrent ride integrity
 
 - Updated matching to favor nearby destination pins and fuller feasible groups; six seats/six bags by default, always bounded by approved vehicle capacity. Filter fleet equipment before limiting, fetch driver/vehicle together and exclude a driver from their own passenger group. Added `docs/database-architecture.md` with ER diagram, invariants, what-if cases and explicit scaling limits.

@@ -187,3 +187,5 @@ Authentication implementation checkpoint `4796756` passed [GitHub CI](https://gi
 ### Central local environment
 
 All local app/provider/Clerk/Supabase administration settings are now collected in `.environment/.env`. Edit that ignored file, then run `.\backend\.venv\Scripts\python scripts/sync_env.py` from the root to generate the scoped runtime files. See [.environment/README.md](.environment/README.md). The sync command rejects duplicate/missing names and refuses to clear saved values with empty entries. Restart local apps after syncing. Hosted settings still require a separate approved sync.
+
+Dashboard preview: `/dashboard` now displays the supplied workspace UI with sample metrics, charts, projects and activity. It is a static preview, separate from backend ride data; see [frontend notes](frontend/README.md).

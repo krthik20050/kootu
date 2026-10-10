@@ -1,5 +1,10 @@
 # AI usage record
 
+## 2026-10-11 05:06 IST - Dashboard component integration
+
+Codex integrated the React/shadcn dashboard supplied in the user's attachment on `/dashboard`, supplied its missing sidebar/data modules, added responsive navigation and sample project search, and scoped its styling. The pasted component is the UI source; Radix UI, Lucide, CVA and Recharts are supporting libraries. Typecheck passed; lint fixes rerun. No tests or browser checks run. Sample data only; human review pending.
+
+
 ## 2026-10-11 02:51 IST - Destination grouping and multi-user correctness
 
 Codex applied the user's city-cluster clarification, researched PostgreSQL concurrency/partial uniqueness and PostGIS clustering, and used two scoped agents for request-idempotency and lifecycle fixes. Added database architecture, synthetic 200-arrival and six-passenger tests, locking/expiry/readiness safeguards and migration 004. The isolated release snapshot passed all 100 tests on a dedicated local release-test database; lint/format/contracts passed. Applied migrations 003/004 to authorized Supabase after a schema-only backup and verified runtime access/index/RLS without exporting passenger data. Teammate voice/PDF/frontend working edits were preserved and excluded. Human review pending; no perfect-database or production-capacity claim.
