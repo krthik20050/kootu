@@ -14,7 +14,7 @@ Checked 11 October 2026 around 01:01 IST on Windows with Python 3.13 and Node 22
 
 ## Remote evidence
 
-The backend milestone `1a1f33babdd10980c7f960a8e73d1b21804573f4` passed [GitHub Actions](https://github.com/krthik20050/kootu/actions/runs/38078412613), including its 45-test backend/database suite. Final expanded checks are also in CI; their result is recorded after push. CI provides PostgreSQL/PostGIS, so database tests do not skip there.
+The backend milestone `1a1f33babdd10980c7f960a8e73d1b21804573f4` passed [GitHub Actions](https://github.com/krthik20050/kootu/actions/runs/38078412613), including its 45-test backend/database suite. The completed connected implementation `3a03e7ce8cf957b783bd9a954f951a59060e21f8` passed [its expanded GitHub Actions run](https://github.com/krthik20050/kootu/actions/runs/38080277973), including 53 backend and 8 frontend tests, lint/types/build and contract checks. CI provides PostgreSQL/PostGIS, so database tests do not skip there.
 
 ## Activation still needed
 

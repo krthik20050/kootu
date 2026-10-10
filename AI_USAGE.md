@@ -23,3 +23,7 @@ Codex implemented the persistent ride lifecycle, authentication/authorization, d
 ## 2026-10-11 01:01 IST - Frontend integration, research and verification
 
 Codex connected the passenger, driver and operator screens, implemented reviewed Grok/Sarvam intake, hardened provider budgets/privacy/locking/flight polling, and documented official competitor findings and team workflow. Corrections included transient upload handling in the jsdom harness, preserving existing delays when estimates disappear, withholding exact addresses before assignment, and literal SQL handling during migration/RLS provisioning. Human review pending.53 backend and8 frontend tests passed locally, lint/types/build/contracts passed, production npm audit0. Live account and deployment testing remain pending.
+
+## 2026-10-11 01:05 IST - CI evidence
+
+Codex verified the public GitHub Actions result for the final implementation and recorded its exact SHA/run link. No implementation changed after that validated checkpoint. Human review and live account testing remain pending.
