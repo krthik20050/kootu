@@ -1,5 +1,10 @@
 # AI usage record
 
+## 2026-10-11 02:40 IST - Central environment setup
+
+Codex consolidated local configuration at user request without printing or committing keys. Built and verified a scoped sync command with protection against accidentally clearing saved values. Three synthetic tests and Ruff passed; real settings match the central file. Human review pending. No hosting credentials changed during this task.
+
+
 ## 2026-10-11 02:36 IST - Backend research and matching hardening
 
 Codex audited matching/lifecycle/database code, consulted primary technical and competitor sources, used a read-only architecture review agent, and implemented focused matching, queue and schema safeguards. Added a research/architecture report and real PostGIS regression cases. Baseline 53 tests and final 76 tests passed; Ruff lint/format and contract checks passed after correcting one test import-order issue. No frontend or AI-provider changes, production migration, deployment or load-performance claim. Human review remains pending; rollout needs migration-first coordination. Agent Reach's Exa was unconfigured and Context7 offline, so built-in web research and the supported Jina reader supplied primary references; update check was rate-limited.

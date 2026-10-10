@@ -1,5 +1,11 @@
 # Change log
 
+## 2026-10-11 02:40 IST - Central environment configuration
+
+- Consolidated existing backend/provider, frontend/Clerk and Supabase administration settings into ignored `.environment/.env`; added a sanitized example and folder guide. Added scripts/sync_env.py to generate scoped runtime files without exposing values. Test-only database settings remain isolated.
+- Validation: all real generated settings match the central source; secrets remain Git-ignored. Three synthetic tests verify frontend secret separation, blank-overwrite protection and duplicate rejection. Ruff checks passed. Preserved unrelated in-progress backend work.
+
+
 ## 2026-10-11 02:36 IST - Matching and database hardening
 
 - Researched published Uber, Lyft, Quick Ride and ride-pooling research plus PostgreSQL/PostGIS/SQLAlchemy/Google references. Added `docs/backend-research-and-plan.md` with current parameters, architecture decisions, database responsibilities, prioritized failure modes, rollout and staged route-duration/scaling work.
