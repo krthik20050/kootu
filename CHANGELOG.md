@@ -1,5 +1,13 @@
 # Change log
 
+## 2026-10-11 05:13 IST - Request page dashboard theme
+
+- Changed: Applied the dashboard palette to `/request`, with matching responsive sidebar, sticky header, light/dark toggle, bordered cards, chat bubbles, composer, ticket upload and journey list styling. Reused the saved theme preference. Corrected the passenger sign-in return destination to `/request`.
+- Why: User asked to apply the dashboard design to the request route.
+- Validation: Frontend lint/typecheck run; type narrowing issue corrected. No tests or browser checks run.
+- Limitations: Three-question UI-only flow and existing authentication/API requirements remain. Saving requests is still disabled.
+
+
 ## 2026-10-11 05:09 IST - Dashboard dark mode
 
 - Changed: Added an accessible light/dark toggle in the dashboard header, saved browser preference, system-theme default, and matching dark colors for cards, charts, inputs and mobile navigation.

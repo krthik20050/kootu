@@ -1,5 +1,10 @@
 # AI usage record
 
+## 2026-10-11 05:13 IST - Request page dashboard theme
+
+Codex reused the dashboard theme preference and layout components for the request page, styled its chat/composer/journey list in both themes, added mobile navigation, and corrected the passenger sign-in return path. Existing flight → arrival date → drop-off preview behavior retained. Frontend lint/typecheck run; no tests or browser checks run. Human review pending.
+
+
 ## 2026-10-11 05:09 IST - Dashboard dark mode
 
 Codex added dashboard theme switching, browser persistence with system preference fallback, and dark chart/sidebar colors including portalled mobile navigation. Frontend lint and typecheck run; no tests or browser checks run. Human review pending.

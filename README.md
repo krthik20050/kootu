@@ -191,3 +191,5 @@ All local app/provider/Clerk/Supabase administration settings are now collected 
 Dashboard preview: `/dashboard` now displays the supplied workspace UI with sample metrics, charts, projects and activity. It is a static preview, separate from backend ride data; see [frontend notes](frontend/README.md).
 
 The `/dashboard` preview supports light and dark themes using the header toggle, with a saved browser preference and system-theme default.
+
+The `/request` workspace now shares the dashboard's light/dark theme and responsive navigation while keeping its existing three-question ride preview.
