@@ -11,7 +11,7 @@
 - Automatic Aviationstack flight polling adjusts ready times from the original baseline, preserves feasible groups, and releases incompatible/cancelled groups for rematching. A PostgreSQL advisory lock coordinates maintenance across processes; no queue service is required.
 - Generated OpenAPI/TypeScript contracts, SQL migration runner, PR template, GitHub CI and [collaboration guide](CONTRIBUTING.md).
 
-Local regression coverage includes real PostgreSQL 17/PostGIS 3.5, signed JWT validation, concurrency and provider contract fixtures. **Live Clerk/provider credentials and deployment have not been verified.** The keyless preview shows a setup state instead of fabricated bookings. Adding keys also requires applying migrations, enabling provider products, selecting a compatible Grok model and approving real drivers/vehicles. No claim of guaranteed rides or zero defects is made.
+Local regression coverage includes real PostgreSQL 17/PostGIS 3.5, signed JWT validation, concurrency and provider contract fixtures. **The public setup website is deployed; live Clerk/provider credentials, Supabase and backend deployment have not been verified.** The keyless preview shows a setup state instead of fabricated bookings. Adding keys also requires applying migrations, enabling provider products, selecting a compatible Grok model and approving real drivers/vehicles. No claim of guaranteed rides or zero defects is made.
 
 This is a coordination MVP. Payments, fare quotes, GPS tracking, emergency dispatch, passenger identity verification and commercial operating procedures are not implemented. Driver approval records an operator decision; kootu does not verify government documents automatically. See [competitor research](docs/competitor-analysis.md) and [validation](docs/backend-validation.md).
 
@@ -97,7 +97,24 @@ After a contract change run `python export_contracts.py`, review both generated 
 
 ## Deployment
 
-Vercel root `apps/web`, Node 22.12+, install `npm ci`, build `npm run build`. Render root `apps/api`, Python 3.13, build `python -m pip install -r requirements.lock` then `python -m pip install --no-deps .`; start `uvicorn app.main:app --host 0.0.0.0 --port $PORT --no-access-log`. Set production HTTPS origins and server secrets. Apply reviewed migrations separately before releasing; use a direct/session-pooled PostgreSQL connection for advisory locks, not transaction-mode pooling. Set an ingress upload limit around 6MB and provider/request timeouts that permit bounded matching. A host that sleeps requires a continuously running worker or a later approved scheduled-job setup for continuous flight refresh. Nothing has been deployed automatically.
+Vercel root `apps/web`, Node 22.12+, install `npm ci`, build `npm run build`. Render root `apps/api`, Python 3.13, build `python -m pip install -r requirements.lock` then `python -m pip install --no-deps .`; start `uvicorn app.main:app --host 0.0.0.0 --port $PORT --no-access-log`. Set production HTTPS origins and server secrets. Apply reviewed migrations separately before releasing; use a direct/session-pooled PostgreSQL connection for advisory locks, not transaction-mode pooling. Set an ingress upload limit around 6MB and provider/request timeouts that permit bounded matching. A host that sleeps requires a continuously running worker or a later approved scheduled-job setup for continuous flight refresh. The Vercel public setup website has been deployed as documented below; the backend and Supabase connection remain pending.
+
+### Current Vercel deployment
+
+[Public website](https://kootu-five.vercel.app) · [Vercel project](https://vercel.com/krthik20050s-projects/kootu)
+
+The existing `krthik20050` account owns the project. GitHub `krthik20050/kootu` is connected, with root `apps/web`, Next.js preset, Node project setting `22.x` and install command `npm ci`. The initial production deployment reached READY, and its homepage and passenger setup state were browser-verified on 11 October 2026. Vercel warns that the package's `>=22.12.0` engine range can select a later major runtime.
+
+Production and Preview currently use `NEXT_PUBLIC_AUTH_ENABLED=false` and `NEXT_PUBLIC_API_URL=https://kootu-api.invalid`. That reserved invalid domain intentionally cannot reach a backend. Booking is disabled. Replace it with the real HTTPS API URL and configure Clerk before enabling booking; then redeploy. Supabase migrations, server-role provisioning and provider authentication remain pending. The website calls FastAPI; only FastAPI receives the Supabase database connection string.
+
+For future CLI deployments, run from the repository root (the project already specifies `apps/web`):
+
+```powershell
+vercel link --yes --project kootu --scope krthik20050s-projects
+vercel deploy --prod --scope krthik20050s-projects
+```
+
+Do not deploy from `apps/web` after setting the remote root directory, since that can apply the subdirectory twice. `.vercelignore` excludes local environment files, dependencies and build output. Keep real credentials in the appropriate hosting environment. GitHub deploys are subject to Vercel's account/commit-author permissions; a connected repository does not grant teammates deployment access.
 
 ## Sources
 

@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 01:26 IST - Vercel setup
+
+At the user's direction, Codex used the existing Vercel CLI account to create/link kootu, deploy the public setup website and connect its GitHub repository. Added a deployment upload exclusion file and documented the deployed URL, disabled booking state and outstanding Supabase/backend work. Verified the upload manifest, Vercel READY build and public homepage/passenger page. Human review pending. No private environment files or credentials were committed.
+
 Use Codex during the hackathon and briefly document its actual contribution here. Add a row after each meaningful task or milestone. Keep summaries concise and omit secrets, private data, and full chat transcripts.
 
 ## Event build log
