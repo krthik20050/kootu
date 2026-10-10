@@ -77,6 +77,7 @@ export type GroupResponse = {
   "passengers": number;
   "luggage": number;
   "destination_cluster": string | null;
+  "destination_area"?: Coordinates | null;
   "women_only": boolean;
   "vehicle": VehicleResponse | null;
   "events": Array<EventResponse>;
@@ -97,6 +98,28 @@ export type LocationResponse = {
   "name": string;
   "place_id": string;
   "coordinates": Coordinates;
+};
+
+export type ManifestResponse = {
+  "id": string;
+  "airport": string;
+  "flight_number": string;
+  "flight_date": string;
+  "ready_at": string;
+  "max_wait_minutes": number;
+  "destination_name": string;
+  "destination": Coordinates;
+  "passengers": number;
+  "luggage": number;
+  "women_only": boolean;
+  "wheelchair_spaces": number;
+  "child_seats": number;
+  "pet_friendly": boolean;
+  "notes": string;
+  "status": "WAITING" | "MATCHED" | "ASSIGNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | "FLIGHT_CANCELLED";
+  "flight_status": string;
+  "group_id": string | null;
+  "display_name": string;
 };
 
 export type MatchResponse = {
@@ -123,6 +146,7 @@ export type OfferResponse = {
   "child_seats": number;
   "pet_friendly": boolean;
   "destination_cluster": string | null;
+  "destination_area"?: Coordinates | null;
 };
 
 export type ProfileResponse = {

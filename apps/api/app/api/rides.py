@@ -4,9 +4,10 @@ from sqlalchemy.orm import Session
 
 from app.core.auth import current_profile
 from app.core.database import get_session
+from app.core.rate_limit import provider_budget
 from app.models.domain import Driver, Profile, RideGroup, RideMember, RideRequest, Vehicle
 from app.schemas.requests import TripStatusInput
-from app.schemas.responses import GroupResponse, MatchResponse, RequestResponse
+from app.schemas.responses import GroupResponse, ManifestResponse, MatchResponse, RequestResponse
 from app.services.matching import departure_for
 from app.services.providers import GoogleRouting
 from app.services.rides import (
@@ -22,7 +23,7 @@ from app.services.views import group_members, group_view, request_view
 router = APIRouter(tags=["rides"])
 
 
-@router.get("/ride-groups/{group_id}/manifest", response_model=list[RequestResponse])
+@router.get("/ride-groups/{group_id}/manifest", response_model=list[ManifestResponse])
 def manifest(
     group_id: str,
     profile: Profile = Depends(current_profile),
@@ -32,10 +33,20 @@ def manifest(
     driver = session.get(Driver, group.driver_id) if group and group.driver_id else None
     if not driver or driver.profile_id != profile.id:
         raise HTTPException(404, "Assigned trip not found")
-    return [request_view(row, session) for row in group_members(session, group_id)]
+    return [
+        {
+            **request_view(row, session),
+            "display_name": session.get(Profile, row.profile_id).display_name,
+        }
+        for row in group_members(session, group_id)
+    ]
 
 
-@router.post("/ride-requests/{request_id}/match", response_model=MatchResponse)
+@router.post(
+    "/ride-requests/{request_id}/match",
+    response_model=MatchResponse,
+    dependencies=[Depends(provider_budget)],
+)
 def match_request(
     request_id: str,
     request: Request,
@@ -74,12 +85,21 @@ def cancel_request(
     profile: Profile = Depends(current_profile),
     session: Session = Depends(get_session, scope="function"),
 ) -> dict:
-    row = session.scalar(select(RideRequest).where(RideRequest.id == request_id).with_for_update())
+    row = session.get(RideRequest, request_id)
     if not row or row.profile_id != profile.id:
         raise HTTPException(404, "Ride request not found")
-    member = session.get(RideMember, request_id)
+    initial = session.get(RideMember, request_id)
+    group = locked_group(session, initial.group_id) if initial else None
+    row = session.scalar(
+        select(RideRequest)
+        .where(RideRequest.id == request_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    member = session.get(RideMember, request_id, populate_existing=True)
     if member:
-        group = locked_group(session, member.group_id)
+        if group is None or member.group_id != group.id:
+            raise HTTPException(409, "Group changed during cancellation; retry")
         if group.status in {"IN_PROGRESS", "COMPLETED"}:
             raise HTTPException(409, "A started trip requires operator assistance")
         row.status = "CANCELLED"
@@ -106,6 +126,25 @@ def get_group(
     group = session.get(RideGroup, group_id)
     if not group or not can_view_group(session, group, profile):
         raise HTTPException(404, "Ride group not found")
+    return group_view(group, session, profile)
+
+
+@router.post("/ride-groups/{group_id}/cancel", response_model=GroupResponse)
+def release_group(
+    group_id: str,
+    profile: Profile = Depends(current_profile),
+    session: Session = Depends(get_session, scope="function"),
+) -> dict:
+    group = locked_group(session, group_id)
+    driver = session.get(Driver, group.driver_id) if group.driver_id else None
+    own_trip = bool(driver and driver.profile_id == profile.id)
+    if not own_trip and profile.role != "ADMIN":
+        raise HTTPException(403, "Only the assigned driver or an operator can release this group")
+    if group.status != "CANCELLED":
+        dissolve_group(session, group, "DRIVER_CANCELLED" if own_trip else "OPERATOR_CANCELLED")
+        if own_trip:
+            driver.available = False
+            session.get(Vehicle, group.vehicle_id).available = False
     return group_view(group, session, profile)
 
 

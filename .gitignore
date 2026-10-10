@@ -36,3 +36,5 @@ id_ed25519*
 *.pfx
 supabase/.temp/
 supabase/.branches/
+
+.vitest/

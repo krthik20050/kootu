@@ -42,6 +42,10 @@ class RequestResponse(BaseModel):
     group_id: str | None
 
 
+class ManifestResponse(RequestResponse):
+    display_name: str
+
+
 class VehicleResponse(BaseModel):
     id: str
     registration: str
@@ -74,6 +78,7 @@ class GroupResponse(BaseModel):
     passengers: int
     luggage: int
     destination_cluster: str | None
+    destination_area: Coordinates | None = None
     women_only: bool
     vehicle: VehicleResponse | None
     events: list[EventResponse]
@@ -99,6 +104,7 @@ class OfferResponse(BaseModel):
     child_seats: int
     pet_friendly: bool
     destination_cluster: str | None
+    destination_area: Coordinates | None = None
 
 
 class AdminDriverResponse(DriverResponse):

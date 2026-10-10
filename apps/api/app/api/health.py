@@ -34,16 +34,30 @@ def ready(request: Request) -> JSONResponse:
         "routing": bool(
             settings.google_maps_api_key and settings.google_maps_api_key.get_secret_value()
         ),
-        "ticket_extraction": bool(settings.grok_api_key and settings.grok_model),
-        "transcription": bool(settings.sarvam_api_key),
-        "flight_updates": bool(settings.aviationstack_api_key),
+        "ticket_extraction": bool(
+            settings.grok_api_key
+            and settings.grok_api_key.get_secret_value()
+            and settings.grok_model
+        ),
+        "transcription": bool(
+            settings.sarvam_api_key and settings.sarvam_api_key.get_secret_value()
+        ),
+        "flight_updates": bool(
+            settings.aviationstack_api_key and settings.aviationstack_api_key.get_secret_value()
+        ),
     }
     if request.app.state.engine is not None:
         try:
             with request.app.state.engine.connect() as connection:
                 checks["database"] = (
                     connection.scalar(
-                        text("SELECT to_regclass('public.passenger_requests') IS NOT NULL")
+                        text(
+                            "SELECT bool_and(to_regclass(name) IS NOT NULL) "
+                            "FROM unnest(ARRAY['public.profiles','public.passenger_requests',"
+                            "'public.drivers','public.vehicles','public.ride_groups',"
+                            "'public.ride_members','public.driver_offers','public.trip_events',"
+                            "'public.provider_usage']) AS name"
+                        )
                     )
                     is True
                 )

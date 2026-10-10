@@ -52,7 +52,7 @@ def client(database_url):
         connection.execute(
             text(
                 "TRUNCATE profiles, drivers, vehicles, passenger_requests, "
-                "ride_groups, ride_members, driver_offers, trip_events CASCADE"
+                "ride_groups, ride_members, driver_offers, trip_events, provider_usage CASCADE"
             )
         )
     with TestClient(application) as test_client:

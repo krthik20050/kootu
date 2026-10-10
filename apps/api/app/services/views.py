@@ -74,6 +74,15 @@ def group_members(session: Session, group_id: str) -> list[RideRequest]:
     )
 
 
+def destination_area(members: list[RideRequest]) -> dict | None:
+    if not members:
+        return None
+    return {
+        "latitude": round(sum(row.latitude for row in members) / len(members), 2),
+        "longitude": round(sum(row.longitude for row in members) / len(members), 2),
+    }
+
+
 def group_view(item: RideGroup, session: Session, viewer: Profile) -> dict:
     members = group_members(session, item.id)
     vehicle = session.get(Vehicle, item.vehicle_id) if item.vehicle_id else None
@@ -93,7 +102,8 @@ def group_view(item: RideGroup, session: Session, viewer: Profile) -> dict:
         "status": item.status,
         "passengers": sum(row.passengers for row in members),
         "luggage": sum(row.luggage for row in members),
-        "destination_cluster": members[0].destination_name if members else None,
+        "destination_cluster": f"{len(members)} nearby drop-offs" if members else None,
+        "destination_area": destination_area(members),
         "women_only": bool(members and members[0].women_only),
         "vehicle": vehicle_view(vehicle) if vehicle else None,
         "events": [{"kind": event.kind, "created_at": event.created_at} for event in events],
@@ -116,5 +126,6 @@ def offer_view(offer: DriverOffer, session: Session) -> dict:
         "wheelchair_spaces": sum(row.wheelchair_spaces for row in members),
         "child_seats": sum(row.child_seats for row in members),
         "pet_friendly": any(row.pet_friendly for row in members),
-        "destination_cluster": members[0].destination_name if members else None,
+        "destination_cluster": f"{len(members)} nearby drop-offs" if members else None,
+        "destination_area": destination_area(members),
     }

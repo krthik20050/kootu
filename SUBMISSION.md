@@ -5,11 +5,11 @@ Complete this file during the hackathon and use it to prepare your submission th
 ## Project
 
 - **Project name:** kootu
-- **Short description:** Airport shared-cab coordination around compatible arrival times and small destination clusters. Current implementation is a public concept shell and API architecture bootstrap; working matching/booking is planned.
+- **Short description:** Airport shared-cab coordination around compatible arrival times and small destination clusters. Includes connected passenger/driver/operator screens, persistent PostgreSQL/PostGIS matching and confirmed ticket/voice intake. Live provider configuration is pending.
 - **Code repository URL:** https://github.com/krthik20050/kootu
 - **Final submitted implementation commit SHA:** TODO
-- **Working demo URL or local demo steps:** Local bootstrap walkthrough in [README.md](README.md#hackathon-demo); no deployed demo yet.
-- **Demo access requirements:** Node 22+, Python 3.13 recommended. Public preview needs no credentials; real Clerk mode requires team-configured keys.
+- **Working demo URL or local demo steps:** Local configuration/demo walkthrough in [README.md](README.md#hackathon-demo); no deployed demo yet.
+- **Demo access requirements:** Node 22.12+, Python 3.13 recommended. Public preview needs no credentials; real Clerk mode requires team-configured keys.
 
 ## Participants
 
@@ -21,14 +21,14 @@ Participate solo or in a team of up to 4. Remove unused rows.
 
 ## Run and demonstrate
 
-- **Prerequisites and versions:** Node 22+, npm, Python 3.13 recommended; see README.
+- **Prerequisites and versions:** Node 22.12+, npm, Python 3.13 recommended; see README.
 - **Install command:** Web: `npm ci` in `apps/web`; API: pip/venv locked installation in README.
-- **Required environment variable names:** `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_AUTH_ENABLED`; Clerk keys only for enabled auth. API `APP_ENV`, `FRONTEND_URL`; sanitized examples in each app.
+- **Required environment variable names:** Web Clerk keys, API database/Clerk issuer/Google/Grok/Sarvam/Aviationstack settings; complete list and sanitized examples in README.
 - **Start command:** Web: `npm run dev`; API: `python -m uvicorn app.main:app --reload --no-access-log` inside the configured venv and `apps/api`.
-- **Demo walkthrough:** Show public concept landing and `/health` plus `/docs`. Explain planned deterministic matching separately.
-- **Checks performed and results:** Frontend lint/typecheck/build, six backend tests, Ruff, imports and live HTTP passed; desktop/mobile checked. Details: [validation](docs/bootstrap-validation.md).
-- **Known limitations or incomplete features:** Bootstrap only. No working booking/matching, live Clerk/DB/provider integration or deployment. Dev-tool security advisories disclosed in README. Participant names and final submitted SHA remain pending.
-- **Libraries, APIs, and public datasets used:** Library/source links in README; no external dataset or live provider is used.
+- **Demo walkthrough:** Follow the configured multi-account booking/approval/offer/trip walkthrough in README; keyless mode demonstrates setup and regression checks only.
+- **Checks performed and results:** Frontend lint/typecheck/build and8 interaction tests;53 backend tests using real PostgreSQL/PostGIS, Ruff and contract checks. Details: [validation](docs/backend-validation.md).
+- **Known limitations or incomplete features:** Live Clerk/provider accounts and deployment remain unverified. No fares/payments, GPS/emergency dispatch or automatic document verification. Dev-tool advisories are disclosed in validation. Participant names and final submitted SHA remain for the team.
+- **Libraries, APIs, and public datasets used:** Library/source links in README; no external dataset or live credentials are bundled.
 - **AI usage record:** [AI_USAGE.md](AI_USAGE.md)
 - **Development change log:** [CHANGELOG.md](CHANGELOG.md)
 

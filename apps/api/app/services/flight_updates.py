@@ -37,21 +37,34 @@ def arrival_delay(data: dict) -> timedelta:
 
 
 def apply_flight_update(session: Session, request_id: str, data: dict) -> None:
-    row = session.scalar(select(RideRequest).where(RideRequest.id == request_id).with_for_update())
+    initial = session.get(RideMember, request_id)
+    group = locked_group(session, initial.group_id) if initial else None
+    row = session.scalar(
+        select(RideRequest)
+        .where(RideRequest.id == request_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
     if row is None or row.status not in {"WAITING", "MATCHED", "ASSIGNED"}:
         return
     status = data.get("flight_status")
     if status not in {"scheduled", "active", "landed", "cancelled", "incident", "diverted"}:
         raise ValueError("Unsupported provider flight status")
-    revised = utc(row.baseline_ready_at) + arrival_delay(data)
+    arrival = data.get("arrival") or {}
+    revised = (
+        utc(row.baseline_ready_at) + arrival_delay(data)
+        if arrival.get("scheduled") and (arrival.get("actual") or arrival.get("estimated"))
+        else utc(row.ready_at)
+    )
     changed = revised != utc(row.ready_at) or status != row.flight_status
     row.flight_status = status
     row.ready_at = revised
     row.updated_at = now()
     if changed:
         row.version += 1
-    member = session.get(RideMember, row.id)
-    group = locked_group(session, member.group_id) if member else None
+    member = session.get(RideMember, row.id, populate_existing=True)
+    if member and (group is None or member.group_id != group.id):
+        raise ValueError("Group changed during flight refresh; retry next poll")
     if status in {"cancelled", "diverted", "incident"}:
         row.status = "FLIGHT_CANCELLED"
         if group:
@@ -101,6 +114,12 @@ def maintain_rides(engine, settings: Settings) -> None:
                     except Exception as error:
                         logger.warning("Flight refresh failed type=%s", type(error).__name__)
             with Session(engine) as session, session.begin():
+                session.execute(
+                    text(
+                        "DELETE FROM provider_usage "
+                        "WHERE window_at < CURRENT_TIMESTAMP - interval '2 days'"
+                    )
+                )
                 groups = list(
                     session.scalars(
                         select(RideGroup)
@@ -141,6 +160,9 @@ def maintain_rides(engine, settings: Settings) -> None:
 async def polling_loop(application) -> None:
     while True:
         await asyncio.sleep(application.state.settings.flight_poll_seconds)
-        await asyncio.to_thread(
-            maintain_rides, application.state.engine, application.state.settings
-        )
+        try:
+            await asyncio.to_thread(
+                maintain_rides, application.state.engine, application.state.settings
+            )
+        except Exception as error:
+            logger.warning("Ride maintenance failed type=%s", type(error).__name__)

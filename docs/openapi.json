@@ -330,6 +330,16 @@
             "title": "Departure At",
             "type": "string"
           },
+          "destination_area": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Coordinates"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "destination_cluster": {
             "anyOf": [
               {
@@ -471,6 +481,126 @@
         "title": "LocationResponse",
         "type": "object"
       },
+      "ManifestResponse": {
+        "properties": {
+          "airport": {
+            "title": "Airport",
+            "type": "string"
+          },
+          "child_seats": {
+            "title": "Child Seats",
+            "type": "integer"
+          },
+          "destination": {
+            "$ref": "#/components/schemas/Coordinates"
+          },
+          "destination_name": {
+            "title": "Destination Name",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "flight_date": {
+            "format": "date",
+            "title": "Flight Date",
+            "type": "string"
+          },
+          "flight_number": {
+            "title": "Flight Number",
+            "type": "string"
+          },
+          "flight_status": {
+            "title": "Flight Status",
+            "type": "string"
+          },
+          "group_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "luggage": {
+            "title": "Luggage",
+            "type": "integer"
+          },
+          "max_wait_minutes": {
+            "title": "Max Wait Minutes",
+            "type": "integer"
+          },
+          "notes": {
+            "title": "Notes",
+            "type": "string"
+          },
+          "passengers": {
+            "title": "Passengers",
+            "type": "integer"
+          },
+          "pet_friendly": {
+            "title": "Pet Friendly",
+            "type": "boolean"
+          },
+          "ready_at": {
+            "format": "date-time",
+            "title": "Ready At",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "WAITING",
+              "MATCHED",
+              "ASSIGNED",
+              "IN_PROGRESS",
+              "COMPLETED",
+              "CANCELLED",
+              "FLIGHT_CANCELLED"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "wheelchair_spaces": {
+            "title": "Wheelchair Spaces",
+            "type": "integer"
+          },
+          "women_only": {
+            "title": "Women Only",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "airport",
+          "flight_number",
+          "flight_date",
+          "ready_at",
+          "max_wait_minutes",
+          "destination_name",
+          "destination",
+          "passengers",
+          "luggage",
+          "women_only",
+          "wheelchair_spaces",
+          "child_seats",
+          "pet_friendly",
+          "notes",
+          "status",
+          "flight_status",
+          "group_id",
+          "display_name"
+        ],
+        "title": "ManifestResponse",
+        "type": "object"
+      },
       "MatchResponse": {
         "properties": {
           "group": {
@@ -534,6 +664,16 @@
             "format": "date-time",
             "title": "Departure At",
             "type": "string"
+          },
+          "destination_area": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Coordinates"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "destination_cluster": {
             "anyOf": [
@@ -1840,6 +1980,53 @@
         ]
       }
     },
+    "/ride-groups/{group_id}/cancel": {
+      "post": {
+        "operationId": "release_group_ride_groups__group_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "title": "Group Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Release Group",
+        "tags": [
+          "rides"
+        ]
+      }
+    },
     "/ride-groups/{group_id}/manifest": {
       "get": {
         "operationId": "manifest_ride_groups__group_id__manifest_get",
@@ -1860,7 +2047,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/RequestResponse"
+                    "$ref": "#/components/schemas/ManifestResponse"
                   },
                   "title": "Response Manifest Ride Groups  Group Id  Manifest Get",
                   "type": "array"

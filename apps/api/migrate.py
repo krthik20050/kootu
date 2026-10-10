@@ -19,6 +19,8 @@ def main() -> None:
             "CREATE TABLE IF NOT EXISTS public.kootu_migrations "
             "(name text PRIMARY KEY, sha256 text NOT NULL)"
         )
+        connection.exec_driver_sql("ALTER TABLE public.kootu_migrations ENABLE ROW LEVEL SECURITY")
+        connection.exec_driver_sql("REVOKE ALL ON public.kootu_migrations FROM PUBLIC")
         for path in sorted(
             (Path(__file__).resolve().parents[2] / "supabase/migrations").glob("*.sql")
         ):
@@ -32,7 +34,7 @@ def main() -> None:
                 if previous != digest:
                     raise SystemExit(f"Applied migration was edited: {path.name}")
                 continue
-            connection.exec_driver_sql(sql)
+            connection.exec_driver_sql(sql, execution_options={"no_parameters": True})
             connection.execute(
                 text("INSERT INTO public.kootu_migrations(name,sha256) VALUES (:name,:hash)"),
                 {"name": path.name, "hash": digest},

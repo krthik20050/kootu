@@ -110,6 +110,8 @@ def test_complete_trip_and_privacy(client, monkeypatch):
     first, second, group = make_group(client, monkeypatch)
     assert client.get(f"/ride-groups/{group['id']}", headers=headers("outsider")).status_code == 404
     assert "notes" not in str(group)
+    assert first["destination_name"] not in str(group)
+    assert group["destination_area"] == {"latitude": 10.11, "longitude": 76.35}
     assert client.get(f"/ride-groups/{group['id']}/manifest").status_code == 404
     offer = client.get("/driver-offers", headers=headers("driver")).json()[0]
     accepted = client.post(f"/driver-offers/{offer['id']}/accept", headers=headers("driver"))
@@ -137,6 +139,12 @@ def test_complete_trip_and_privacy(client, monkeypatch):
         assert response.json()["status"] == status
         if status == "IN_PROGRESS":
             assert client.post(f"/ride-requests/{first['id']}/cancel").status_code == 409
+            assert (
+                client.post(
+                    f"/ride-groups/{group['id']}/cancel", headers=headers("driver")
+                ).status_code
+                == 409
+            )
     assert client.get("/ride-requests").json()[0]["status"] == "COMPLETED"
     assert client.get("/drivers/me", headers=headers("driver")).json()["available"]
 
@@ -248,3 +256,93 @@ def test_real_postgis_index_and_persistence(client):
         )
     client.app.state.engine.dispose()
     assert client.get("/ride-requests").json()[0]["id"] == item["id"]
+
+
+def test_two_groups_cannot_assign_the_same_vehicle(client, monkeypatch):
+    client.app.state.settings.max_group_seats = 2
+    make_group(client, monkeypatch)
+    third, _ = submit(client, "charlie")
+    submit(client, "diana")
+    response = client.post(f"/ride-requests/{third['id']}/match", headers=headers("charlie"))
+    assert response.json()["matched"]
+    offers = client.get("/driver-offers", headers=headers("driver")).json()
+    assert len(offers) == 2
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        responses = list(
+            pool.map(
+                lambda offer: client.post(
+                    f"/driver-offers/{offer['id']}/accept", headers=headers("driver")
+                ),
+                offers,
+            )
+        )
+    assert sorted(response.status_code for response in responses) == [200, 409]
+    with client.app.state.engine.connect() as connection:
+        assert (
+            connection.scalar(text("SELECT count(*) FROM ride_groups WHERE status='ASSIGNED'")) == 1
+        )
+
+
+def test_provider_budget_is_shared_and_user_scoped(client):
+    for _ in range(30):
+        assert client.post("/ride-requests/missing/match").status_code == 404
+    limited = client.post("/ride-requests/missing/match")
+    assert limited.status_code == 429
+    assert limited.headers["Retry-After"] == "3600"
+    assert client.post("/ride-requests/missing/match", headers=headers("bob")).status_code == 404
+
+
+def test_missing_arrival_estimate_preserves_previous_delay(client):
+    first, _ = submit(client)
+    with Session(client.app.state.engine) as session, session.begin():
+        row = session.get(RideRequest, first["id"])
+        delayed = row.ready_at + timedelta(hours=1)
+        row.ready_at = delayed
+        apply_flight_update(session, first["id"], {"flight_status": "active", "arrival": {}})
+        assert row.ready_at == delayed
+
+
+def test_competing_driver_offers_have_one_winner(client, monkeypatch):
+    fleet(client, "driver-two", "KL07ZZ5678")
+    first, second, group = make_group(client, monkeypatch)
+    offers = [
+        (subject, client.get("/driver-offers", headers=headers(subject)).json()[0])
+        for subject in ("driver", "driver-two")
+    ]
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        responses = list(
+            pool.map(
+                lambda entry: client.post(
+                    f"/driver-offers/{entry[1]['id']}/accept", headers=headers(entry[0])
+                ),
+                offers,
+            )
+        )
+    assert sorted(response.status_code for response in responses) == [200, 409]
+    statuses = [
+        client.get("/driver-offers", headers=headers(subject)).json()[0]["status"]
+        for subject in ("driver", "driver-two")
+    ]
+    assert sorted(statuses) == ["ACCEPTED", "WITHDRAWN"]
+
+
+def test_driver_release_returns_passengers_to_waiting_and_goes_offline(client, monkeypatch):
+    first, second, group = make_group(client, monkeypatch)
+    offer = client.get("/driver-offers", headers=headers("driver")).json()[0]
+    assert (
+        client.post(f"/driver-offers/{offer['id']}/accept", headers=headers("driver")).status_code
+        == 200
+    )
+    assert client.post(f"/ride-groups/{group['id']}/cancel").status_code == 403
+    response = client.post(f"/ride-groups/{group['id']}/cancel", headers=headers("driver"))
+    assert response.status_code == 200 and response.json()["status"] == "CANCELLED"
+    assert client.get("/ride-requests").json()[0]["status"] == "WAITING"
+    assert not client.get("/drivers/me", headers=headers("driver")).json()["available"]
+
+
+def test_cancelled_flight_requeues_others(client, monkeypatch):
+    first, second, group = make_group(client, monkeypatch)
+    with Session(client.app.state.engine) as session, session.begin():
+        apply_flight_update(session, first["id"], {"flight_status": "cancelled", "arrival": {}})
+    assert client.get("/ride-requests").json()[0]["status"] == "FLIGHT_CANCELLED"
+    assert client.get("/ride-requests", headers=headers("bob")).json()[0]["status"] == "WAITING"

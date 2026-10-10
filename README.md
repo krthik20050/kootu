@@ -1,130 +1,104 @@
 # kootu
 
-**Land together. Leave together.** Airport shared-cab coordination for passengers arriving at similar times and travelling to one small destination cluster.
+**Land together. Leave together.** Shared airport rides for passengers with compatible arrival times and nearby drop-offs.
 
-Airport arrivals often mean solo cab fares or a long wait to find company. kootu's planned matching system groups compatible passengers by airport, ready time, real destination coordinates, seats/luggage and safety preferences. Thrissur and nearby destinations may share a cab; Guruvayur normally forms a separate group. This is not a long multi-stop route service.
+## What works
 
-Built from scratch for the **DevDay Exchange Community Hackathon: Kochi**, 10–11 October 2026. Read [RULES.md](RULES.md) and [AGENTS.md](AGENTS.md). Participant identities and final submission details remain for the team to complete in [SUBMISSION.md](SUBMISSION.md).
+- Passenger, driver and operator web workspaces connected to FastAPI, with Clerk bearer sessions and server-owned roles.
+- PostgreSQL/PostGIS persistence; deterministic grouping by airport, ready/wait window, whole-cluster destination proximity, seats, luggage, women-only policy, wheelchair spaces, child seats and pets. Google road-distance verification is required before a group is created.
+- Driver/vehicle operator approval, availability, expiring offers, atomic acceptance, passenger cancellation and trip start/completion. Exact drop-offs and private notes are available only to the assigned driver; other passengers receive aggregate group information.
+- Optional Grok ticket extraction (JPG/PNG or text PDF), user-confirmed autofill, and Sarvam WAV transcription with reviewed notes. Explicit structured needs affect matching; free text does not automatically reserve equipment.
+- Automatic Aviationstack flight polling adjusts ready times from the original baseline, preserves feasible groups, and releases incompatible/cancelled groups for rematching. A PostgreSQL advisory lock coordinates maintenance across processes; no queue service is required.
+- Generated OpenAPI/TypeScript contracts, SQL migration runner, PR template, GitHub CI and [collaboration guide](CONTRIBUTING.md).
 
-## Current status
+Local regression coverage includes real PostgreSQL 17/PostGIS 3.5, signed JWT validation, concurrency and provider contract fixtures. **Live Clerk/provider credentials and deployment have not been verified.** The keyless preview shows a setup state instead of fabricated bookings. Adding keys also requires applying migrations, enabling provider products, selecting a compatible Grok model and approving real drivers/vehicles. No claim of guaranteed rides or zero defects is made.
 
-Backend milestone in progress (11 October 2026): persistent ride APIs, Clerk verification, matching, driver/admin workflow, Grok/Sarvam/Google/flight adapters and polling are implemented. 45 local backend tests passed, including real PostgreSQL/PostGIS tests. Frontend screens and final documentation are being connected next. The older bootstrap description below records the starting point and will be replaced before handoff.
+This is a coordination MVP. Payments, fare quotes, GPS tracking, emergency dispatch, passenger identity verification and commercial operating procedures are not implemented. Driver approval records an operator decision; kootu does not verify government documents automatically. See [competitor research](docs/competitor-analysis.md) and [validation](docs/backend-validation.md).
 
+Built from scratch for the DevDay Exchange Community Hackathon: Kochi, 10–11 October 2026. [RULES.md](RULES.md) permits a team of at most four; the 23-person workflow in CONTRIBUTING applies outside that event or with organizer approval. Participant identities and submission details remain in [SUBMISSION.md](SUBMISSION.md).
 
-**IMPLEMENTED:** responsive public concept landing, strict frontend configuration checks, optional configured Clerk provider/proxy/sign-in controls with shadcn theme, API client boundary, FastAPI health/OpenAPI, environment settings, CORS, startup logging, sanitized error responses, six API tests, provider contracts, PostGIS extension migration and CI configuration.
+## Stack and ownership
 
-**PLANNED:** bookings, ticket uploads/extraction with confirmation, domain tables, spatial queries, deterministic matching, role/ownership checks and API token verification, verified driver onboarding, offers, routing, flight updates, cancellation/re-matching and authorized Realtime updates. These do not exist as working features.
+`apps/web`: Next.js 16, React 19, TypeScript, Tailwind 4 and Clerk. `apps/api`: FastAPI/Pydantic, SQLAlchemy/psycopg, PyJWT. `supabase/migrations`: PostgreSQL/PostGIS SQL. `docs/openapi.json` and `apps/web/src/lib/api/generated.ts` are exported from the backend, not edited independently. No microservices, Redis, AI matching, or message brokers. Docker is optional for disposable database tests, not an application prerequisite.
 
-The public shell runs without credentials with authentication explicitly disabled. Clerk-enabled sign-in is scaffolded but has not been live-verified. `/health` proves process liveness only. No database, live map, passenger data or ride inventory is shown.
-
-## Architecture and stack
-
-Next.js 16, React 19, strict TypeScript and Tailwind 4 own the user experience; shadcn/ui configuration and `cn` utility are prepared. Clerk owns authentication, distinct from kootu driver verification. FastAPI/Python/Pydantic own future authorization, business logic and matching. Supabase PostgreSQL/PostGIS will own persistence and spatial queries. Routing and ticket extraction sit behind provider contracts. Deployment targets are Vercel and Render, not yet deployed.
-
-No microservices, queues, Docker prerequisite or AI matching. See [architecture](docs/architecture.md), [API contracts](docs/api-contracts.md), [database](docs/database.md), and [matching engine](docs/matching-engine.md).
-
-```text
-apps/
-  web/                       Next.js app, package-lock.json, shadcn config
-    src/app/                 Landing and root layout
-    src/components/          Optional Clerk integration
-    src/lib/api/             FastAPI client
-    src/proxy.ts             Optional Clerk middleware
-  api/                       pyproject.toml and pip dependency lockfiles
-    app/
-      api/                   Health resource
-      core/                  Environment settings
-      models/                Identity/verification vocabulary
-      schemas/               Validated provider data
-      services/              Provider contracts
-      main.py                Composition, lifespan, errors
-    tests/                   Health, OpenAPI and CORS checks
-supabase/migrations/         PostGIS extension preparation
-docs/                        Architecture and validation evidence
-.github/workflows/          Independent web/API CI checks
-```
-
-Future `/passenger`, `/driver`, `/admin` areas can use separate layouts and feature components. No empty role pages or fake CRUD endpoints are created.
+[Architecture](docs/architecture.md) · [Database](docs/database.md) · [Matching](docs/matching-engine.md) · [API](docs/api-contracts.md)
 
 ## Local setup
 
-Prerequisites: **Node 22+**, npm, **Python 3.13 recommended** (project requires 3.12+) and Git. Use **pip + venv only** for Python. Exact dependencies are captured in npm and pip lockfiles.
+Use Node **22.12+**, npm, Python **3.13** (project requires 3.12+), Git and a PostgreSQL database with PostGIS. Python uses pip + venv.
 
-From the repository in PowerShell:
+PowerShell, in `apps/api`:
 
 ```powershell
-cd apps/web
+python -m venv .venv
+.\.venv\Scripts\python -m pip install -r requirements-dev.lock
+.\.venv\Scripts\python -m pip install --no-deps -e .
+Copy-Item .env.example .env
+# Fill server-only settings. Apply migrations using a database migration owner:
+.\.venv\Scripts\python migrate.py
+.\.venv\Scripts\python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 --no-access-log
+```
+
+In `apps/web`, another terminal:
+
+```powershell
 Copy-Item .env.example .env.local
 npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000`. In another terminal:
+Open `http://localhost:3000`. Use that same origin in `FRONTEND_URL`; `localhost` and `127.0.0.1` are different origins for CORS and Clerk `azp`. Without database/keys, `/health` and the public shell work, while private functionality fails with an explicit configuration error. `/ready` checks configuration and table availability; it does not authenticate provider credentials. macOS/Linux use `cp` and `.venv/bin/python`.
 
-```powershell
-cd apps/api
-python -m venv .venv
-.\.venv\Scripts\python -m pip install -r requirements-dev.lock
-.\.venv\Scripts\python -m pip install --no-deps -e .
-Copy-Item .env.example .env
-.\.venv\Scripts\python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 --no-access-log
-```
+## Fill these settings
 
-On macOS/Linux use `cp` and `.venv/bin/python`. Run API commands from `apps/api` so its `.env` is loaded there. No database is required for this bootstrap.
-
-## Environment
-
-| Variable | Scope | Requirement |
+| Location | Settings | Purpose |
 | --- | --- | --- |
-| `NEXT_PUBLIC_API_URL` | Browser-safe web | Required HTTP(S) API base URL; local example `http://localhost:8000` |
-| `NEXT_PUBLIC_AUTH_ENABLED` | Browser-safe web | Required explicit `false` preview or `true` real auth |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Browser-safe web | Real key required when Clerk is enabled |
-| `CLERK_SECRET_KEY` | Web server only | Real key required when Clerk is enabled; never client-side |
-| `APP_ENV` | API server | `development` (default), `test`, or `production` |
-| `FRONTEND_URL` | API server | One exact allowed origin; default `http://localhost:3000`; production requires an explicit HTTPS origin |
+| Web `.env.local` | `NEXT_PUBLIC_API_URL` | API base URL |
+| Web `.env.local` | `NEXT_PUBLIC_AUTH_ENABLED=true`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` | Enable real sign-in; secret stays server-only |
+| API `.env` | `DATABASE_URL` | PostgreSQL connection, migrations applied; [role setup](docs/database.md) |
+| API `.env` | `CLERK_ISSUER`, optional `CLERK_AUDIENCE` | Exact trusted instance origin; JWKS derived from it |
+| API `.env` | `BOOTSTRAP_ADMIN_SUBJECT` | Trusted operator's Clerk user ID; creates ADMIN after that user signs in |
+| API `.env` | `GOOGLE_MAPS_API_KEY` | Enable Routes API and Geocoding API for this server key |
+| API `.env` | `GROK_API_KEY`, `GROK_MODEL` | Account-supported vision model with structured output |
+| API `.env` | `SARVAM_API_KEY`, `SARVAM_MODEL=saaras:v3` | Speech-to-text; WAV under 30 seconds in this MVP |
+| API `.env` | `AVIATIONSTACK_API_KEY` | Plan with HTTPS flight lookup and the necessary coverage/date access |
+| API `.env` | `FRONTEND_URL`, `APP_ENV` | Exact origin; production requires HTTPS |
 
-Missing required web configuration, or enabled Clerk without keys, fails clearly during build/start. Preview mode authenticates nobody. Configure a Clerk app with the [official quickstart](https://clerk.com/docs/nextjs/getting-started/quickstart) before enabling auth. Before any private endpoint ships, implement backend token verification and role/ownership checks.
+Examples also expose configurable radius (3000m), seats/luggage (4 each), wait5–120 minutes, offer expiry300 seconds, and polling900 seconds. The web passenger form currently targets the default four-seat/four-luggage pilot policy. Provider usage can cost money; configure quotas/billing limits in the provider accounts. App limits per signed-in user per hour: ticket 20, audio 30, matching 30, destination search 100. Polling bounds each cycle to 30 active flight requests and 5 matching attempts.
 
-Future database, Supabase, Clerk issuer/JWKS and maps credentials should be added only when adapters use them. Service-role credentials stay server-only. Never commit `.env`, keys or private passenger/ticket data. Examples contain no credentials. Public Next.js variables are embedded at build time; changing them requires a rebuild.
+Keys never go in Git, screenshots or chat. Public Next.js variables are baked into a build; rebuild after changing them. Raw tickets/audio are transient uploads, closed after processing; provider retention terms still apply. Consent is required before either upload is forwarded. Notes should contain only useful ride details.
 
-## Commands and checks
+## Checks
 
-From `apps/web`:
+In `apps/web`: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, `npm audit --omit=dev`.
 
-```powershell
-npm run lint
-npm run typecheck
-npm run build
-npm run start
-npm audit --omit=dev
-```
-
-From `apps/api`:
+In `apps/api`:
 
 ```powershell
 .\.venv\Scripts\python -m ruff check .
 .\.venv\Scripts\python -m ruff format --check .
 .\.venv\Scripts\python -m pytest
-.\.venv\Scripts\python -m pip check
+.\.venv\Scripts\python export_contracts.py --check
 ```
 
-GitHub Actions checks both apps; deployment is manual. [Deployment instructions](docs/architecture.md#security-and-deployment) specify Vercel/Render roots and commands. PostGIS migration must be reviewed and applied to the team's selected Supabase development project; no remote migration was executed.
+Set `TEST_DATABASE_URL` to a **disposable** PostgreSQL/PostGIS database whose name contains `test`. Tests drop/recreate its public schema and truncate test tables; never use a shared/production database. If omitted, database tests skip locally; CI supplies the database and runs them. The current isolated local container uses port55432 and ignored `.env.test` files; no credentials are committed.
 
-## Hackathon demo
+After a contract change run `python export_contracts.py`, review both generated files and commit them with the backend change. CI detects contract drift. npm/pip lockfiles pin installed versions. Production npm audit is separate from dev tooling; known ESLint dependency advisories are disclosed in validation, without forced incompatible upgrades.
 
-1. Run both applications.
-2. Open the landing, resize to mobile, and follow “Meet the idea”. The route is a labelled illustration, not a live map.
-3. Open `http://localhost:8000/health`, then `/docs` or `/openapi.json`. Only `/health` is implemented.
-4. Present the documented matching architecture as planned work, not a working booking flow.
+## Demo walkthrough
 
-## Verified results and limitations
+1. Configure the database and providers, apply migrations, enable Clerk, then restart both apps.
+2. Sign in with an operator matching `BOOTSTRAP_ADMIN_SUBJECT`; visit `/admin`.
+3. A different user visits `/driver`, submits a licence reference and vehicle. Operator reviews actual documents and approves both. Driver sets both available.
+4. Two passenger accounts visit `/passenger`, confirm arrival details and choose nearby destination pins, overlapping ready times and compatible needs. Save and match. A group is proposed only when road verification and capacity checks succeed.
+5. Driver accepts under `/driver`, views assigned drop-offs, starts after ready time, then completes. Passenger status refreshes every 15 seconds.
+6. Demonstrate cancellation or a provider-confirmed delay: affected groups return to waiting when required. The maintenance worker runs while the API process is awake; a sleeping host cannot continuously poll flights.
+7. Without keys, demonstrate only the honest setup state, `/health`, `/ready` and the test suite; do not portray those as a live ride demo.
 
-Clean frontend install, lint, typecheck and production build passed. API imports, Ruff lint/format and **six tests** passed. Running Uvicorn returned the expected health JSON over HTTP. Browser verification at desktop 1440px and mobile 390px confirmed layout, no horizontal overflow, anchor navigation and no captured console errors/warnings. Missing API config and enabled Clerk without keys failed as intended. See [exact commands and evidence](docs/bootstrap-validation.md).
+## Deployment
 
-Production npm audit reports **zero advisories**. Full audit reports **five high-severity tooling advisories** stemming from unpatched `braces` through Next.js lint dependencies ([advisory](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)). Registry version 3.0.3 remains affected. ESLint 9 is pinned for compatibility with Next.js's import/React/a11y plugins and emits an upstream deprecation notice; ESLint 10 caused incompatible peer warnings and was reverted. Revisit compatible patched tooling; do not force a Next.js tooling downgrade to hide the warnings.
+Vercel root `apps/web`, Node 22.12+, install `npm ci`, build `npm run build`. Render root `apps/api`, Python 3.13, build `python -m pip install -r requirements.lock` then `python -m pip install --no-deps .`; start `uvicorn app.main:app --host 0.0.0.0 --port $PORT --no-access-log`. Set production HTTPS origins and server secrets. Apply reviewed migrations separately before releasing; use a direct/session-pooled PostgreSQL connection for advisory locks, not transaction-mode pooling. Set an ingress upload limit around 6MB and provider/request timeouts that permit bounded matching. A host that sleeps requires a continuously running worker or a later approved scheduled-job setup for continuous flight refresh. Nothing has been deployed automatically.
 
-No live Clerk sign-in, role enforcement, database/migration execution, matching, routing, ticket extraction, remote CI, deployment or performance target verification is claimed. This is an architecture bootstrap, not the complete product.
+## Sources
 
-Sources: [Next.js](https://nextjs.org/docs), [React](https://react.dev), [TypeScript](https://www.typescriptlang.org), [Tailwind](https://tailwindcss.com/docs), [shadcn/ui](https://ui.shadcn.com), [Clerk](https://clerk.com/docs), [FastAPI](https://fastapi.tiangolo.com), [Pydantic](https://docs.pydantic.dev), [Uvicorn](https://www.uvicorn.org), [Supabase/PostGIS](https://supabase.com/docs/guides/database/extensions/postgis), [pytest](https://docs.pytest.org), [Ruff](https://docs.astral.sh/ruff). No dataset, commercial image or AI model is used by the application; the route SVG is original markup.
-
-See [AI_USAGE.md](AI_USAGE.md) and [CHANGELOG.md](CHANGELOG.md). Independent next workstreams: passenger frontend/ticket intake; database/PostGIS domain schema; deterministic matching; Clerk and driver onboarding. None has been started.
+[Clerk](https://clerk.com/docs/nextjs/getting-started/quickstart), [FastAPI](https://fastapi.tiangolo.com/), [SQLAlchemy](https://docs.sqlalchemy.org/en/20/), [PostGIS](https://postgis.net/documentation/), [Google Routes](https://developers.google.com/maps/documentation/routes/compute_route_directions), [Grok structured output](https://docs.x.ai/developers/model-capabilities/text/structured-outputs), [Sarvam transcription](https://docs.sarvam.ai/api-reference/speech-to-text/transcribe), [Aviationstack](https://docs.apilayer.com/apilayer/docs/aviationstack), [Vitest](https://vitest.dev/guide/), [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/). No external dataset or live credentials are bundled.

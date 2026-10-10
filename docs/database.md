@@ -1,36 +1,30 @@
-# Database design targets
+# PostgreSQL/PostGIS persistence
 
-Supabase-hosted PostgreSQL with PostGIS is the geospatial foundation. Passwords remain with Clerk. Database development is migration-first.
+Apply ordered SQL through `apps/api/migrate.py` using a migration-owner connection. It serializes migration runs with an advisory transaction lock, records SHA256 hashes and refuses edited applied migrations. No production `create_all`, SQLite or in-memory fallback exists.
 
-## Implemented
+Domain tables: profiles, passenger_requests, drivers, vehicles, ride_groups, ride_members, driver_offers, trip_events. `provider_usage` tracks hashed Clerk subjects and hourly provider request budgets; maintenance deletes buckets older than two days. Passenger geography is a stored WGS84 point generated from longitude/latitude with a GiST index. The application search path is `public,extensions`, supporting PostGIS installed in either of those schemas.
 
-`supabase/migrations/202610100001_enable_postgis.sql` prepares an `extensions` schema and enables PostGIS if absent. No application tables or database connection exist. This migration has not been applied to a Supabase project or live-validated. An existing PostGIS installation is not moved; inspect `pg_extension` for its actual schema before later schema-qualified queries. See [Supabase PostGIS guidance](https://supabase.com/docs/guides/database/extensions/postgis).
+Request membership's primary key prevents one request joining multiple groups. Partial unique indexes prevent multiple ASSIGNED/IN_PROGRESS groups using one driver or vehicle. Database checks validate roles, coordinates and capacities; HTTP schemas additionally validate time/flight/needs. Foreign keys keep references consistent. Candidate request versions and `FOR UPDATE` locks prevent stale matching from committing. Completed trips remain durable across engine/process reconnection.
 
-## Planned relationships
+## Server role and RLS
 
-| Entity | Intended data and relationships |
-| --- | --- |
-| `profiles` | UUID, unique Clerk subject, server-managed role, minimal display/contact data |
-| `passenger_requests` | Profile, airport, flight/date, ready window, destination geography, party/luggage capacity, wait limit, women-only preference, status |
-| `drivers` | Profile, independent verification status and availability; document metadata with restricted access |
-| `vehicles` | Driver, approved seat and luggage capacity, availability |
-| `ride_groups` | Airport, destination cluster, ready/departure windows, assigned vehicle/driver, status and version |
-| `ride_members` | Group/request relation, party allocation, joined/left timestamps and membership state |
-| `driver_offers` | Group and driver/vehicle, expiration, offer state and response timestamps |
-| `trip_events` | Group, actor and minimal state transitions, event/creation timestamps |
+All application tables have RLS enabled and no browser-facing policies. Never put a database password or Supabase service-role credential in the frontend. The migration owner can bypass RLS, which is useful for migrations/tests. For normal deployment create a dedicated **server-only** role, grant schema usage and only application table privileges, and add explicit role policies. Example SQL after the administrator has created `kootu_api` with a password in the secret manager:
 
-One profile may own many requests; requests can have membership history but only one active group. One driver may have multiple vehicles, while each actual trip has one assigned approved vehicle. Capacity must sum party sizes and luggage units across active members. Constraints and transactions must prevent duplicate active membership, double assignment and oversubscription.
+```sql
+GRANT USAGE ON SCHEMA public, extensions TO kootu_api;
+DO $$
+DECLARE table_name text;
+BEGIN
+  FOREACH table_name IN ARRAY ARRAY[
+    'profiles','passenger_requests','drivers','vehicles','ride_groups',
+    'ride_members','driver_offers','trip_events','provider_usage'
+  ] LOOP
+    EXECUTE format('GRANT SELECT, INSERT, UPDATE, DELETE ON public.%I TO kootu_api', table_name);
+    EXECUTE format('CREATE POLICY server_access ON public.%I TO kootu_api USING (true) WITH CHECK (true)', table_name);
+  END LOOP;
+END $$;
+```
 
-Destinations should use `geography(Point, 4326)` with a GiST index; store longitude then latitude when constructing points. Geographic `ST_DWithin` distances are metres. Keep the airport identity explicit and normalized; flight identity includes date and arrival airport, not just a repeated daily flight number. Use separate ready-window bounds and request expiry, with UTC timestamps (`timestamptz`). Establish indexes for active requests/airport/window based on actual queries.
+Run this role-policy provisioning once per database, with a unique role and administrator review. These policies give the trusted backend role access; HTTP ownership checks enforce individual user boundaries. Anonymous/authenticated browser roles have no policies. Do not grant them this role or BYPASSRLS. `kootu_migrations` stays owned by the migration role, outside API privileges. Set the API's `DATABASE_URL` to the provisioned server role after migrations. Supply the migration-owner URL only to migration operations. The dedicated-role SQL has not been applied to a remote Supabase project.
 
-Destination compatibility is a small bounded cluster. Do not form a long chain by accepting each next neighbour without checking group diameter and each member's deviation. Road detour validation comes through the routing adapter. Radius, wait limit, luggage units and minimum viable occupancy require product-approved policies; none are invented as deployed defaults here.
-
-Women-only preference must be retained in requests and groups. Define voluntary eligibility and driver eligibility policy before implementing enforcement. Do not infer gender from a name, identity document or Clerk authentication.
-
-Cancellation, delay and cancellation of flights require request/group states and timestamped history. Avoid destroying historical records needed to explain a re-match. Keep sensitive payloads out of events and logs.
-
-## Migration and access workflow
-
-Create sequential timestamped SQL migrations in `supabase/migrations`; agree names across workstreams. Review and test against a disposable PostgreSQL/PostGIS or Supabase development database before production. With a Supabase CLI installed and the correct project explicitly selected, link the project and use `supabase db push`; this affects that project and is not run by bootstrap CI. No Docker prerequisite is imposed.
-
-Enable RLS and least privilege with each table. FastAPI may use a restricted database role; a Supabase service-role key bypasses RLS and must remain server-only. Realtime/browser access needs a tested Clerk-compatible authorization policy. Storage documents require private buckets, narrowly scoped signed access and deletion/retention rules. Store only confirmed flight metadata needed for matching, not unnecessary ticket contents. No passwords, real keys or passenger data belong in migrations.
+Use PostgreSQL direct or session-mode pooling: maintenance uses session advisory locks, incompatible with transaction-only pooling. Tests use a disposable PostGIS database and destructive setup only when its name contains `test`. CI supplies one. Database backups, retention and operational access are deployment responsibilities; no cloud project is created by this code.

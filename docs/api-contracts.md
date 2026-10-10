@@ -1,35 +1,30 @@
 # API contracts
 
-FastAPI `/openapi.json` is the API source of truth. Interactive documentation is at `/docs`. Only the health endpoint is implemented.
+`GET /openapi.json` and `/docs` describe the running API; `docs/openapi.json` is the committed snapshot. Generate frontend types with `python export_contracts.py` from `apps/api`. CI uses `--check`. Input models forbid extra fields, including attempted role/approval escalation.
 
-## GET /health
-
-Public process liveness, HTTP 200:
-
-```json
-{"status":"ok","service":"cootu-api","version":"0.1.0","environment":"development"}
-```
-
-Environment is `development`, `test` or `production`. This does not prove database, Clerk, maps or matching readiness. The frontend health client validates this response and uses an eight-second timeout. The landing is static concept content and does not invent a connected API indicator.
-
-Validation errors use HTTP 422 with `detail: "Invalid request"` and an `errors` array of locations/types; rejected input values are omitted. Unexpected failures return HTTP 500 with `detail: "Internal server error"`. FastAPI's normal 404 remains in place. Public client errors retain HTTP status without exposing raw backend response bodies.
-
-## Planned resource conventions
-
-| Resource | Intended responsibility |
+| API area | Implemented routes |
 | --- | --- |
-| `/passengers` | Passenger profile, subject/ownership enforced |
-| `/ride-requests` | Airport, flight, ready window, coordinates, party/luggage, wait and safety preferences |
-| `/ride-groups` | Proposed membership, cluster, capacity and lifecycle |
-| `/drivers` | Driver onboarding and separate approval status |
-| `/driver-offers` | Expiring offer, acceptance/rejection, atomic assignment |
-| `/vehicles` | Approved seats/luggage capacity and availability |
-| `/matches` | Candidate evaluation and authorized matching operations |
+| Public health | `GET /health`, `GET /ready` |
+| Own profile | `GET /me`, `PATCH /me` |
+| Passenger arrivals | `POST /ride-requests`, `GET /ride-requests`, `POST /ride-requests/{id}/match`, `POST /ride-requests/{id}/cancel` |
+| Group/trip | `GET /ride-groups/{id}`, assigned-driver `GET /ride-groups/{id}/manifest`, assigned-driver `POST /ride-groups/{id}/status`, driver/operator `POST /ride-groups/{id}/cancel` |
+| Driver/fleet | `POST /drivers`, `GET /drivers/me`, `PATCH /drivers/me/availability`, `POST /vehicles`, `GET /vehicles`, `PATCH /vehicles/{id}/availability` |
+| Offers | `GET /driver-offers`, `POST /driver-offers/{id}/accept`, `POST /driver-offers/{id}/reject` |
+| Operator | `GET /admin/drivers`, `GET /admin/vehicles`, `POST /admin/drivers/{id}/verification`, `POST /admin/vehicles/{id}/verification`, `POST /admin/ride-groups/{id}/offers` |
+| Providers | `GET /locations/search?q=...`, multipart `POST /tickets/extract`, multipart `POST /audio/transcribe` |
 
-These paths have no routes today. Private endpoints require verified Clerk bearer tokens and backend role/ownership checks. Plan UTC ISO-8601 timestamps, stable UUID identifiers, validated coordinate ranges, explicit status enums, bounded pagination and idempotency for booking/offer mutations. Do not expose another passenger's ticket, phone or full destination to unauthorized users. Model a group containing parties, not one seat per request regardless of passenger count.
+All areas other than public health require a valid Clerk bearer token. Ownership/role checks are server-side. The bootstrap operator subject is a server setting, never a request field. Operator approval cannot self-approve a licence or vehicle and cannot change approval during an active assigned trip.
 
-Define cancellation and stale-state conflicts explicitly (e.g. 409), and use transactions/version checks for membership and assignment races. Document exact schemas in FastAPI before generating frontend types. No hand-authored speculative CRUD or cross-language shared package.
+## Booking and intake
 
-## Planned notification projection
+`RideRequestInput` defines fields: client-generated UUID, airport/flight/date, timezone-aware ready time, max wait, destination name/pin, passengers/luggage, optional women-only/wheelchair/child-seat/pet/notes and `flight_details_confirmed: true`. Repeating the same UUID and original data is idempotent; a changed payload or other owner returns409. Ready times are bounded to the next 30 days (five-minute clock grace); flight date must agree within one day. Request list pagination is bounded.
 
-Useful future event names: `MATCH_FOUND`, `GROUP_UPDATED`, `DRIVER_ASSIGNED`, `DRIVER_ACCEPTED`, `PASSENGER_CANCELLED`, `TRIP_STATUS_CHANGED`. Persist authoritative state first, then expose minimal authorized projections through Supabase Realtime if it improves the experience. Clerk identity must map to a supported Realtime authorization policy; never use a service-role key in the browser. No event bus or Realtime subscription is implemented.
+Ticket/audio multipart forms require `file` and `consent=true`; audio optionally accepts supported `language`. Uploads max 5 MB; text PDF max 3 pages, images max 12 megapixels, WAV max 30 seconds. Scanned PDFs must be supplied as JPG/PNG. Both return `confirmation_required: true`. Transcript notes must be reviewed and structured equipment selections made separately.
+
+## States and errors
+
+Requests: WAITING → MATCHED → ASSIGNED → IN_PROGRESS → COMPLETED, plus CANCELLED/FLIGHT_CANCELLED and transitions back to WAITING during rematching. Groups: PROPOSED → ASSIGNED → IN_PROGRESS → COMPLETED or CANCELLED before start. Driver offers: PENDING → ACCEPTED/REJECTED/EXPIRED/WITHDRAWN. Only the assigned driver can start/complete; starting before readiness or after wait expiry fails.
+
+401 invalid session;403 denied role/action;404 inaccessible/not-found resource;409 stale state/conflict;413 oversized file;415 unsupported file type;422 invalid data;429 provider request budget;502 provider failure;503 missing configuration or unavailable storage. Validation errors omit rejected values. Internal errors never expose credentials or uploaded data. Frontend passes session tokens transiently and renders backend messages as text, not HTML.
+
+`/ready` reports configured checks and `provider_credentials_verified: false`. It is not a live account smoke test. Routine API timeout is 8s; extraction/transcription 45s and matching 150s permit bounded external requests. UI refreshes every 15s while visible. Production should align ingress timeouts with those operations.

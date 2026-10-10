@@ -15,12 +15,12 @@ git switch main
 git pull --ff-only origin main
 git switch -c feat/passenger-request-form
 # Make a small, complete change. Run checks. Update relevant docs and changelog.
-git add apps/web/src/components/passenger-request-form.tsx
+git add apps/web/src/components/workspace/passenger.tsx
 git commit -m "feat: add passenger request form"
 git push -u origin feat/passenger-request-form
 ```
 
-Open a pull request into `main`, describe what changed, link its task and state the checks. The path above is an example for a future component; stage your actual files explicitly. Another person reviews; CI checks the proposed merged code. A maintainer merges after checks/review. Preserve event development commits rather than squashing away the event record. Do not force push or rewrite shared history.
+Open a pull request into `main`, describe what changed, link its task and state the checks. The path above is an example; stage only your actual changed files. Another person reviews; CI checks the proposed merged code. A maintainer merges after checks/review. Preserve event development commits rather than squashing away the event record. Do not force push or rewrite shared history.
 
 When `main` changes while your branch is active:
 
@@ -53,7 +53,7 @@ Use additive API changes first: add a field/endpoint, update consumers, then rem
 Under repository Settings → Rules → Rulesets (or branch protection), target `main` and require:
 
 - Pull requests and at least one approving review from someone other than the author.
-- Passing `web`, `api` and database checks added by this repository.
+- Passing `web` and `api` checks; `api` includes the real PostGIS database tests.
 - Branch up to date with `main` before merge, or a supported merge queue for a busy larger team.
 - Resolved review conversations; dismiss stale approvals after meaningful changes.
 - No force push or deletion; apply the rules to maintainers too where supported.

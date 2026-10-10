@@ -1,53 +1,27 @@
-# Matching engine design
+# Deterministic destination-cluster matching
 
-Status: design only. No candidate generation, optimization, spatial query, driver search or matching endpoint is implemented.
+Implemented in `services/matching.py` and `services/rides.py`. Default pilot: at least two distinct requests, up to 4 passenger seats and 4 luggage pieces, a 3000m cluster, and each passenger's own 5–120 minute maximum wait. These are configurable product choices, not competitor benchmarks.
 
-The product model is **airport → small destination cluster → shared cab**. Thrissur city/nearby destinations can form one candidate; Guruvayur should normally form another. Never group passengers because their destinations share a name or lie somewhere along one long route.
+1. Validate a confirmed flight arrival and a precise WGS84 destination pin. Party counts include everyone in that request.
+2. Retrieve up to 100 WAITING requests at the same airport through indexed PostGIS geography `ST_DWithin`; expired wait windows are excluded.
+3. Consider up to 30 approved/available vehicles. Order candidates by same flight/date first, absolute ready-time difference, geodesic distance and stable ID.
+4. Greedily add a candidate only if every member remains compatible: whole-cluster pair distances, airport, women-only policy, overlapping wait intervals, total seats/luggage, actual wheelchair/child-seat spaces, pet policy and driver eligibility. An unsupported candidate does not block a later feasible one.
+5. Verify every selected destination pair in both road directions through Google Routes, rejecting any road distance over the cluster bound. A route outage does not permit a proposal.
+6. Reacquire request/driver/vehicle locks, revalidate request versions and availability, create a group, memberships and expiring offers to a bounded eligible fleet atomically. A proposal is not a confirmed ride.
+7. Acceptance rechecks state/time/capacity, locks assignment and reserves driver/vehicle. Database unique indexes forbid two active trips for either.
 
-## Inputs and policy
+The shared departure is `max(now, all ready times)`. It must not exceed any member's `ready_at + max_wait_minutes`; no averaged wait can override an individual limit. Whole-cluster checking prevents a chain of neighbouring destinations becoming a long multi-stop route. Two directed road estimates per pair mean at most 12 calls for the default four-seat group.
 
-Requests eventually contain normalized airport, flight/date, estimated passenger-ready window (arrival plus deplaning/baggage allowance), validated destination coordinates, party size, luggage needs, maximum waiting time and safety preferences. Drivers contribute verified eligibility, availability and approved vehicle capacity. Same-flight candidates are preferred for synchronized timing; nearby-flight candidates remain possible when their ready windows overlap within everyone's limit.
+The heuristic is bounded and deterministic, not a globally optimal fare or route solver. It does not estimate savings, quote fares, optimize actual stop order, or promise an available cab. The assigned driver receives drop-off pins after acceptance. Matching users get explicit waiting states if no suitable fleet/group exists.
 
-Product-approved configuration must define cluster radius/diameter, maximum allowed road deviation/stops, wait limits, luggage units, minimum viability and women-only eligibility including driver policy. Do not infer these values or demographic eligibility from names. Treat unavailable required data as incomplete rather than silently compatible.
+## Changes after a proposal
 
-## Hard constraints
+Passenger cancellation before departure removes that request. Proposed groups are withdrawn/requeued; an assigned group can continue if at least two distinct requests remain. Smaller groups are dissolved, pending/accepted offers withdrawn and the driver/vehicle released. Started/completed trips reject self-service cancellation and require operator assistance.
 
-- Same airport and active, non-expired requests.
-- A feasible shared departure interval respecting each request's ready window and maximum wait; do not average away an individual wait violation.
-- Destination proximity in metres, bounded across the entire cluster and relative to an agreed drop area. Prevent transitive neighbour chains from creating a distant multi-stop route.
-- Total seats for parties and luggage within vehicle capacity; revalidate against the assigned vehicle, not an assumed cab size.
-- Compatible safety preferences. Women-only groups require explicit eligibility and driver policy; ordinary groups must not absorb women-only requests.
-- Available, COOTU-approved driver/vehicle before confirming assignment.
-- Road detour/stops within policy when routing data is required. Straight-line distance is a candidate filter, not proof of a valid road journey.
+Confirmed flight delays update readiness from a baseline. A feasible group's departure moves; an infeasible group is dissolved and waiting members are eligible for later matching. Cancelled/diverted/incident flights set FLIGHT_CANCELLED for the affected request. Expired or rejected offers are released by maintenance. Flights after trip start do not reshuffle a moving cab.
 
-## Soft optimization
+## Regression cases
 
-Among feasible candidates, score waiting time, destination dispersion, estimated road detour, occupancy and estimated passenger savings. Prefer same-flight groups when otherwise viable. Normalize units and explain scores; do not claim savings without a fare model. Keep deterministic tie-breaks (ready time, creation time, stable ID), bounded candidate sizes and explicit expiration to avoid starvation. Hard constraints always outrank scores.
+Tests cover same-flight preference, alternate-flight compatibility, different airports, whole-cluster diameter, road mismatch, wait boundary, capacity, women-only separation, required equipment, approval/availability, cancellation, repeated flight delay, missing estimate, expiry, duplicate membership and concurrent acceptance. Fixtures replace external providers only in tests; production always uses configured adapters.
 
-Start with understandable heuristics and fixtures, not a solver framework or LLM. PostGIS retrieves nearby requests; routing refines road compatibility. Policy version and evaluation reasons should eventually accompany decisions for debugging without leaking passenger details.
-
-## Candidate flow
-
-1. Validate request and confirmed flight details.
-2. Determine ready interval and expiry.
-3. Retrieve geographically compatible active requests at the same airport using PostGIS and compatible time windows.
-4. Apply hard constraints, including whole-cluster spatial bounds and safety.
-5. Score compatible candidates and construct a bounded candidate group.
-6. Validate capacity and feasibility against a real eligible vehicle.
-7. Propose/create a group transactionally, protecting against concurrent requests and duplicate membership.
-8. Search eligible available drivers; send an expiring offer.
-9. Accept atomically, rechecking capacity, request state and availability before assignment.
-
-The early implementation may propose groups before a driver is available; keep proposed versus confirmed explicit. A proposal is not a guaranteed ride. Never hold a database transaction open while making a routing-provider call.
-
-## Passenger cancellation
-
-Update request and membership atomically → recompute remaining capacity, route and economics → determine whether group is viable → search compatible waiting passengers where still within existing riders' commitments → re-match if possible → update affected passengers/driver. An accepted driver or departed trip requires a distinct cancellation policy; do not casually move committed riders between groups.
-
-## Flight delays and cancellations
-
-Trusted flight update → update estimated ready windows of affected requests → reevaluate affected groups → preserve groups still feasible → re-match only incompatible members/groups → revise or withdraw pending offers → notify affected parties. Flight cancellation must distinguish cancelling the request from passenger-confirmed alternate travel. Avoid repeated reshuffling for tiny ETA changes; define policy thresholds and preserve valid accepted commitments.
-
-## Acceptance cases for the next workstream
-
-Test same-flight preference, compatible nearby flights, different airport rejection, Thrissur/Guruvayur separation, transitive cluster-chain rejection, road-distance mismatch, no overlapping feasible departure, one rider's wait limit, multi-passenger party capacity, luggage overflow, women-only compatibility, unapproved driver rejection, expired offer, concurrent membership/acceptance, passenger cancellation, delayed/cancelled flight and provider failure. No tests of a fake engine are included in bootstrap.
+Assigned drivers can release a group before departure if they can no longer serve it. Requests return to waiting and that driver/vehicle go unavailable. Started/completed groups reject release. Offers are sent to up to 30 fitting fleet entries, at most one vehicle per driver; one acceptance withdraws competing offers. Consistent group-first locks serialize competing acceptances.

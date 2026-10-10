@@ -17,8 +17,8 @@ from app.models.domain import (
     now,
 )
 from app.schemas.integrations import Coordinates
+from app.services.integrations import RoutingProvider
 from app.services.matching import Candidate, build_candidate, departure_for, utc
-from app.services.providers import GoogleRouting
 from app.services.views import group_members
 
 
@@ -31,7 +31,12 @@ def record(session: Session, group_id: str, kind: str) -> None:
 
 
 def locked_group(session: Session, group_id: str) -> RideGroup:
-    group = session.scalar(select(RideGroup).where(RideGroup.id == group_id).with_for_update())
+    group = session.scalar(
+        select(RideGroup)
+        .where(RideGroup.id == group_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
     if group is None:
         raise HTTPException(404, "Ride group not found")
     return group
@@ -66,7 +71,7 @@ def vehicle_fits(vehicle: Vehicle, driver: Driver, members: list[RideRequest | C
 
 
 def propose_match(
-    session: Session, seed_id: str, settings: Settings, routing: GoogleRouting
+    session: Session, seed_id: str, settings: Settings, routing: RoutingProvider
 ) -> RideGroup | None:
     seed_row = session.get(RideRequest, seed_id)
     if seed_row is None or seed_row.status != "WAITING":
@@ -154,8 +159,14 @@ def propose_match(
         row.status != "WAITING" or row.version != versions[row.id] for row in locked
     ):
         raise HTTPException(409, "Requests changed during matching; retry")
-    vehicle = session.scalar(select(Vehicle).where(Vehicle.id == vehicle_id).with_for_update())
+    vehicle = session.get(Vehicle, vehicle_id)
     driver = session.scalar(select(Driver).where(Driver.id == vehicle.driver_id).with_for_update())
+    vehicle = session.scalar(
+        select(Vehicle)
+        .where(Vehicle.id == vehicle_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
     if not vehicle_fits(vehicle, driver, locked):
         raise HTTPException(409, "The eligible vehicle is no longer available")
     departure = departure_for([snapshot(row) for row in locked], now())
@@ -168,14 +179,33 @@ def propose_match(
         row.status = "MATCHED"
         row.version += 1
         session.add(RideMember(request_id=row.id, group_id=group.id))
-    session.add(
-        DriverOffer(
-            group_id=group.id,
-            driver_id=driver.id,
-            vehicle_id=vehicle.id,
-            expires_at=now() + timedelta(seconds=settings.offer_ttl_seconds),
+    # Offer to a bounded fleet, at most one fitting vehicle per driver.
+    offered = set()
+    expiry = now() + timedelta(seconds=settings.offer_ttl_seconds)
+    fleet = session.scalars(
+        select(Vehicle)
+        .join(Driver)
+        .where(
+            Vehicle.approved,
+            Vehicle.available,
+            Driver.available,
+            Driver.verification_status == "APPROVED",
         )
+        .order_by(Vehicle.seats, Vehicle.id)
+        .limit(30)
     )
+    for option in fleet:
+        operator = session.get(Driver, option.driver_id)
+        if operator.id not in offered and vehicle_fits(option, operator, locked):
+            offered.add(operator.id)
+            session.add(
+                DriverOffer(
+                    group_id=group.id,
+                    driver_id=operator.id,
+                    vehicle_id=option.id,
+                    expires_at=expiry,
+                )
+            )
     record(session, group.id, "MATCH_FOUND")
     return group
 
@@ -200,13 +230,19 @@ def dissolve_group(session: Session, group: RideGroup, kind: str) -> None:
 
 
 def accept_offer(session: Session, offer_id: str, profile: Profile) -> RideGroup:
-    offer = session.scalar(select(DriverOffer).where(DriverOffer.id == offer_id).with_for_update())
+    offer = session.get(DriverOffer, offer_id)
     if offer is None:
         raise HTTPException(404, "Offer not found")
+    group = locked_group(session, offer.group_id)
+    offer = session.scalar(
+        select(DriverOffer)
+        .where(DriverOffer.id == offer_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
     driver = session.scalar(select(Driver).where(Driver.id == offer.driver_id).with_for_update())
     if driver.profile_id != profile.id:
         raise HTTPException(403, "This offer belongs to another driver")
-    group = locked_group(session, offer.group_id)
     if offer.status == "ACCEPTED" and group.driver_id == driver.id:
         return group
     if offer.status != "PENDING" or utc(offer.expires_at) <= now() or group.status != "PROPOSED":

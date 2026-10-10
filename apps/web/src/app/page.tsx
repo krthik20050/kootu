@@ -2,9 +2,9 @@ import { AuthControls } from "@/components/auth-controls";
 import Link from "next/link";
 
 const principles = [
-  ["01", "Your arrival, in sync", "Matching will prefer passengers on the same flight, with nearby arrivals considered when timing works."],
+  ["01", "Your arrival, in sync", "Matching prefers passengers on the same flight, with nearby arrivals considered when timing works."],
   ["02", "One small destination cluster", "Thrissur with Thrissur. Guruvayur with Guruvayur. Shared cabs should mean fewer detours."],
-  ["03", "Comfort comes with you", "Seat and luggage capacity, waiting limits and women-only preferences will shape each group."],
+  ["03", "Comfort comes with you", "Seat and luggage capacity, waiting limits and women-only preferences shape each group."],
 ];
 
 export default function Home() {
@@ -13,7 +13,7 @@ export default function Home() {
     <header className="site-header">
       <Link href="/" className="wordmark" aria-label="kootu home">kootu<span className="brand-dot" /></Link>
       <span className="header-note">A little company. A better journey.</span>
-      {process.env.NEXT_PUBLIC_AUTH_ENABLED === "true" ? <AuthControls /> : <span className="stage-badge">Hackathon foundation</span>}
+      {process.env.NEXT_PUBLIC_AUTH_ENABLED === "true" ? <AuthControls /> : <span className="stage-badge">Airport shared rides</span>}
     </header>
     <main id="main">
       <section className="hero" aria-labelledby="hero-title">
@@ -21,8 +21,8 @@ export default function Home() {
           <p className="eyebrow"><span /> AIRPORT ARRIVALS, BETTER TOGETHER</p>
           <h1 id="hero-title">Land together.<br />Leave <em>together.</em></h1>
           <p className="intro">Same airport. Similar arrival. Somewhere close.<br />A shared cab for the part of the journey that comes next.</p>
-          <a className="primary-link" href="#how-it-works">Meet the idea <span aria-hidden="true">↗</span></a>
-          <p className="availability">Foundation preview. Ride booking and matching are coming next.</p>
+          <Link className="primary-link" href="/passenger">Plan your arrival <span aria-hidden="true">↗</span></Link>
+          <p className="availability">Shared rides depend on compatible passengers and approved, available drivers.</p>
         </div>
         <div className="journey-card" aria-label="Concept: Kochi Airport to a small Thrissur destination cluster">
           <div className="journey-top"><span>THE NEXT LEG</span><span className="concept-tag">CONCEPT</span></div>
@@ -35,10 +35,10 @@ export default function Home() {
         </div>
       </section>
       <section id="how-it-works" className="principles" aria-labelledby="principles-title">
-        <div className="section-heading"><p className="eyebrow">THE PRODUCT WE ARE BUILDING</p><h2 id="principles-title">Share the cab.<br />Keep your direction.</h2></div>
+        <div className="section-heading"><p className="eyebrow">HOW SHARING WORKS</p><h2 id="principles-title">Share the cab.<br />Keep your direction.</h2></div>
         <div className="principle-grid">{principles.map(([number, title, description]) => <article key={number}><span className="number">{number}</span><h3>{title}</h3><p>{description}</p></article>)}</div>
       </section>
     </main>
-    <footer><Link href="/" className="footer-brand">kootu</Link><p>Airport → destination cluster → shared cab</p><span>Built in Kochi · 2026</span></footer>
+    <footer><Link href="/" className="footer-brand">kootu</Link><p>Airport → destination cluster → shared cab</p><Link href="/driver">Drive with kootu ↗</Link></footer>
   </>;
 }

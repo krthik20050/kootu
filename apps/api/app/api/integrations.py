@@ -3,6 +3,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
 
 from app.core.auth import Identity, verify_token
+from app.core.rate_limit import provider_budget
 from app.schemas.responses import LocationResponse, TicketResponse, TranscriptResponse
 from app.services.providers import GoogleRouting, extract_ticket, transcribe_audio
 
@@ -18,7 +19,11 @@ def read_bounded(upload: UploadFile, maximum: int) -> bytes:
     return document
 
 
-@router.get("/locations/search", response_model=list[LocationResponse])
+@router.get(
+    "/locations/search",
+    response_model=list[LocationResponse],
+    dependencies=[Depends(provider_budget)],
+)
 def locations(
     request: Request,
     q: str = Query(min_length=3, max_length=160),
@@ -27,7 +32,9 @@ def locations(
     return GoogleRouting(request.app.state.settings).search(q)
 
 
-@router.post("/tickets/extract", response_model=TicketResponse)
+@router.post(
+    "/tickets/extract", response_model=TicketResponse, dependencies=[Depends(provider_budget)]
+)
 def ticket(
     request: Request,
     file: UploadFile = File(),
@@ -45,7 +52,9 @@ def ticket(
         file.file.close()
 
 
-@router.post("/audio/transcribe", response_model=TranscriptResponse)
+@router.post(
+    "/audio/transcribe", response_model=TranscriptResponse, dependencies=[Depends(provider_budget)]
+)
 def audio(
     request: Request,
     file: UploadFile = File(),

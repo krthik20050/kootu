@@ -25,6 +25,8 @@ def verify_token(
 ) -> Identity:
     if credentials is None:
         raise HTTPException(401, "Sign in to continue", headers={"WWW-Authenticate": "Bearer"})
+    if len(credentials.credentials) > 8192:
+        raise HTTPException(401, "Session is invalid or expired")
     settings = request.app.state.settings
     if not settings.clerk_issuer:
         raise HTTPException(503, "Authentication is not configured")
@@ -50,7 +52,7 @@ def verify_token(
         ):
             raise InvalidTokenError("Invalid party or subject")
         return Identity(subject=claims["sub"])
-    except (InvalidTokenError, PyJWKClientError, URLError, OSError) as error:
+    except (InvalidTokenError, PyJWKClientError, URLError, OSError, TypeError, ValueError) as error:
         raise HTTPException(
             401, "Session is invalid or expired", headers={"WWW-Authenticate": "Bearer"}
         ) from error
