@@ -24,9 +24,12 @@ def build_engine(settings: Settings) -> Engine | None:
         pool_pre_ping=True,
         pool_size=5,
         max_overflow=5,
+        pool_timeout=5,
         connect_args={
             "connect_timeout": 8,
-            "options": "-c statement_timeout=15000 -c search_path=public,extensions",
+            "options": (
+                "-c statement_timeout=15000 -c lock_timeout=5000 -c search_path=public,extensions"
+            ),
         },
     )
 
@@ -44,4 +47,14 @@ def get_session(request: Request) -> Generator[Session]:
             raise HTTPException(409, "This change conflicts with the current ride state") from error
         except SQLAlchemyError as error:
             session.rollback()
+            if getattr(getattr(error, "orig", None), "sqlstate", None) in {
+                "40001",
+                "40P01",
+                "55P03",
+            }:
+                raise HTTPException(
+                    409,
+                    "Ride state is busy or changed; retry the complete request",
+                    headers={"Retry-After": "1"},
+                ) from error
             raise HTTPException(503, "Database temporarily unavailable; retry later") from error

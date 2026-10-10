@@ -42,10 +42,12 @@ class VehicleLimits:
     child_seats: int
     pet_friendly: bool
     women_only_eligible: bool
+    driver_profile_id: str | None = None
 
     def fits(self, members: list[Candidate]) -> bool:
         return (
-            sum(item.passengers for item in members) <= self.seats
+            all(item.profile_id != self.driver_profile_id for item in members)
+            and sum(item.passengers for item in members) <= self.seats
             and sum(item.luggage for item in members) <= self.luggage
             and sum(item.wheelchair_spaces for item in members) <= self.wheelchair_spaces
             and sum(item.child_seats for item in members) <= self.child_seats
@@ -114,9 +116,9 @@ def build_candidate(
     ordered = sorted(
         others,
         key=lambda item: (
+            distance_metres((seed.latitude, seed.longitude), (item.latitude, item.longitude)),
             (item.flight_number, item.flight_date) != (seed.flight_number, seed.flight_date),
             abs((utc(item.ready_at) - utc(seed.ready_at)).total_seconds()),
-            distance_metres((seed.latitude, seed.longitude), (item.latitude, item.longitude)),
             item.id,
         ),
     )

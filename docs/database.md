@@ -1,5 +1,7 @@
 # PostgreSQL/PostGIS persistence
 
+See [current architecture and concurrency cases](database-architecture.md). Migrations 003 and 004 are now applied to hosted Supabase. Migration 004 adds one active booking per account/airport/flight date and queue indexes. The older local-only rollout statement below describes the prior milestone.
+
 Apply ordered SQL through `backend/migrate.py` using a migration-owner connection. It serializes migration runs with an advisory transaction lock, records SHA256 hashes and refuses edited applied migrations. No production `create_all`, SQLite or in-memory fallback exists.
 
 Migration `202610110003_matching_integrity.sql` must precede the hardened backend rollout. It adds independent match/flight attempt timestamps, queue indexes, legal-state and positive-version checks, approval requirements for availability, assignment presence checks and composite vehicle-owner foreign keys for groups/offers. Invalid historical records cause migration failure for operator review; they are not silently repaired. The migration was tested locally on disposable PostGIS, not applied to the hosted database in this milestone. See [research and rollout details](backend-research-and-plan.md).

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.auth import current_profile
 from app.core.database import get_session
 from app.core.rate_limit import provider_budget
-from app.models.domain import Driver, Profile, RideGroup, RideMember, RideRequest, Vehicle
+from app.models.domain import Driver, Profile, RideGroup, RideMember, RideRequest, Vehicle, now
 from app.schemas.requests import TripStatusInput
 from app.schemas.responses import GroupResponse, ManifestResponse, MatchResponse, RequestResponse
 from app.services.matching import departure_for
@@ -14,6 +14,7 @@ from app.services.rides import (
     can_view_group,
     dissolve_group,
     locked_group,
+    locked_members,
     propose_match,
     record,
     snapshot,
@@ -90,6 +91,8 @@ def cancel_request(
         raise HTTPException(404, "Ride request not found")
     initial = session.get(RideMember, request_id)
     group = locked_group(session, initial.group_id) if initial else None
+    if group:
+        locked_members(session, group.id)
     row = session.scalar(
         select(RideRequest)
         .where(RideRequest.id == request_id)
@@ -109,7 +112,12 @@ def cancel_request(
         if len(remaining) < 2 or group.status == "PROPOSED":
             dissolve_group(session, group, "PASSENGER_CANCELLED")
         else:
-            record(session, group.id, "GROUP_UPDATED")
+            departure = departure_for([snapshot(item) for item in remaining], now())
+            if departure is None:
+                dissolve_group(session, group, "PICKUP_WINDOW_EXPIRED")
+            else:
+                group.departure_at = departure
+                record(session, group.id, "GROUP_UPDATED")
     elif row.status == "COMPLETED":
         raise HTTPException(409, "A completed ride cannot be cancelled")
     row.status = "CANCELLED"
@@ -164,18 +172,29 @@ def trip_status(
         return group_view(group, session, profile)
     if group.status != expected:
         raise HTTPException(409, "Invalid trip status transition")
-    members = group_members(session, group.id)
+    members = locked_members(session, group.id)
     if body.status == "IN_PROGRESS":
-        from app.models.domain import now
-
         departure = departure_for([snapshot(row) for row in members], now())
         if departure is None or now() < group.departure_at:
             raise HTTPException(409, "Passengers are not ready or their wait window expired")
     group.status = body.status
     for row in members:
         row.status = body.status
+        row.version += 1
     if body.status == "COMPLETED":
+        driver = session.scalar(
+            select(Driver)
+            .where(Driver.id == group.driver_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        vehicle = session.scalar(
+            select(Vehicle)
+            .where(Vehicle.id == group.vehicle_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
         driver.available = True
-        session.get(Vehicle, group.vehicle_id).available = True
+        vehicle.available = True
     record(session, group.id, "TRIP_STATUS_CHANGED")
     return group_view(group, session, profile)

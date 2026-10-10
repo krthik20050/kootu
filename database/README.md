@@ -1,5 +1,7 @@
 # Database
 
+Current rollout: all five ordered migrations, including matching integrity (003) and arrival-booking integrity (004), are applied to the existing hosted database. Runtime access to new columns, arrival index validity and RLS were verified. Historical three/four-migration notes below describe earlier checkpoints. See [current architecture](../docs/database-architecture.md).
+
 `migrations` contains the ordered PostgreSQL/PostGIS schema. Keep migration filenames unique and never edit an already-applied migration. Coordinate schema changes with the backend and review them before applying to a shared database.
 
 Run `python migrate.py` from `backend` with a migration-owner `DATABASE_URL`. The runner reads this folder, tracks hashes and serializes migration operations. See [database roles and RLS](../docs/database.md) for the dedicated server role.

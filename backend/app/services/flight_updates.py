@@ -11,7 +11,14 @@ from app.core.config import Settings
 from app.models.domain import DriverOffer, RideGroup, RideMember, RideRequest, now
 from app.services.matching import departure_for, utc
 from app.services.providers import GoogleRouting, flight_status
-from app.services.rides import dissolve_group, locked_group, propose_match, record, snapshot
+from app.services.rides import (
+    dissolve_group,
+    locked_group,
+    locked_members,
+    propose_match,
+    record,
+    snapshot,
+)
 from app.services.views import group_members
 
 logger = logging.getLogger("kootu.flights")
@@ -39,6 +46,11 @@ def arrival_delay(data: dict) -> timedelta:
 def apply_flight_update(session: Session, request_id: str, data: dict) -> None:
     initial = session.get(RideMember, request_id)
     group = locked_group(session, initial.group_id) if initial else None
+    # A provider response may arrive after boarding. Never reschedule a started trip.
+    if group and group.status in {"IN_PROGRESS", "COMPLETED"}:
+        return
+    if group:
+        locked_members(session, group.id)
     row = session.scalar(
         select(RideRequest)
         .where(RideRequest.id == request_id)
@@ -65,6 +77,10 @@ def apply_flight_update(session: Session, request_id: str, data: dict) -> None:
     member = session.get(RideMember, row.id, populate_existing=True)
     if member and (group is None or member.group_id != group.id):
         raise ValueError("Group changed during flight refresh; retry next poll")
+    if member is None:
+        # Cancellation may have removed membership while we waited for the lock.
+        # The old group's driver may already be serving another ride.
+        group = None
     if status in {"cancelled", "diverted", "incident"}:
         row.status = "FLIGHT_CANCELLED"
         if group:
@@ -163,6 +179,59 @@ def maintain_rides(engine, settings: Settings) -> None:
                             offer.status = "EXPIRED"
                     if not any(item.status == "PENDING" for item in offers):
                         dissolve_group(session, group, "OFFER_EXPIRED_REMATCH")
+            # Assigned trips can miss pickup without ever starting. Release their
+            # fleet reservation; an expired passenger must explicitly book again.
+            # Filter before the batch limit so healthy trips cannot starve expiry.
+            with Session(engine) as session:
+                missed_ids = list(
+                    session.scalars(
+                        select(RideGroup.id)
+                        .where(
+                            RideGroup.status == "ASSIGNED",
+                            select(RideRequest.id)
+                            .join(RideMember)
+                            .where(
+                                RideMember.group_id == RideGroup.id,
+                                text(
+                                    "passenger_requests.ready_at + "
+                                    "passenger_requests.max_wait_minutes * interval '1 minute' "
+                                    "< CURRENT_TIMESTAMP"
+                                ),
+                            )
+                            .exists(),
+                        )
+                        .order_by(RideGroup.departure_at, RideGroup.id)
+                        .limit(100)
+                    )
+                )
+            for group_id in missed_ids:
+                with Session(engine) as session, session.begin():
+                    group = locked_group(session, group_id)
+                    if (
+                        group.status == "ASSIGNED"
+                        and departure_for(
+                            [snapshot(row) for row in group_members(session, group.id)], now()
+                        )
+                        is None
+                    ):
+                        dissolve_group(session, group, "PICKUP_WINDOW_EXPIRED")
+            with Session(engine) as session, session.begin():
+                expired = session.scalars(
+                    select(RideRequest)
+                    .where(
+                        RideRequest.status == "WAITING",
+                        text(
+                            "ready_at + max_wait_minutes * interval '1 minute' < CURRENT_TIMESTAMP"
+                        ),
+                    )
+                    .order_by(RideRequest.ready_at, RideRequest.id)
+                    .limit(100)
+                    .with_for_update(skip_locked=True)
+                )
+                for row in expired:
+                    row.status = "CANCELLED"
+                    row.version += 1
+                    row.updated_at = now()
             if settings.google_maps_api_key:
                 with Session(engine) as session:
                     waiting = list(

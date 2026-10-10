@@ -36,6 +36,14 @@ def create_request(
     profile: Profile = Depends(current_profile),
     session: Session = Depends(get_session, scope="function"),
 ) -> dict:
+    # Serialize submissions for one account across API workers. A retry must see
+    # the first transaction's committed row before checking its client UUID.
+    profile = session.scalar(
+        select(Profile)
+        .where(Profile.id == profile.id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
     existing = session.get(RideRequest, body.client_request_id)
     if existing:
         if existing.profile_id != profile.id:
@@ -53,6 +61,22 @@ def create_request(
                 409, "This request identifier was already used for different details"
             )
         return request_view(existing, session)
+    active = session.scalar(
+        select(RideRequest.id)
+        .where(
+            RideRequest.profile_id == profile.id,
+            RideRequest.airport == body.airport,
+            RideRequest.flight_date == body.flight_date,
+            RideRequest.status.in_(("WAITING", "MATCHED", "ASSIGNED", "IN_PROGRESS")),
+        )
+        .limit(1)
+    )
+    if active:
+        raise HTTPException(
+            409,
+            "You already have an active booking for this airport and arrival date. "
+            "Use that booking, or cancel it before submitting a replacement.",
+        )
     if body.women_only and not profile.women_only_eligible:
         raise HTTPException(
             422, "Confirm that every passenger in your party is eligible for a women-only ride"

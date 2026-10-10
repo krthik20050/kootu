@@ -50,8 +50,8 @@ def add_waiting(session, count, **changes):
     [
         {"women_only": True},
         {"ready_at": now() + timedelta(hours=2)},
-        {"passengers": 4},
-        {"luggage": 4},
+        {"passengers": 6},
+        {"luggage": 6},
     ],
 )
 def test_incompatible_rows_do_not_fill_bounded_shortlist(client, monkeypatch, changes):
@@ -73,7 +73,9 @@ def test_incompatible_rows_do_not_fill_bounded_shortlist(client, monkeypatch, ch
 def test_duplicate_account_requests_do_not_form_shared_ride(client, monkeypatch):
     fleet(client)
     first, _ = submit(client)
-    submit(client)
+    from test_rides import party
+
+    assert client.post("/ride-requests", json=party()).status_code == 409
     monkeypatch.setattr(
         GoogleRouting, "estimate", lambda *args: pytest.fail("No real second party")
     )
@@ -99,7 +101,12 @@ def test_bad_road_candidate_does_not_hide_a_good_alternative(client, monkeypatch
     client.app.state.settings.max_group_seats = 2
     first, _ = submit(client)
     bad, _ = submit(client, "bob", destination={"latitude": 10.109, "longitude": 76.351})
-    good, _ = submit(client, "charlie", flight_number="AI456")
+    good, _ = submit(
+        client,
+        "charlie",
+        flight_number="AI456",
+        destination={"latitude": 10.110, "longitude": 76.351},
+    )
     calls = []
 
     def road(self, origin, destination):
@@ -120,7 +127,7 @@ def test_road_alternative_search_is_bounded(client, monkeypatch):
     fleet(client)
     first, _ = submit(client)
     with Session(client.app.state.engine) as session, session.begin():
-        add_waiting(session, 25)
+        add_waiting(session, 40)
     calls = []
 
     def road(*args):
@@ -130,7 +137,7 @@ def test_road_alternative_search_is_bounded(client, monkeypatch):
     monkeypatch.setattr(GoogleRouting, "estimate", road)
     response = client.post(f"/ride-requests/{first['id']}/match")
     assert response.status_code == 200 and not response.json()["matched"]
-    assert len(calls) == 12
+    assert len(calls) == 30
 
 
 def test_failed_matching_rotates_and_skips_expired_and_future_requests(client, monkeypatch):

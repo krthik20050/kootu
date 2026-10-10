@@ -19,7 +19,6 @@ from app.models.domain import (
 from app.schemas.integrations import Coordinates
 from app.services.integrations import RoutingProvider
 from app.services.matching import Candidate, VehicleLimits, build_candidate, departure_for, utc
-from app.services.views import group_members
 
 
 def snapshot(row: RideRequest) -> Candidate:
@@ -40,6 +39,27 @@ def locked_group(session: Session, group_id: str) -> RideGroup:
     if group is None:
         raise HTTPException(404, "Ride group not found")
     return group
+
+
+def locked_members(session: Session, group_id: str) -> list[RideRequest]:
+    return list(
+        session.scalars(
+            select(RideRequest)
+            .join(RideMember)
+            .where(RideMember.group_id == group_id)
+            .order_by(RideRequest.id)
+            .with_for_update(of=RideRequest)
+            .execution_options(populate_existing=True)
+        )
+    )
+
+
+def locked_fleet(session: Session, driver_id: str, vehicle_id: str) -> tuple[Driver, Vehicle]:
+    driver = session.get(Driver, driver_id, with_for_update=True, populate_existing=True)
+    vehicle = session.get(Vehicle, vehicle_id, with_for_update=True, populate_existing=True)
+    if driver is None or vehicle is None or vehicle.driver_id != driver.id:
+        raise HTTPException(409, "Driver or vehicle assignment changed; retry")
+    return driver, vehicle
 
 
 def can_view_group(session: Session, group: RideGroup, profile: Profile) -> bool:
@@ -63,6 +83,7 @@ def vehicle_limits(vehicle: Vehicle, driver: Driver) -> VehicleLimits:
         child_seats=vehicle.child_seats,
         pet_friendly=vehicle.pet_friendly,
         women_only_eligible=driver.women_only_eligible,
+        driver_profile_id=driver.profile_id,
     )
 
 
@@ -118,6 +139,31 @@ def road_verified_group(
     )
 
 
+def available_fleet(session: Session, members: list[Candidate | RideRequest]) -> list:
+    """Filter actual equipment before the fleet limit, and fetch drivers in one query."""
+    return list(
+        session.execute(
+            select(Vehicle, Driver)
+            .join(Driver)
+            .where(
+                Vehicle.approved,
+                Vehicle.available,
+                Driver.available,
+                Driver.verification_status == "APPROVED",
+                Driver.profile_id.not_in([item.profile_id for item in members]),
+                Vehicle.seats >= sum(item.passengers for item in members),
+                Vehicle.luggage_capacity >= sum(item.luggage for item in members),
+                Vehicle.wheelchair_spaces >= sum(item.wheelchair_spaces for item in members),
+                Vehicle.child_seats >= sum(item.child_seats for item in members),
+                Vehicle.pet_friendly if any(item.pet_friendly for item in members) else True,
+                Driver.women_only_eligible if any(item.women_only for item in members) else True,
+            )
+            .order_by(Vehicle.seats.desc(), Vehicle.id)
+            .limit(30)
+        )
+    )
+
+
 def propose_match(
     session: Session, seed_id: str, settings: Settings, routing: RoutingProvider
 ) -> RideGroup | None:
@@ -167,25 +213,11 @@ def propose_match(
         snapshot(row)
         for row in session.scalars(select(RideRequest).where(RideRequest.id.in_(nearby_ids)))
     ]
-    vehicles = list(
-        session.scalars(
-            select(Vehicle)
-            .join(Driver)
-            .where(
-                Vehicle.approved,
-                Vehicle.available,
-                Driver.available,
-                Driver.verification_status == "APPROVED",
-            )
-            .order_by(Vehicle.seats, Vehicle.id)
-            .limit(30)
-        )
-    )
+    vehicles = available_fleet(session, [seed])
     selected: list[Candidate] = []
     vehicle_id = None
     limits = None
-    for vehicle in vehicles:
-        driver = session.get(Driver, vehicle.driver_id)
+    for vehicle, driver in vehicles:
         members = build_candidate(
             seed,
             others,
@@ -197,10 +229,16 @@ def propose_match(
                 selected_vehicle, selected_driver, items
             ),
         )
-        if members and vehicle_fits(vehicle, session.get(Driver, vehicle.driver_id), members):
+        # Prefer serving more people in one feasible car, then minimize unused seats.
+        score = (sum(item.passengers for item in members), len(members), -vehicle.seats)
+        best_score = (
+            sum(item.passengers for item in selected),
+            len(selected),
+            -limits.seats if limits else -settings.max_group_seats,
+        )
+        if members and score > best_score:
             selected, vehicle_id = members, vehicle.id
             limits = vehicle_limits(vehicle, driver)
-            break
     # Release reads before provider I/O. Locked rows are revalidated afterward.
     session.rollback()
     if not selected or not vehicle_id or limits is None:
@@ -223,18 +261,9 @@ def propose_match(
     ):
         raise HTTPException(409, "Requests changed during matching; retry")
     vehicle = session.get(Vehicle, vehicle_id)
-    driver = session.scalar(
-        select(Driver)
-        .where(Driver.id == vehicle.driver_id)
-        .with_for_update()
-        .execution_options(populate_existing=True)
-    )
-    vehicle = session.scalar(
-        select(Vehicle)
-        .where(Vehicle.id == vehicle_id)
-        .with_for_update()
-        .execution_options(populate_existing=True)
-    )
+    if vehicle is None:
+        raise HTTPException(409, "The eligible vehicle is no longer available")
+    driver, vehicle = locked_fleet(session, vehicle.driver_id, vehicle.id)
     if not vehicle_fits(vehicle, driver, locked):
         raise HTTPException(409, "The eligible vehicle is no longer available")
     departure = departure_for([snapshot(row) for row in locked], now())
@@ -250,20 +279,8 @@ def propose_match(
     # Offer to a bounded fleet, at most one fitting vehicle per driver.
     offered = set()
     expiry = now() + timedelta(seconds=settings.offer_ttl_seconds)
-    fleet = session.scalars(
-        select(Vehicle)
-        .join(Driver)
-        .where(
-            Vehicle.approved,
-            Vehicle.available,
-            Driver.available,
-            Driver.verification_status == "APPROVED",
-        )
-        .order_by(Vehicle.seats, Vehicle.id)
-        .limit(30)
-    )
-    for option in fleet:
-        operator = session.get(Driver, option.driver_id)
+    fleet = available_fleet(session, locked)
+    for option, operator in fleet:
         if operator.id not in offered and vehicle_fits(option, operator, locked):
             offered.add(operator.id)
             session.add(
@@ -279,9 +296,15 @@ def propose_match(
 
 
 def dissolve_group(session: Session, group: RideGroup, kind: str) -> None:
+    if group.status == "CANCELLED":
+        return
     if group.status in {"IN_PROGRESS", "COMPLETED"}:
         raise HTTPException(409, "A started trip requires operator assistance")
-    for row in group_members(session, group.id):
+    members = locked_members(session, group.id)
+    driver = vehicle = None
+    if group.driver_id and group.vehicle_id:
+        driver, vehicle = locked_fleet(session, group.driver_id, group.vehicle_id)
+    for row in members:
         if row.status not in {"CANCELLED", "FLIGHT_CANCELLED"}:
             row.status = "WAITING"
         row.version += 1
@@ -289,10 +312,10 @@ def dissolve_group(session: Session, group: RideGroup, kind: str) -> None:
     for offer in session.scalars(select(DriverOffer).where(DriverOffer.group_id == group.id)):
         if offer.status in {"PENDING", "ACCEPTED"}:
             offer.status = "WITHDRAWN"
-    if group.vehicle_id:
-        session.get(Vehicle, group.vehicle_id).available = True
-    if group.driver_id:
-        session.get(Driver, group.driver_id).available = True
+    if vehicle:
+        vehicle.available = vehicle.approved
+    if driver:
+        driver.available = driver.verification_status == "APPROVED"
     group.status = "CANCELLED"
     record(session, group.id, kind)
 
@@ -302,31 +325,20 @@ def accept_offer(session: Session, offer_id: str, profile: Profile) -> RideGroup
     if offer is None:
         raise HTTPException(404, "Offer not found")
     group = locked_group(session, offer.group_id)
+    members = locked_members(session, group.id)
     offer = session.scalar(
         select(DriverOffer)
         .where(DriverOffer.id == offer_id)
         .with_for_update()
         .execution_options(populate_existing=True)
     )
-    driver = session.scalar(
-        select(Driver)
-        .where(Driver.id == offer.driver_id)
-        .with_for_update()
-        .execution_options(populate_existing=True)
-    )
+    driver, vehicle = locked_fleet(session, offer.driver_id, offer.vehicle_id)
     if driver.profile_id != profile.id:
         raise HTTPException(403, "This offer belongs to another driver")
     if offer.status == "ACCEPTED" and group.driver_id == driver.id:
         return group
     if offer.status != "PENDING" or utc(offer.expires_at) <= now() or group.status != "PROPOSED":
         raise HTTPException(409, "This offer is no longer available")
-    members = group_members(session, group.id)
-    vehicle = session.scalar(
-        select(Vehicle)
-        .where(Vehicle.id == offer.vehicle_id)
-        .with_for_update()
-        .execution_options(populate_existing=True)
-    )
     if (
         not vehicle_fits(vehicle, driver, members)
         or len(members) < 2

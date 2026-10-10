@@ -22,8 +22,8 @@ class Settings(BaseSettings):
     aviationstack_api_key: SecretStr | None = None
     flight_poll_seconds: int = Field(default=900, ge=60, le=86400)
     cluster_radius_metres: int = Field(default=3000, ge=100, le=10000)
-    max_group_seats: int = Field(default=4, ge=2, le=8)
-    max_group_luggage: int = Field(default=4, ge=0, le=12)
+    max_group_seats: int = Field(default=6, ge=2, le=8)
+    max_group_luggage: int = Field(default=6, ge=0, le=12)
     offer_ttl_seconds: int = Field(default=300, ge=30, le=1800)
     dispatch_horizon_minutes: int = Field(default=30, ge=5, le=120)
 

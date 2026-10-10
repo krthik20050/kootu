@@ -1,5 +1,7 @@
 # Deterministic destination-cluster matching
 
+Current update: default policy is six seats/six bags, with actual fleet limits enforced. Destination distance is the first ranking key, then same-flight preference/readiness/stable ID. The bounded fleet search prefers serving more people together instead of immediately selecting the smallest car. See [current architecture](database-architecture.md) for concurrency, expiry and policy details; the original four-seat milestone description below is historical.
+
 Implemented in `services/matching.py` and `services/rides.py`. Default pilot: at least two distinct requests, up to 4 passenger seats and 4 luggage pieces, a 3000m cluster, and each passenger's own 5–120 minute maximum wait. These are configurable product choices, not competitor benchmarks.
 
 1. Validate a confirmed flight arrival and a precise WGS84 destination pin. Party counts include everyone in that request.

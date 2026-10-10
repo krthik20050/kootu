@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 02:51 IST - Destination grouping and multi-user correctness
+
+Codex applied the user's city-cluster clarification, researched PostgreSQL concurrency/partial uniqueness and PostGIS clustering, and used two scoped agents for request-idempotency and lifecycle fixes. Added database architecture, synthetic 200-arrival and six-passenger tests, locking/expiry/readiness safeguards and migration 004. The isolated release snapshot passed all 100 tests on a dedicated local release-test database; lint/format/contracts passed. Applied migrations 003/004 to authorized Supabase after a schema-only backup and verified runtime access/index/RLS without exporting passenger data. Teammate voice/PDF/frontend working edits were preserved and excluded. Human review pending; no perfect-database or production-capacity claim.
+
 ## 2026-10-11 02:40 IST - Central environment setup
 
 Codex consolidated local configuration at user request without printing or committing keys. Built and verified a scoped sync command with protection against accidentally clearing saved values. Three synthetic tests and Ruff passed; real settings match the central file. Human review pending. No hosting credentials changed during this task.

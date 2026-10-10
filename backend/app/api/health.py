@@ -4,7 +4,9 @@ from typing import Literal
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from sqlalchemy import text
+from sqlalchemy import select, text
+
+from app.models.domain import RideRequest
 
 router = APIRouter(tags=["health"])
 
@@ -61,8 +63,18 @@ def ready(request: Request) -> JSONResponse:
                     )
                     is True
                 )
+                # Table names alone do not detect a backend deployed before its migration.
+                connection.execute(select(RideRequest).limit(0))
+                checks["database"] = checks["database"] and bool(
+                    connection.scalar(
+                        text(
+                            "SELECT indisvalid FROM pg_index "
+                            "WHERE indexrelid=to_regclass('public.one_active_arrival_booking')"
+                        )
+                    )
+                )
         except Exception:
-            pass
+            checks["database"] = False
     configured = all(checks.values())
     return JSONResponse(
         status_code=200 if configured else 503,

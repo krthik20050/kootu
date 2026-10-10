@@ -1,5 +1,7 @@
 # Matching backend: research, implementation and next decisions
 
+Update: [destination-cluster/database architecture](database-architecture.md) records the subsequent six-seat policy, multi-user fixes, missed-pickup recovery and hosted migration rollout. The initial milestone details below are historical where superseded.
+
 Reviewed 11 October 2026 (IST). Scope: backend coordination, matching and PostgreSQL; frontend and ticket/speech AI are outside this change. Sources describe published designs, not access to competitors' proprietary code. No claim of zero defects, global optimality or measured production capacity is justified.
 
 ## Recommendation

@@ -1,5 +1,7 @@
 # kootu
 
+Latest backend: [destination clusters and database architecture](docs/database-architecture.md). Nearby-city groups now default to up to six passengers/six bags subject to actual approved vehicle capacity. Concurrent booking retries, duplicate arrival bookings, missed pickup cleanup and stale flight callbacks are covered by database regressions. Migrations through `202610110004_arrival_booking_integrity.sql` are applied to the existing Supabase database; production ride-flow verification still needs routing and signed-in users.
+
 **Land together. Leave together.** Shared airport rides for passengers with compatible arrival times and nearby drop-offs.
 
 ## What works
