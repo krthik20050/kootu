@@ -4,6 +4,8 @@
 
 Run `python migrate.py` from `backend` with a migration-owner `DATABASE_URL`. The runner reads this folder, tracks hashes and serializes migration operations. See [database roles and RLS](../docs/database.md) for the dedicated server role.
 
+The fourth migration, `202610110003_matching_integrity.sql`, is tested locally and pending hosted rollout. Apply it before the matching-hardening backend. It validates historical state/ownership and adds nullable maintenance-attempt columns and indexes. On validation failure, inspect the conflicting records; do not silently delete or rewrite them. Previous hosted verification below covers the first three migrations only.
+
 Supabase has an [official CLI](https://supabase.com/docs/guides/local-development/cli/getting-started). CLI 2.120.0 was run through npx using an existing authenticated account. Project `hsxahwksjlvtrgpbrwvc` (`kootu`, Mumbai) is created and linked. Three migrations and the dedicated server role were provisioned remotely. Database connection, nine tables with RLS, nine backend-only policies and session advisory locks were verified. No paid upgrade was selected.
 
 The tracked `supabase/config.toml` is CLI/local-stack configuration, not a copy of remote secrets. Link metadata in `supabase/.temp` and credentials in `.env.supabase` are ignored. Teammates must authenticate their own account and link again from the repository root:

@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     max_group_seats: int = Field(default=4, ge=2, le=8)
     max_group_luggage: int = Field(default=4, ge=0, le=12)
     offer_ttl_seconds: int = Field(default=300, ge=30, le=1800)
+    dispatch_horizon_minutes: int = Field(default=30, ge=5, le=120)
 
     @field_validator("frontend_url")
     @classmethod

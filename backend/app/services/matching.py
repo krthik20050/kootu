@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from math import asin, cos, radians, sin, sqrt
 
 
@@ -17,9 +17,10 @@ def distance_metres(a: tuple[float, float], b: tuple[float, float]) -> float:
 @dataclass(frozen=True)
 class Candidate:
     id: str
+    profile_id: str
     airport: str
     flight_number: str
-    flight_date: str
+    flight_date: date
     ready_at: datetime
     max_wait_minutes: int
     latitude: float
@@ -33,7 +34,29 @@ class Candidate:
     version: int
 
 
+@dataclass(frozen=True)
+class VehicleLimits:
+    seats: int
+    luggage: int
+    wheelchair_spaces: int
+    child_seats: int
+    pet_friendly: bool
+    women_only_eligible: bool
+
+    def fits(self, members: list[Candidate]) -> bool:
+        return (
+            sum(item.passengers for item in members) <= self.seats
+            and sum(item.luggage for item in members) <= self.luggage
+            and sum(item.wheelchair_spaces for item in members) <= self.wheelchair_spaces
+            and sum(item.child_seats for item in members) <= self.child_seats
+            and (not any(item.pet_friendly for item in members) or self.pet_friendly)
+            and (not any(item.women_only for item in members) or self.women_only_eligible)
+        )
+
+
 def departure_for(members: list[Candidate], now: datetime) -> datetime | None:
+    if not members:
+        return None
     departure = max(utc(now), *(utc(item.ready_at) for item in members))
     deadline = min(
         utc(item.ready_at) + timedelta(minutes=item.max_wait_minutes) for item in members
@@ -52,7 +75,10 @@ def compatible(
     combined = [*members, candidate]
     return (
         all(
-            item.airport == candidate.airport and item.women_only == candidate.women_only
+            item.id != candidate.id
+            and item.profile_id != candidate.profile_id
+            and item.airport == candidate.airport
+            and item.women_only == candidate.women_only
             for item in members
         )
         and sum(item.passengers for item in combined) <= seats

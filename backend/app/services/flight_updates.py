@@ -4,7 +4,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 
-from sqlalchemy import select, text
+from sqlalchemy import or_, select, text
 from sqlalchemy.orm import Session
 
 from app.core.config import Settings
@@ -97,15 +97,23 @@ def maintain_rides(engine, settings: Settings) -> None:
                             RideRequest.flight_date >= (now() - timedelta(days=1)).date(),
                             RideRequest.flight_date <= (now() + timedelta(days=1)).date(),
                         )
-                        .order_by(RideRequest.updated_at)
+                        .order_by(
+                            RideRequest.flight_attempted_at.asc().nulls_first(),
+                            RideRequest.created_at,
+                            RideRequest.id,
+                        )
                         .limit(30)
                     )
                 )
             if settings.aviationstack_api_key:
                 for request_id in ids:
                     try:
-                        with Session(engine) as session:
-                            row = session.get(RideRequest, request_id)
+                        with Session(engine) as session, session.begin():
+                            row = session.get(RideRequest, request_id, with_for_update=True)
+                            if row is None or row.status not in {"WAITING", "MATCHED", "ASSIGNED"}:
+                                continue
+                            # Persist attempts even if the provider fails or has no flight data.
+                            row.flight_attempted_at = now()
                             number, date, airport = row.flight_number, row.flight_date, row.airport
                         data = flight_status(settings, number, date, airport)
                         if data:
@@ -123,7 +131,26 @@ def maintain_rides(engine, settings: Settings) -> None:
                 groups = list(
                     session.scalars(
                         select(RideGroup)
-                        .where(RideGroup.status == "PROPOSED")
+                        .where(
+                            RideGroup.status == "PROPOSED",
+                            or_(
+                                ~select(DriverOffer.id)
+                                .where(
+                                    DriverOffer.group_id == RideGroup.id,
+                                    DriverOffer.status == "PENDING",
+                                )
+                                .exists(),
+                                select(DriverOffer.id)
+                                .where(
+                                    DriverOffer.group_id == RideGroup.id,
+                                    DriverOffer.status == "PENDING",
+                                    DriverOffer.expires_at <= now(),
+                                )
+                                .exists(),
+                            ),
+                        )
+                        .order_by(RideGroup.created_at, RideGroup.id)
+                        .limit(100)
                         .with_for_update(skip_locked=True)
                     )
                 )
@@ -141,13 +168,30 @@ def maintain_rides(engine, settings: Settings) -> None:
                     waiting = list(
                         session.scalars(
                             select(RideRequest.id)
-                            .where(RideRequest.status == "WAITING")
-                            .order_by(RideRequest.created_at)
+                            .where(
+                                RideRequest.status == "WAITING",
+                                RideRequest.ready_at
+                                <= now() + timedelta(minutes=settings.dispatch_horizon_minutes),
+                                text(
+                                    "ready_at + max_wait_minutes * interval '1 minute' "
+                                    ">= CURRENT_TIMESTAMP"
+                                ),
+                            )
+                            .order_by(
+                                RideRequest.match_attempted_at.asc().nulls_first(),
+                                RideRequest.created_at,
+                                RideRequest.id,
+                            )
                             .limit(5)
                         )
                     )
                 for request_id in waiting:
                     try:
+                        with Session(engine) as session, session.begin():
+                            row = session.get(RideRequest, request_id, with_for_update=True)
+                            if row is None or row.status != "WAITING":
+                                continue
+                            row.match_attempted_at = now()
                         with Session(engine) as session:
                             propose_match(session, request_id, settings, GoogleRouting(settings))
                             session.commit()

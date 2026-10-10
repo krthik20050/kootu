@@ -49,6 +49,8 @@ class RideRequest(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     version: Mapped[int] = mapped_column(Integer, default=1)
+    match_attempted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    flight_attempted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class Driver(Base):

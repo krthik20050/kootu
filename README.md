@@ -55,6 +55,8 @@ Each main folder has its own README. Provider secrets and executable adapters be
 
 [Architecture](docs/architecture.md) · [Database](docs/database.md) · [Matching](docs/matching-engine.md) · [API](docs/api-contracts.md)
 
+[Backend research and hardening plan](docs/backend-research-and-plan.md) explains current parameters, competitor/research approaches, database invariants and remaining failure modes. The local hardening milestone adds distinct-account groups, prefiltered candidate selection, bounded road alternatives and fair maintenance attempts. Apply migration `202610110003_matching_integrity.sql` before deploying this backend; it has not been applied to the hosted database in this milestone. Frontend API contracts remain unchanged.
+
 ## Local setup
 
 Use Node **22.12+**, npm, Python **3.13** (project requires 3.12+), Git and a PostgreSQL database with PostGIS. Python uses pip + venv.
@@ -97,6 +99,8 @@ Open `http://localhost:3000`. Use that same origin in `FRONTEND_URL`; `localhost
 | API `.env` | `FRONTEND_URL`, `APP_ENV` | Exact origin; production requires HTTPS |
 
 Examples also expose configurable radius (3000m), seats/luggage (4 each), wait5–120 minutes, offer expiry300 seconds, and polling900 seconds. The web passenger form currently targets the default four-seat/four-luggage pilot policy. Provider usage can cost money; configure quotas/billing limits in the provider accounts. App limits per signed-in user per hour: ticket 20, audio 30, matching 30, destination search 100. Polling bounds each cycle to 30 active flight requests and 5 matching attempts.
+
+`DISPATCH_HORIZON_MINUTES=30` (allowed 5–120) keeps advance requests waiting until close to readiness, instead of reserving today's fleet for a distant booking. Automatic matching skips expired/out-of-horizon requests and rotates by attempt time; flight polling rotates even after failures or empty results. Proposal expiry processes at most 100 groups per cycle. Road alternatives share a per-attempt budget of 12 directed calls under the default four-seat policy. These are bounded heuristics, not guaranteed wait times or global provider spending caps.
 
 Keys never go in Git, screenshots or chat. Public Next.js variables are baked into a build; rebuild after changing them. Raw tickets/audio are transient uploads, closed after processing; provider retention terms still apply. Consent is required before either upload is forwarded. Notes should contain only useful ride details.
 

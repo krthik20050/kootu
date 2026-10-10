@@ -1,5 +1,13 @@
 # Change log
 
+## 2026-10-11 02:36 IST - Matching and database hardening
+
+- Researched published Uber, Lyft, Quick Ride and ride-pooling research plus PostgreSQL/PostGIS/SQLAlchemy/Google references. Added `docs/backend-research-and-plan.md` with current parameters, architecture decisions, database responsibilities, prioritized failure modes, rollout and staged route-duration/scaling work.
+- Backend matching now filters seed-incompatible requests before the 100-row limit, rejects same-account group duplicates, gates proposals with a configurable 30-minute dispatch horizon, and considers road-compatible alternatives within a bounded lookup budget. Immutable vehicle limits preserve provider I/O outside database transactions; locked ORM rows refresh before revalidation.
+- Maintenance records independent attempt times so failed/empty flight lookups and unsuccessful matching rotate fairly; skips expired/future match seeds and bounds proposal expiry to 100 groups. Added migration `202610110003_matching_integrity.sql` for legal states, versions, approval/availability, assignment and vehicle-owner integrity plus queue indexes. Updated setup, matching and database guides.
+- Validation: baseline 53 tests passed. Final backend suite: **76 passed**, including real disposable PostgreSQL/PostGIS migrations and regressions, existing concurrency/auth/privacy/provider coverage, and new forced approval-race/road-alternative/queue-fairness cases. Ruff lint and format checks passed; generated API contract check passed. Initial import-order lint failure corrected before final checks. Frontend files and AI extraction/transcription unchanged.
+- Limitations: migration/code remain local, not deployed or applied to hosted Supabase; load/failover and live authenticated ride flow not tested. Matching remains bounded/greedy; full-route detour, driver pickup ETA, no-show recovery, global provider quotas and durable notifications remain documented work. Human review pending.
+
 ## 2026-10-11 02:36 IST - Local credential recovery
 
 Restored missing local Groq, Sarvam and Aviationstack settings from the existing private Render environment after finding blank entries and obsolete Grok variable names in backend/.env. Verified key presence without printing values. Clerk frontend keys remained present. Google Maps was not configured. Only ignored local settings changed; origin of the file replacement is unknown.

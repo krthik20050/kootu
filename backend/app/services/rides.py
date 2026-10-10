@@ -18,7 +18,7 @@ from app.models.domain import (
 )
 from app.schemas.integrations import Coordinates
 from app.services.integrations import RoutingProvider
-from app.services.matching import Candidate, build_candidate, departure_for, utc
+from app.services.matching import Candidate, VehicleLimits, build_candidate, departure_for, utc
 from app.services.views import group_members
 
 
@@ -55,18 +55,66 @@ def can_view_group(session: Session, group: RideGroup, profile: Profile) -> bool
     return bool(driver and driver.profile_id == profile.id)
 
 
+def vehicle_limits(vehicle: Vehicle, driver: Driver) -> VehicleLimits:
+    return VehicleLimits(
+        seats=vehicle.seats,
+        luggage=vehicle.luggage_capacity,
+        wheelchair_spaces=vehicle.wheelchair_spaces,
+        child_seats=vehicle.child_seats,
+        pet_friendly=vehicle.pet_friendly,
+        women_only_eligible=driver.women_only_eligible,
+    )
+
+
 def vehicle_fits(vehicle: Vehicle, driver: Driver, members: list[RideRequest | Candidate]) -> bool:
     return (
         driver.verification_status == "APPROVED"
         and driver.available
         and vehicle.approved
         and vehicle.available
-        and sum(item.passengers for item in members) <= vehicle.seats
-        and sum(item.luggage for item in members) <= vehicle.luggage_capacity
-        and sum(item.wheelchair_spaces for item in members) <= vehicle.wheelchair_spaces
-        and sum(item.child_seats for item in members) <= vehicle.child_seats
-        and (not any(item.pet_friendly for item in members) or vehicle.pet_friendly)
-        and (not any(item.women_only for item in members) or driver.women_only_eligible)
+        and vehicle_limits(vehicle, driver).fits(
+            [snapshot(item) if isinstance(item, RideRequest) else item for item in members]
+        )
+    )
+
+
+def road_verified_group(
+    seed: Candidate,
+    others: list[Candidate],
+    limits: VehicleLimits,
+    settings: Settings,
+    routing: RoutingProvider,
+) -> list[Candidate]:
+    # One attempt-local cache: no durable provider data or unbounded alternative searches.
+    distances: dict[tuple[str, str], bool] = {}
+    budget = max(12, settings.max_group_seats * (settings.max_group_seats - 1))
+
+    def fits(members: list[Candidate]) -> bool:
+        if not limits.fits(members):
+            return False
+        for a in members[:-1]:
+            for origin, destination in ((a, members[-1]), (members[-1], a)):
+                key = (origin.id, destination.id)
+                if key not in distances:
+                    if len(distances) >= budget:
+                        return False
+                    estimate = routing.estimate(
+                        Coordinates(latitude=origin.latitude, longitude=origin.longitude),
+                        Coordinates(latitude=destination.latitude, longitude=destination.longitude),
+                    )
+                    distances[key] = estimate.distance_metres <= settings.cluster_radius_metres
+                if not distances[key]:
+                    return False
+        return True
+
+    return build_candidate(
+        seed,
+        others,
+        now(),
+        settings.cluster_radius_metres,
+        min(limits.seats, settings.max_group_seats),
+        min(limits.luggage, settings.max_group_luggage),
+        fits=fits,
     )
 
 
@@ -77,13 +125,22 @@ def propose_match(
     if seed_row is None or seed_row.status != "WAITING":
         raise HTTPException(409, "Only a waiting request can be matched")
     seed = snapshot(seed_row)
+    current = now()
+    horizon = current + timedelta(minutes=settings.dispatch_horizon_minutes)
+    if utc(seed.ready_at) > horizon or departure_for([seed], current) is None:
+        return None
     # PostGIS retrieves a bounded candidate set. No destination-string comparisons.
     nearby_ids = list(
         session.scalars(
             text("""
         SELECT id FROM passenger_requests
         WHERE airport=:airport AND status='WAITING' AND id<>:id
-          AND ready_at + max_wait_minutes * interval '1 minute' >= CURRENT_TIMESTAMP
+          AND profile_id<>:profile_id AND women_only=:women_only
+          AND ready_at <= :horizon
+          AND ready_at <= :deadline
+          AND ready_at + max_wait_minutes * interval '1 minute' >= :departure
+          AND passengers + :passengers <= :seats
+          AND luggage + :luggage <= :luggage_limit
           AND ST_DWithin(destination_geo,
               ST_SetSRID(ST_MakePoint(:lon,:lat),4326)::geography,:radius)
         ORDER BY created_at,id LIMIT 100
@@ -94,6 +151,15 @@ def propose_match(
                 "lat": seed.latitude,
                 "lon": seed.longitude,
                 "radius": settings.cluster_radius_metres,
+                "profile_id": seed.profile_id,
+                "women_only": seed.women_only,
+                "horizon": horizon,
+                "deadline": utc(seed.ready_at) + timedelta(minutes=seed.max_wait_minutes),
+                "departure": max(current, utc(seed.ready_at)),
+                "passengers": seed.passengers,
+                "seats": settings.max_group_seats,
+                "luggage": seed.luggage,
+                "luggage_limit": settings.max_group_luggage,
             },
         )
     )
@@ -117,6 +183,7 @@ def propose_match(
     )
     selected: list[Candidate] = []
     vehicle_id = None
+    limits = None
     for vehicle in vehicles:
         driver = session.get(Driver, vehicle.driver_id)
         members = build_candidate(
@@ -132,26 +199,22 @@ def propose_match(
         )
         if members and vehicle_fits(vehicle, session.get(Driver, vehicle.driver_id), members):
             selected, vehicle_id = members, vehicle.id
+            limits = vehicle_limits(vehicle, driver)
             break
     # Release reads before provider I/O. Locked rows are revalidated afterward.
     session.rollback()
-    if not selected or not vehicle_id:
+    if not selected or not vehicle_id or limits is None:
         return None
-    for index, a in enumerate(selected):
-        for b in selected[index + 1 :]:
-            for origin, destination in ((a, b), (b, a)):
-                estimate = routing.estimate(
-                    Coordinates(latitude=origin.latitude, longitude=origin.longitude),
-                    Coordinates(latitude=destination.latitude, longitude=destination.longitude),
-                )
-                if estimate.distance_metres > settings.cluster_radius_metres:
-                    return None
+    selected = road_verified_group(seed, others, limits, settings, routing)
+    if not selected:
+        return None
     locked = list(
         session.scalars(
             select(RideRequest)
             .where(RideRequest.id.in_([item.id for item in selected]))
             .order_by(RideRequest.id)
             .with_for_update()
+            .execution_options(populate_existing=True)
         )
     )
     versions = {item.id: item.version for item in selected}
@@ -160,7 +223,12 @@ def propose_match(
     ):
         raise HTTPException(409, "Requests changed during matching; retry")
     vehicle = session.get(Vehicle, vehicle_id)
-    driver = session.scalar(select(Driver).where(Driver.id == vehicle.driver_id).with_for_update())
+    driver = session.scalar(
+        select(Driver)
+        .where(Driver.id == vehicle.driver_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
     vehicle = session.scalar(
         select(Vehicle)
         .where(Vehicle.id == vehicle_id)
@@ -240,7 +308,12 @@ def accept_offer(session: Session, offer_id: str, profile: Profile) -> RideGroup
         .with_for_update()
         .execution_options(populate_existing=True)
     )
-    driver = session.scalar(select(Driver).where(Driver.id == offer.driver_id).with_for_update())
+    driver = session.scalar(
+        select(Driver)
+        .where(Driver.id == offer.driver_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
     if driver.profile_id != profile.id:
         raise HTTPException(403, "This offer belongs to another driver")
     if offer.status == "ACCEPTED" and group.driver_id == driver.id:
@@ -249,7 +322,10 @@ def accept_offer(session: Session, offer_id: str, profile: Profile) -> RideGroup
         raise HTTPException(409, "This offer is no longer available")
     members = group_members(session, group.id)
     vehicle = session.scalar(
-        select(Vehicle).where(Vehicle.id == offer.vehicle_id).with_for_update()
+        select(Vehicle)
+        .where(Vehicle.id == offer.vehicle_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
     )
     if (
         not vehicle_fits(vehicle, driver, members)

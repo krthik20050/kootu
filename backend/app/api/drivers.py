@@ -52,7 +52,12 @@ def availability(
     session: Session = Depends(get_session, scope="function"),
 ) -> dict:
     driver = owned_driver(session, profile)
-    driver = session.scalar(select(Driver).where(Driver.id == driver.id).with_for_update())
+    driver = session.scalar(
+        select(Driver)
+        .where(Driver.id == driver.id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
     if driver.verification_status != "APPROVED":
         raise HTTPException(403, "Driver approval is required")
     from app.models.domain import RideGroup
