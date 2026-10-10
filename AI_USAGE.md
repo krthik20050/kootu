@@ -1,5 +1,10 @@
 # AI usage record
 
+## 2026-10-11 05:22 IST - Interactive mobile request chat
+
+Codex added chat step navigation, direct answer editing, arrival-date shortcuts and automatic conversation scrolling. Adjusted mobile spacing, viewport sizing, input typography, safe-area padding and touch targets using the existing dashboard theme. Frontend lint/typecheck passed; no tests or mobile browser checks run. Human review pending.
+
+
 ## 2026-10-11 05:19 IST - Sidebar navigation cleanup
 
 Codex removed the Projects sidebar link on desktop and mobile. Source and diff whitespace inspected; no tests run. Human review pending.

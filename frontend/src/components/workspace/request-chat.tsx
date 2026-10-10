@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Check, ChevronRight } from "lucide-react";
 import type { LocationResponse, ProfileResponse } from "@/lib/api/generated";
 import { message, type Api } from "./shared";
 import { TicketCamera } from "./ticket-camera";
@@ -48,10 +49,22 @@ export function RequestChat({
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const feed = useRef<HTMLDivElement | null>(null);
 
   const question = questions[stepIndex];
   const doneCount = Math.min(stepIndex, questions.length);
   const progress = questions.length ? Math.round((doneCount / questions.length) * 100) : 0;
+
+  useEffect(() => {
+    const container = feed.current;
+    container?.scrollTo({ top: container.scrollHeight, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+  }, [stepIndex]);
+
+  function chooseArrivalDay(offset: number) {
+    const date = new Date();
+    date.setDate(date.getDate() + offset);
+    setValue("flightDate", `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`);
+  }
 
   function setValue<K extends keyof Draft>(key: K, value: Draft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -110,15 +123,24 @@ export function RequestChat({
         </div>
       </header>
 
-      <div className="request-chat-feed" aria-live="polite">
+      <nav className="chat-step-nav" aria-label="Ride request steps">
+        {["Flight", "Arrival", "Drop-off"].map((label, index) => (
+          <button key={label} type="button" disabled={disabled || index > stepIndex} aria-current={index === stepIndex ? "step" : undefined} onClick={() => { setStepIndex(index); setError(""); setNotice(""); }}>
+            <span className="chat-step-number">{index < doneCount ? <Check size={12} /> : index + 1}</span>{label}
+            {index < 2 && <ChevronRight size={12} aria-hidden="true" />}
+          </button>
+        ))}
+      </nav>
+
+      <div ref={feed} className="request-chat-feed" aria-live="polite">
         <div className="chat-message chat-message-bot">
           <span className="chat-avatar" aria-hidden="true">k</span>
           <p>Hi{draft.displayName ? ` ${draft.displayName.split(" ")[0]}` : ""}. I’ll help put your airport ride request together. Let’s take it one step at a time.</p>
         </div>
-        {questions.slice(0, doneCount).map((item) => (
+        {questions.slice(0, doneCount).map((item, index) => (
           <div className="chat-turn" key={item.key}>
             <div className="chat-message chat-message-bot"><span className="chat-avatar" aria-hidden="true">k</span><p>{item.prompt}</p></div>
-            <div className="chat-message chat-message-user"><p>{answerFor(item.key)}</p></div>
+            <div className="chat-message chat-message-user"><button type="button" className="chat-answer-edit" disabled={disabled} aria-label={`Edit ${item.key === "flightNumber" ? "flight number" : item.key === "flightDate" ? "arrival date" : "drop-off"}: ${answerFor(item.key)}`} onClick={() => { setStepIndex(index); setError(""); setNotice(""); }}><span>{answerFor(item.key)}</span><small>Edit</small></button></div>
           </div>
         ))}
         {question && (
@@ -142,7 +164,7 @@ export function RequestChat({
             <label className="chat-input-label">Flight number<input autoComplete="off" required pattern="[A-Za-z0-9]{2,3}[0-9]{1,4}" placeholder="AI123" value={draft.flightNumber} onChange={(event) => setValue("flightNumber", event.target.value.toUpperCase().replaceAll(" ", ""))} /></label>
           )}
           {question.key === "flightDate" && (
-            <label className="chat-input-label">Arrival date<input type="date" required value={draft.flightDate} onChange={(event) => setValue("flightDate", event.target.value)} /></label>
+            <div><label className="chat-input-label">Arrival date<input type="date" required value={draft.flightDate} onChange={(event) => setValue("flightDate", event.target.value)} /></label><div className="chat-quick-dates"><button type="button" onClick={() => chooseArrivalDay(0)}>Today</button><button type="button" onClick={() => chooseArrivalDay(1)}>Tomorrow</button></div></div>
           )}
           {question.key === "destinationName" && (
             <div className="chat-destination">
@@ -190,7 +212,7 @@ export function RequestChat({
             <button type="button" className="chat-back" disabled={stepIndex === 0 || disabled} onClick={() => { setError(""); setNotice(""); setStepIndex((current) => Math.max(0, current - 1)); }}>← Back</button>
             <div className="chat-continue-actions">
                 <button className="chat-send" disabled={disabled || searching || (question.key === "destinationName" && (!draft.latitude || !draft.longitude))}>
-                  Continue <span aria-hidden="true">→</span>
+                  {question.key === "destinationName" ? "Review details" : "Continue"} <span aria-hidden="true">→</span>
                 </button>
             </div>
           </div>

@@ -1,5 +1,13 @@
 # Change log
 
+## 2026-10-11 05:22 IST - Interactive mobile request chat
+
+- Changed: Added step navigation, tappable answers for editing, local-date Today/Tomorrow shortcuts, and automatic feed scrolling with reduced-motion support. Mobile styling uses dynamic viewport height, compact bubbles, 44px+ action targets, 16px inputs, two-column camera/voice controls, safe-area spacing and scrollable destination results.
+- Why: User requested a more interactive mobile chatbox.
+- Validation: Frontend lint/typecheck passed and diff whitespace checked. No tests or mobile browser checks run.
+- Limitations: Existing UI-only saving restriction and camera/microphone/API requirements remain.
+
+
 ## 2026-10-11 05:19 IST - Sidebar navigation cleanup
 
 - Removed Projects from the shared desktop/mobile dashboard sidebar as requested.

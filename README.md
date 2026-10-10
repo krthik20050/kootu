@@ -197,3 +197,5 @@ The `/request` workspace now shares the dashboard's light/dark theme and respons
 The `/request` chat includes a local voice recorder with playback and discard controls. Recordings are not uploaded or transcribed.
 
 On `/request`, “Scan ticket” opens a camera capture dialog beside “Record voice”, with review/retake, file fallback and consent before existing ticket extraction.
+
+Mobile `/request` chat now includes step navigation, tap-to-edit answers, arrival-date shortcuts and larger composer controls.
