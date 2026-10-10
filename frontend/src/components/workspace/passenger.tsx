@@ -11,6 +11,7 @@ import type {
 } from "@/lib/api/generated";
 import { localTime, message, readable, type Api } from "./shared";
 import { UploadAssist } from "./upload-assist";
+import { VoicePreferences } from "./voice-preferences";
 
 const active = new Set(["WAITING", "MATCHED", "ASSIGNED"]);
 
@@ -21,6 +22,10 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [extracting, setExtracting] = useState(false);
+  const [displayName, setDisplayName] = useState<string | null>(null);
+  const [passengerCount, setPassengerCount] = useState("1");
+  const [flightConfirmed, setFlightConfirmed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [flight, setFlight] = useState({
     airport: "COK",
@@ -125,6 +130,10 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
     const form = new FormData(event.currentTarget);
     const text = (key: string) => String(form.get(key) || "");
     const count = (key: string) => Number(form.get(key));
+    if (extracting || !flightConfirmed) {
+      setError("Finish reading your ticket and check your flight details before saving.");
+      return;
+    }
     await run(async () => {
       const ready = new Date(text("ready_at"));
       if (
@@ -202,25 +211,24 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
         <section className="booking">
           <UploadAssist
             api={api}
+            disabled={busy || loading || !profile}
+            onBusy={setExtracting}
             onTicket={(details) => {
-              setFlight((old) => ({
-                airport: details.arrival_airport || old.airport,
-                number: details.flight_number || old.number,
-                date: details.flight_date || old.date,
-              }));
+              setFlight({
+                airport: details.arrival_airport || "",
+                number: details.flight_number || "",
+                date: details.flight_date || "",
+              });
+              setFlightConfirmed(false);
+              setDisplayName(details.display_name || profile?.display_name || accountName);
+              setPassengerCount(details.passengers ? String(details.passengers) : "");
               setNotice(
                 "Check the extracted flight details, then confirm them before submitting.",
               );
             }}
-            onNote={(note) => {
-              setNotes(note);
-              setNotice(
-                "Notes added. Check any required seats or accessibility options below.",
-              );
-            }}
           />
           <form onSubmit={(event) => void submit(event)}>
-            <fieldset disabled={busy || loading || !profile}>
+            <fieldset disabled={busy || extracting || loading || !profile}>
               <legend>
                 <span>01</span> Your arrival
               </legend>
@@ -228,8 +236,8 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
                 Your name
                 <input
                   name="display_name"
-                  defaultValue={profile?.display_name || accountName}
-                  key={profile?.id}
+                  value={displayName ?? (profile?.display_name || accountName)}
+                  onChange={(event) => setDisplayName(event.target.value)}
                   required
                   maxLength={80}
                   autoComplete="name"
@@ -240,12 +248,13 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
                   Arrival airport
                   <input
                     value={flight.airport}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      setFlightConfirmed(false);
                       setFlight({
                         ...flight,
                         airport: event.target.value.toUpperCase(),
-                      })
-                    }
+                      });
+                    }}
                     required
                     pattern="[A-Z]{3}"
                     maxLength={3}
@@ -255,12 +264,13 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
                   Flight number
                   <input
                     value={flight.number}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      setFlightConfirmed(false);
                       setFlight({
                         ...flight,
                         number: event.target.value.toUpperCase(),
-                      })
-                    }
+                      });
+                    }}
                     required
                     placeholder="AI123"
                   />
@@ -272,9 +282,10 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
                   <input
                     type="date"
                     value={flight.date}
-                    onChange={(event) =>
-                      setFlight({ ...flight, date: event.target.value })
-                    }
+                    onChange={(event) => {
+                      setFlightConfirmed(false);
+                      setFlight({ ...flight, date: event.target.value });
+                    }}
                     required
                   />
                 </label>
@@ -289,11 +300,11 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
                 estimate changes.
               </p>
               <label className="check">
-                <input type="checkbox" required />
+                <input type="checkbox" required checked={flightConfirmed} onChange={(event) => setFlightConfirmed(event.target.checked)} />
                 I’ve checked the flight number, arrival airport and date.
               </label>
             </fieldset>
-            <fieldset disabled={busy || loading || !profile}>
+            <fieldset disabled={busy || extracting || loading || !profile}>
               <legend>
                 <span>02</span> Your destination
               </legend>
@@ -388,7 +399,7 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
                 </div>
               </details>
             </fieldset>
-            <fieldset disabled={busy || loading || !profile}>
+            <fieldset disabled={busy || extracting || loading || !profile}>
               <legend>
                 <span>03</span> Room for your needs
               </legend>
@@ -400,7 +411,8 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
                     type="number"
                     min={1}
                     max={4}
-                    defaultValue={1}
+                    value={passengerCount}
+                    onChange={(event) => setPassengerCount(event.target.value)}
                     required
                   />
                 </label>
@@ -469,6 +481,7 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
                   Every passenger in my party is eligible for a women-only ride.
                 </label>
               )}
+              <VoicePreferences api={api} onNote={setNotes} />
               <label>
                 Anything else the driver should know?
                 <textarea
@@ -485,7 +498,7 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
                 do not change matching.
               </p>
             </fieldset>
-            <button className="action" disabled={busy || loading || !profile}>
+            <button className="action" disabled={busy || extracting || loading || !profile}>
               {busy
                 ? "Saving and finding company…"
                 : "Save arrival & find a group ↗"}

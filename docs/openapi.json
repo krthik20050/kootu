@@ -277,7 +277,8 @@
         "type": "object"
       },
       "ExtractedFlight": {
-        "description": "Unconfirmed suggestions only. Excludes ticket numbers, names and document contents.",
+        "additionalProperties": false,
+        "description": "Unconfirmed booking suggestions. Never includes PNR or ticket numbers.",
         "properties": {
           "arrival_airport": {
             "anyOf": [
@@ -290,6 +291,19 @@
               }
             ],
             "title": "Arrival Airport"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
           },
           "flight_date": {
             "anyOf": [
@@ -314,6 +328,19 @@
               }
             ],
             "title": "Flight Number"
+          },
+          "passengers": {
+            "anyOf": [
+              {
+                "maximum": 4.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Passengers"
           }
         },
         "title": "ExtractedFlight",

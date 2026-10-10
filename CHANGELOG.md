@@ -8,6 +8,14 @@
 - Hosted DB: private schema-only backup completed; migrations 003 and 004 applied transactionally, new columns readable by runtime role, arrival unique index valid, RLS verified on nine application tables. No passenger table data exported. Initial full backup and credential-file copying were rejected by automatic approval review; safe schema/source-only alternatives were used.
 - Preserved teammate voice/PDF/frontend edits. A full mixed-workspace run saw two failures in their unfinished scanned-PDF code; the clean deployable snapshot uses committed provider code and passed. No AI-provider/frontend implementation included in this milestone. GitHub push/CI verification follows; live routing and completed human ride flow remain outstanding.
 
+## 2026-10-11 02:51 IST - Ticket-first autofill and voice preferences
+
+- Added prominent ticket intake, editable Groq suggestions for name/passenger count and existing flight fields, unknown-field clearing and flight confirmation reset on replacement or edit. Destination, pickup readiness and equipment remain explicit.
+- Added Sarvam microphone recording alongside preferences: language choice, 29-second automatic stop, WAV conversion, playback, consent, reviewed transcript and typed/upload fallback. Resource cleanup covers permission races and unmount.
+- Render one-to-three-page PDFs (including scans) through pinned pypdfium2, bound output image sizes, serialize PDFium calls, reject invalid/empty/truncated audio and validate provider output without returning PNRs or ticket numbers. Updated generated contracts, README, integration/API guides and docs/ticket-voice-intake.md with primary research sources.
+- Validation: frontend lint/typecheck and 20 tests passed; production build passed. Final backend run passed 116 tests in a separately created disposable database; focused provider suite passed 30 tests. A shared-database rerun failed because concurrent test runs reset the same schema; isolation resolved those failures. Ruff and generated-contract checks passed. Corrected PDFium page/bitmap cleanup and jsdom file upload tests during validation. Final frontend lint/typecheck, 20 tests and production build passed; final backend Ruff/format and generated-contract checks passed.
+- Limitations: local Groq/Sarvam settings have no usable keys; synthetic extraction returned 503 before a provider request. New live extraction, multilingual target-phone recording and signed-in end-to-end use are unverified. This change is local and has not been deployed. Human review pending. Preserved unrelated concurrent backend changes.
+
 ## 2026-10-11 02:40 IST - Central environment configuration
 
 - Consolidated existing backend/provider, frontend/Clerk and Supabase administration settings into ignored `.environment/.env`; added a sanitized example and folder guide. Added scripts/sync_env.py to generate scoped runtime files without exposing values. Test-only database settings remain isolated.

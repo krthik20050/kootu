@@ -5,6 +5,7 @@ import { Passenger } from "@/components/workspace/passenger";
 import { DriverDesk } from "@/components/workspace/driver";
 import { AdminDesk } from "@/components/workspace/admin";
 import { UploadAssist } from "@/components/workspace/upload-assist";
+import { VoicePreferences } from "@/components/workspace/voice-preferences";
 import type { Api } from "@/components/workspace/shared";
 
 const profile = {
@@ -111,13 +112,12 @@ describe("connected ride screens", () => {
   it("requires a reviewed transcript before it becomes notes", async () => {
     const user = userEvent.setup();
     const onNote = vi.fn();
-    const onTicket = vi.fn();
     const api = vi.fn(async () => ({
       transcript: "One child seat",
       confirmation_required: true,
     })) as Api;
-    render(<UploadAssist api={api} onTicket={onTicket} onNote={onNote} />);
-    await user.click(screen.getByText("Have a ticket or a voice note?"));
+    vi.stubGlobal("URL", { createObjectURL: vi.fn(() => "blob:voice"), revokeObjectURL: vi.fn() });
+    render(<VoicePreferences api={api} onNote={onNote} />);
     await user.upload(
       screen.getByLabelText("Voice note"),
       new File(["WAV"], "voice.wav", { type: "audio/wav" }),
@@ -132,9 +132,7 @@ describe("connected ride screens", () => {
         ) as HTMLInputElement
       ).checked,
     ).toBe(true);
-    fireEvent.submit(
-      screen.getByRole("button", { name: "Transcribe note" }).closest("form")!,
-    );
+    await user.click(screen.getByRole("button", { name: "Transcribe note" }));
     await screen.findByLabelText("Review your words");
     expect(onNote).not.toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: "Use these notes" }));
@@ -197,3 +195,51 @@ describe("connected ride screens", () => {
     ).toBeNull();
   });
 });
+
+  it("fills ticket suggestions and clears stale fields and review confirmation on a second upload", async () => {
+    const user = userEvent.setup();
+    let uploads = 0;
+    const api = vi.fn(async (path) => {
+      if (path === "/me") return profile;
+      if (path === "/ride-requests") return [];
+      if (path === "/tickets/extract") {
+        uploads++;
+        return { confirmation_required: true, details: uploads === 1
+          ? { flight_number: "AI123", flight_date: "2026-10-11", arrival_airport: "COK", display_name: "Demo Traveller", passengers: 2 }
+          : { flight_number: null, flight_date: null, arrival_airport: null, display_name: null, passengers: null } };
+      }
+      throw new Error(`Unexpected ${path}`);
+    }) as Api;
+    render(<Passenger api={api} />);
+    await waitFor(() => expect((screen.getByLabelText("Your name") as HTMLInputElement).disabled).toBe(false));
+    await user.upload(screen.getByLabelText("Ticket"), new File(["PDF"], "ticket.pdf", { type: "application/pdf" }));
+    await user.click(screen.getByLabelText(/send this ticket to Groq/));
+    fireEvent.submit(screen.getByRole("button", { name: /Fill from ticket/ }).closest("form")!);
+    await waitFor(() => expect((screen.getByLabelText("Your name") as HTMLInputElement).value).toBe("Demo Traveller"));
+    expect((screen.getByLabelText("Flight number") as HTMLInputElement).value).toBe("AI123");
+    expect((screen.getByLabelText("Passengers") as HTMLInputElement).value).toBe("2");
+    const confirmation = screen.getByLabelText(/checked the flight/) as HTMLInputElement;
+    expect(confirmation.checked).toBe(false);
+    await user.click(confirmation);
+    fireEvent.change(screen.getByLabelText("Flight number"), { target: { value: "AI124" } });
+    expect(confirmation.checked).toBe(false);
+    await user.click(confirmation);
+    fireEvent.submit(screen.getByRole("button", { name: /Fill from ticket/ }).closest("form")!);
+    await screen.findByText(/Please enter the missing/);
+    expect((screen.getByLabelText("Flight number") as HTMLInputElement).value).toBe("");
+    expect((screen.getByLabelText("Arrival airport") as HTMLInputElement).value).toBe("");
+    expect((screen.getByLabelText("Passengers") as HTMLInputElement).value).toBe("");
+    expect(confirmation.checked).toBe(false);
+  });
+
+  it("preserves manually entered data when ticket extraction fails", async () => {
+    const user = userEvent.setup();
+    const onTicket = vi.fn();
+    const api = vi.fn(async () => { throw new Error("Ticket provider unavailable"); }) as Api;
+    render(<UploadAssist api={api} onTicket={onTicket} />);
+    await user.upload(screen.getByLabelText("Ticket"), new File(["PNG"], "ticket.png", { type: "image/png" }));
+    await user.click(screen.getByLabelText(/send this ticket to Groq/));
+    fireEvent.submit(screen.getByRole("button", { name: /Fill from ticket/ }).closest("form")!);
+    await screen.findByRole("alert");
+    expect(onTicket).not.toHaveBeenCalled();
+  });

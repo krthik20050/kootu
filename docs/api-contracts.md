@@ -19,7 +19,7 @@ All areas other than public health require a valid Clerk bearer token. Ownership
 
 `RideRequestInput` defines fields: client-generated UUID, airport/flight/date, timezone-aware ready time, max wait, destination name/pin, passengers/luggage, optional women-only/wheelchair/child-seat/pet/notes and `flight_details_confirmed: true`. Repeating the same UUID and original data is idempotent; a changed payload or other owner returns409. Ready times are bounded to the next 30 days (five-minute clock grace); flight date must agree within one day. Request list pagination is bounded.
 
-Ticket/audio multipart forms require `file` and `consent=true`; audio optionally accepts supported `language`. Uploads max 5 MB; text PDF max 3 pages, images max 12 megapixels, WAV max 30 seconds. Scanned PDFs must be supplied as JPG/PNG. Both return `confirmation_required: true`. Transcript notes must be reviewed and structured equipment selections made separately.
+Ticket/audio multipart forms require `file` and `consent=true`; audio optionally accepts supported `language`. Uploads max 5 MB; unencrypted PDFs (including scans) max 3 pages, images max 12 megapixels, nonempty complete WAV max 30 seconds. PDF pages are rendered to bounded images for vision extraction. Ticket details include nullable `display_name` and `passengers` alongside the existing flight fields. Unknown values remain null; PNRs and ticket numbers are excluded. Both return `confirmation_required: true`. Browser microphone recordings convert to mono 16 kHz PCM WAV. Transcript notes must be reviewed and structured equipment selections made separately.
 
 ## States and errors
 

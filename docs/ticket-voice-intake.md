@@ -1,0 +1,28 @@
+# Ticket autofill and voice preferences
+
+## Implemented flow
+
+The passenger workspace starts with an optional ticket upload. PDF (including scans), JPG and PNG are accepted, up to 5 MB; PDFs must be unencrypted and contain one to three pages. A consent checkbox identifies Groq before upload. Existing authentication and per-account provider budgets still apply.
+
+Groq returns suggestions for flight number, flight service/departure date, final arrival airport, lead passenger display name and booked passenger count. The count comes from explicit ticket information or distinct named travellers, never baggage allowance or aircraft capacity. Ambiguous journeys should yield null flight fields. Pydantic rejects invalid dates, airport/flight formats, unexpected properties and invalid counts. The browser replaces flight suggestions, clears unknown values and resets confirmation. Every flight edit requires checking the confirmation box again. Provider failures preserve manual entries and show a useful error.
+
+Name falls back to the signed-in profile if absent from the ticket; unknown passenger count requires entry. Destination, pickup readiness, luggage and structured needs stay explicit because a flight ticket cannot reliably supply them. A ticket cannot authorize women-only eligibility or reserve equipment. Extraction fills an editable draft, never creates a booking automatically.
+
+The preferences section offers language selection, microphone recording, stop, listen-back and WAV upload. Recording stops at 29 seconds to leave headroom under the provider's 30-second limit. Native browser audio is decoded and encoded as mono 16 kHz PCM WAV locally. Nothing is sent until the user gives Sarvam consent and selects **Transcribe note**. The transcript remains separate until the user edits/checks it and selects **Use these notes**. Notes have a 500-character limit and do not change structured matching requirements.
+
+Microphone tracks, recording timers and playback URLs are released. Permission denial, missing browser support, empty/truncated audio, oversized uploads and provider errors have explicit failure paths. Typed preferences remain available.
+
+## Research and decisions
+
+- [Groq vision](https://console.groq.com/docs/vision) documents image input and JSON mode. [Structured outputs](https://console.groq.com/docs/structured-outputs) distinguishes JSON syntax guarantees from schema guarantees. The integration uses the configured vision model plus local schema validation, temperature zero and an untrusted-document prompt. Review is mandatory because valid JSON cannot guarantee correct ticket interpretation.
+- [pypdfium2's API](https://pypdfium2.readthedocs.io/en/stable/python_api.html) supplies PDF rendering. Rendering every page preserves scanned text and visual labels. Each page is capped at 1800 pixels on its longest edge, resources are closed, and a process-local lock prevents concurrent calls into PDFium, which is not thread-safe. The added dependency is pinned in `backend/requirements.lock`. This is a library, not a prebuilt project.
+- [MDN's recording guide](https://developer.mozilla.org/en-US/docs/Web/API/MediaStream_Recording_API/Using_the_MediaStream_Recording_API) and [working dictaphone example](https://mdn.github.io/dom-examples/media/web-dictaphone/) show the established `getUserMedia` → `MediaRecorder` → review pattern. The implementation is written for this app; no example project was imported. [MIME feature detection](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/isTypeSupported_static) avoids assuming one recorder codec across browsers. [Microphone requirements](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia) explain HTTPS and permission constraints.
+- [Sarvam's REST contract](https://docs.sarvam.ai/api-reference/speech-to-text/transcribe) documents multipart uploads, the subscription-key header, `unknown` language detection, 30-second interactive requests and 16 kHz guidance. Retaining the existing WAV contract lets the backend independently validate duration and completeness without requiring FFmpeg. The configured `saaras:v3` remains supported; model selection remains a server setting.
+
+## Setup and validation
+
+Install the updated backend requirements, configure server-only `GROQ_API_KEY`, a vision-capable `GROQ_MODEL`, `SARVAM_API_KEY` and `SARVAM_MODEL`, then restart the backend. If using the central `.environment/.env`, run `scripts/sync_env.py` as described in its guide. Groq and Grok/xAI are separate APIs; their keys are not interchangeable. Never put provider secrets into `NEXT_PUBLIC_*` settings.
+
+Run the README's backend pytest/Ruff/contract checks and frontend lint/typecheck/test/build commands. New regressions cover scanned/oversized/encrypted PDFs, extracted name/count validation, malformed provider responses, empty/truncated audio, WAV encoding, ticket replacement/confirmation reset, manual-entry preservation, transcript review, permission denial and microphone cleanup.
+
+Current feature validation is local automated coverage and a successful production build. Local configuration presence checks found no usable Groq or Sarvam keys during this change; one synthetic live extraction attempt returned the expected configuration error before contacting Groq. Previous deployment smoke tests recorded elsewhere concern the earlier integration, not this expanded flow. Real ticket extraction, multilingual recordings on target phones, signed-in end-to-end use and deployment of this change remain unverified. AI accuracy cannot be guaranteed; manual correction and review are part of the flow.

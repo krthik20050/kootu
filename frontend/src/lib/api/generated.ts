@@ -67,6 +67,8 @@ export type ExtractedFlight = {
   "flight_number"?: string | null;
   "flight_date"?: string | null;
   "arrival_airport"?: string | null;
+  "display_name"?: string | null;
+  "passengers"?: number | null;
 };
 
 export type GroupResponse = {
