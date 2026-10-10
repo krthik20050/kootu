@@ -6,6 +6,14 @@
 - Applied the three existing migrations, provisioned the dedicated `kootu_api` server role, and configured the ignored local backend environment with its TLS session-pooler URL. Migration-owner credentials are kept separate from the runtime connection.
 - Validation: healthy project; database and backend-role login succeeded; three migration records, nine RLS-enabled tables, nine backend-only policies and session advisory locking verified remotely. Local API restarted: health200, readiness503 with database=true and missing auth/provider configuration. Hosted backend, Clerk and providers remain pending; Vercel booking stays disabled.
 
+## 2026-10-11T01:43:16+05:30 — Group frontend routes by role
+
+- Changed: Moved the driver route under `frontend/src/app/(driver_app)` and the home, passenger and operator routes under `frontend/src/app/(user_app)`.
+- Why: Separate role-specific frontend route files while keeping one shared Next.js app and preserving existing public URLs.
+- Documentation: Updated root and frontend READMEs with the new route-group structure.
+- Validation: Confirmed route files are in the requested groups and `git diff --check` passed. No tests or build were run.
+- Limitations: Driver and user experiences still share authentication, components, styles and API client by design.
+
 ## 2026-10-11 01:35 IST - Clear team folder structure
 
 - Moved `apps/web` to `frontend`, `apps/api` to `backend`, and `supabase` to `database`. Added folder READMEs and `integrations` guides for Clerk, Google Maps, Grok, Sarvam and Aviationstack; executable server adapters remain packaged in the backend.

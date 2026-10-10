@@ -24,8 +24,10 @@ Start here when choosing what to work on:
 ```text
 kootu/
 ├── frontend/                 # Website, screens and browser API client
-│   ├── src/app/              # Pages and global styles
-│   ├── src/components/       # Shared UI and passenger/driver/admin workspaces
+│   ├── src/app/(driver_app)/ # Driver routes
+│   ├── src/app/(user_app)/   # Home, passenger and operator routes
+│   ├── src/app/              # Shared layout and global styles
+│   ├── src/components/       # Shared UI and workspace components
 │   ├── src/lib/api/          # Backend client and generated contract types
 │   └── tests/                # Frontend tests
 ├── backend/                  # FastAPI application and Python tooling
@@ -49,7 +51,7 @@ kootu/
 
 Each main folder has its own README. Provider secrets and executable adapters belong to the backend; `integrations` explains each connection without putting private keys in browser code. Previous `apps/web`, `apps/api` and `supabase/migrations` paths are now `frontend`, `backend` and `database/migrations`. Historical changelog/validation records retain their original paths.
 
-`frontend`: Next.js 16, React 19, TypeScript, Tailwind 4 and Clerk. `backend`: FastAPI/Pydantic, SQLAlchemy/psycopg, PyJWT. `database/migrations`: PostgreSQL/PostGIS SQL. `docs/openapi.json` and `frontend/src/lib/api/generated.ts` are exported from the backend, not edited independently. No microservices, Redis, AI matching, or message brokers. Docker is optional for disposable database tests, not an application prerequisite.
+`frontend`: Next.js 16, React 19, TypeScript, Tailwind 4 and Clerk. The `(driver_app)` and `(user_app)` folders are Next.js route groups, so they organize each role's pages without changing `/driver`, `/passenger`, `/admin` or `/`. Shared components, authentication, styles and API calls stay in `src/components`, `src/app` and `src/lib`. `backend`: FastAPI/Pydantic, SQLAlchemy/psycopg, PyJWT. `database/migrations`: PostgreSQL/PostGIS SQL. `docs/openapi.json` and `frontend/src/lib/api/generated.ts` are exported from the backend, not edited independently. No microservices, Redis, AI matching, or message brokers. Docker is optional for disposable database tests, not an application prerequisite.
 
 [Architecture](docs/architecture.md) · [Database](docs/database.md) · [Matching](docs/matching-engine.md) · [API](docs/api-contracts.md)
 
