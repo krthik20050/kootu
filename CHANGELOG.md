@@ -1,5 +1,11 @@
 # Change log
 
+## 2026-10-11 05:19 IST - Sidebar navigation cleanup
+
+- Removed Projects from the shared desktop/mobile dashboard sidebar as requested.
+- Validation: Inspected the navigation source and checked diff whitespace; no tests run.
+
+
 ## 2026-10-11 05:18 IST - Camera ticket scan action
 
 - Changed: Moved Scan ticket beside Record voice in the chat composer. It opens a themed camera dialog with rear-camera preference, capture/review/retake, permission errors and file fallback. Consent and Read ticket send the reviewed file through the existing extraction endpoint and autofill only flight number/arrival date. Camera tracks and preview URLs are released on close/unmount.
