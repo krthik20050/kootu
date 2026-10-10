@@ -9,8 +9,8 @@ const people = [
 
 export const app1User = people[0];
 export const app1ChartConfig = {
-  opened: { label: "Opened", color: "#94a3b8" },
-  completed: { label: "Completed", color: "#2563eb" },
+  opened: { label: "Opened", color: "var(--dashboard-chart-opened)" },
+  completed: { label: "Completed", color: "var(--dashboard-chart-completed)" },
 } satisfies ChartConfig;
 export const app1Chart = [
   { week: "Aug 18", opened: 42, completed: 30 },

@@ -1,5 +1,10 @@
 # AI usage record
 
+## 2026-10-11 05:09 IST - Dashboard dark mode
+
+Codex added dashboard theme switching, browser persistence with system preference fallback, and dark chart/sidebar colors including portalled mobile navigation. Frontend lint and typecheck run; no tests or browser checks run. Human review pending.
+
+
 ## 2026-10-11 05:06 IST - Dashboard component integration
 
 Codex integrated the React/shadcn dashboard supplied in the user's attachment on `/dashboard`, supplied its missing sidebar/data modules, added responsive navigation and sample project search, and scoped its styling. The pasted component is the UI source; Radix UI, Lucide, CVA and Recharts are supporting libraries. Typecheck passed; lint fixes rerun. No tests or browser checks run. Sample data only; human review pending.

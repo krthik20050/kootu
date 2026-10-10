@@ -8,6 +8,8 @@ import {
   ClipboardList,
   FileText,
   Search,
+  Moon,
+  Sun,
   Users,
 } from "lucide-react";
 
@@ -43,6 +45,7 @@ import {
   app1User,
 } from "@/components/ui/app-1-utils/app-1-data";
 import { App1Sidebar } from "@/components/ui/app-1-utils/app-1-sidebar";
+import { useDashboardTheme } from "@/components/ui/app-1-utils/dashboard-theme";
 
 const STATS = [
   {
@@ -73,11 +76,13 @@ const STATUS_VARIANT = {
 } as const;
 
 export function App1() {
+  const { theme, toggleTheme } = useDashboardTheme();
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const projects = app1Projects.filter(project => `${project.name} ${project.description}`.toLowerCase().includes(query.toLowerCase()));
   return (
+    <div className="app1-dashboard" data-theme={theme}>
     <SidebarProvider>
       <App1Sidebar />
       {/*
@@ -93,6 +98,9 @@ export function App1() {
             Welcome back, {app1User.name.split(" ")[0]}
           </h1>
           <div className="ml-auto flex items-center gap-1">
+            <Button variant="ghost" size="icon" aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={toggleTheme}>
+              {theme === "dark" ? <Sun /> : <Moon />}
+            </Button>
             <Button variant="ghost" size="icon" aria-label="Search projects" aria-expanded={searchOpen} onClick={() => setSearchOpen(value => !value)}>
               <Search />
             </Button>
@@ -297,6 +305,7 @@ export function App1() {
         </main>
       </SidebarInset>
     </SidebarProvider>
+    </div>
   );
 }
 

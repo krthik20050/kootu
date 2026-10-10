@@ -1,5 +1,13 @@
 # Change log
 
+## 2026-10-11 05:09 IST - Dashboard dark mode
+
+- Changed: Added an accessible light/dark toggle in the dashboard header, saved browser preference, system-theme default, and matching dark colors for cards, charts, inputs and mobile navigation.
+- Why: User requested dark mode for the new dashboard.
+- Validation: Frontend lint and typecheck run; no tests or browser checks run.
+- Limitations: Theme applies to `/dashboard` only. Preference remains session-only if browser storage is unavailable.
+
+
 ## 2026-10-11 05:06 IST - Supplied dashboard UI
 
 - Changed: Integrated the user-supplied App1 React dashboard at `/dashboard`, its shadcn UI components, sample datasets, responsive sidebar, chart, project search and notification disclosure. Added Radix UI, Lucide, CVA and Recharts dependencies; scoped the neutral dashboard palette.

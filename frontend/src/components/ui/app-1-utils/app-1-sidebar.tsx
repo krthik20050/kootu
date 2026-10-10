@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useSidebar } from "./sidebar";
 import { app1User } from "./app-1-data";
+import { useDashboardTheme } from "./dashboard-theme";
 
 function Navigation({ onNavigate }: { onNavigate?: () => void }) {
   return <div className="flex h-full flex-col gap-8 p-5">
@@ -20,9 +21,10 @@ function Navigation({ onNavigate }: { onNavigate?: () => void }) {
   </div>;
 }
 export function App1Sidebar() {
+  const { theme } = useDashboardTheme();
   const { open, collapsed, toggle } = useSidebar();
   return <>
     <aside className={`${collapsed ? "hidden" : "hidden md:block"} sticky top-0 h-svh w-60 shrink-0 border-r bg-card`}><Navigation /></aside>
-    <Sheet open={open} onOpenChange={toggle}><SheetContent side="left" className="app1-dashboard w-72 p-0 md:hidden"><SheetTitle className="sr-only">Dashboard navigation</SheetTitle><Navigation onNavigate={toggle} /></SheetContent></Sheet>
+    <Sheet open={open} onOpenChange={toggle}><SheetContent side="left" data-theme={theme} className="app1-dashboard w-72 p-0 md:hidden"><SheetTitle className="sr-only">Dashboard navigation</SheetTitle><Navigation onNavigate={toggle} /></SheetContent></Sheet>
   </>;
 }

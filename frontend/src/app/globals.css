@@ -155,6 +155,8 @@ button:disabled { opacity: .5; cursor: wait; }
 
 /* Keep the supplied sample dashboard's neutral palette scoped to its route. */
 .app1-dashboard {
+  --dashboard-chart-opened: #94a3b8;
+  --dashboard-chart-completed: #2563eb;
   --background: #f8fafc;
   --foreground: #172033;
   --card: #ffffff;
@@ -176,6 +178,30 @@ button:disabled { opacity: .5; cursor: wait; }
   color-scheme: light;
   font-size: 14px;
 }
+.app1-dashboard[data-theme="dark"] {
+  --background: #0b1120;
+  --foreground: #e2e8f0;
+  --card: #111b2d;
+  --card-foreground: #e2e8f0;
+  --popover: #111b2d;
+  --popover-foreground: #e2e8f0;
+  --primary: #60a5fa;
+  --primary-foreground: #0b1120;
+  --secondary: #24294a;
+  --secondary-foreground: #c7d2fe;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #1e293b;
+  --accent-foreground: #f1f5f9;
+  --border: #2a364b;
+  --input: #2a364b;
+  --ring: #60a5fa;
+  --dashboard-chart-opened: #94a3b8;
+  --dashboard-chart-completed: #60a5fa;
+  color-scheme: dark;
+}
+.app1-dashboard .recharts-cartesian-axis-tick text { fill: var(--muted-foreground); }
+.app1-dashboard .recharts-cartesian-grid line { stroke: var(--border); }
 .app1-dashboard h1 { margin: 0; font-size: 1.125rem; line-height: 1.5; letter-spacing: -.025em; }
 .app1-dashboard h2 { margin: 0; font-size: 1.5rem; line-height: 1.3; font-weight: 600; letter-spacing: -.025em; }
 .app1-dashboard h3 { margin: 0; line-height: 1.4; letter-spacing: -.015em; }

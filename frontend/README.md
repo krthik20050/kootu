@@ -11,3 +11,5 @@ Authentication uses dedicated `/sign-in` and `/sign-up` pages with opaque Clerk 
 ### Dashboard preview
 
 Visit `/dashboard` for the supplied App1 workspace dashboard: sample statistics, a task chart, project progress and activity. Sidebar navigation works on mobile and desktop, and the search button filters projects. All dashboard data is static sample content, separate from ride records. UI components live in `src/components/ui`, with sample data and navigation in `app-1-utils`. Radix UI, Lucide, CVA and Recharts support the supplied component; Recharts 2.15.4 is pinned for its v2 chart API compatibility.
+
+The dashboard header has a light/dark mode toggle. It follows your system preference until you choose a mode, then remembers that choice in browser storage. The theme covers the chart and mobile sidebar and is scoped to `/dashboard`.
