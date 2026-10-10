@@ -1,5 +1,11 @@
 # Change log
 
+## 2026-10-11 02:18 IST - Live provider validation and Groq switch
+
+- Switched ticket extraction to Groq at user request, using the current account-supported Qwen vision model, JSON mode and local field validation. Updated upload consent, environment names and integration docs. Synthetic image extraction returned all expected flight fields; Sarvam transcribed synthetic spoken needs successfully. Stored available provider settings in the approved private Render environment.
+- Removed Aviationstack historical date parameter after live 403 plan restriction; live query returns 200 and exact flight/airport/date filtering remains. Added regression coverage for date mismatch.
+- Validation: 53 backend tests, Ruff and contracts passed; eight frontend tests and regenerated route type checks passed. Local Turbopack build hit a process-start panic; hosted build verification remains pending. Google Maps, human session and operator approval remain pending.
+
 ## 2026-10-11 02:01 IST - Hosted deployment verification
 
 - Verified Vercel auth-enabled deployment READY and its stable public alias; live passenger sign-in opens the kootu Clerk modal with Google/email options. GitHub CI run 38083829579 passed API and web jobs for checkpoint `17e7aef`. Render initial deployment remains live.

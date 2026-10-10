@@ -40,12 +40,13 @@ def transport(monkeypatch, handler):
     )
 
 
-def test_grok_structured_output_and_image(monkeypatch):
+def test_groq_structured_output_and_image(monkeypatch):
     def handler(request):
         body = json.loads(request.content)
-        assert request.url.host == "api.x.ai"
-        assert body["response_format"]["json_schema"]["strict"]
-        assert not body["store"]
+        assert request.url.host == "api.groq.com"
+        assert body["response_format"] == {"type": "json_object"}
+        assert body["reasoning_effort"] == "none"
+        assert "flight_number" in body["messages"][0]["content"]
         assert body["messages"][1]["content"][0]["image_url"]["url"].startswith(
             "data:image/jpeg;base64,"
         )
@@ -70,7 +71,7 @@ def test_grok_structured_output_and_image(monkeypatch):
 
     transport(monkeypatch, handler)
     result = providers.extract_ticket(
-        Settings(grok_api_key=SecretStr("test"), grok_model="account-model", _env_file=None),
+        Settings(groq_api_key=SecretStr("test"), groq_model="account-model", _env_file=None),
         image_bytes(),
         "image/png",
     )
@@ -120,10 +121,16 @@ def test_flight_provider_filters_exact_arrival(monkeypatch):
         "arrival": {"iata": "COK"},
         "flight_status": "scheduled",
     }
-    transport(monkeypatch, lambda request: httpx.Response(200, json={"data": [row]}))
+
+    def handler(request):
+        assert "flight_date" not in request.url.params
+        return httpx.Response(200, json={"data": [row]})
+
+    transport(monkeypatch, handler)
     settings = Settings(aviationstack_api_key=SecretStr("test"), _env_file=None)
     assert providers.flight_status(settings, "AI123", date(2026, 10, 11), "COK") == row
     assert providers.flight_status(settings, "AI124", date(2026, 10, 11), "COK") is None
+    assert providers.flight_status(settings, "AI123", date(2026, 10, 12), "COK") is None
 
 
 @pytest.mark.parametrize(
@@ -133,7 +140,7 @@ def test_provider_failure_is_safe(monkeypatch, status, data):
     transport(monkeypatch, lambda request: httpx.Response(status, json=data))
     with pytest.raises(HTTPException) as caught:
         providers.extract_ticket(
-            Settings(grok_api_key=SecretStr("test"), grok_model="model", _env_file=None),
+            Settings(groq_api_key=SecretStr("test"), groq_model="model", _env_file=None),
             image_bytes(),
             "image/png",
         )

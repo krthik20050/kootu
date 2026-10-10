@@ -85,7 +85,7 @@ export function UploadAssist({
           </label>
           <label className="check">
             <input type="checkbox" name="consent" value="true" required />I
-            agree to send this ticket to Grok for extraction.
+            agree to send this ticket to Groq for extraction.
           </label>
           <button className="secondary" disabled={busy}>
             Read ticket

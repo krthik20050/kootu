@@ -35,9 +35,9 @@ def ready(request: Request) -> JSONResponse:
             settings.google_maps_api_key and settings.google_maps_api_key.get_secret_value()
         ),
         "ticket_extraction": bool(
-            settings.grok_api_key
-            and settings.grok_api_key.get_secret_value()
-            and settings.grok_model
+            settings.groq_api_key
+            and settings.groq_api_key.get_secret_value()
+            and settings.groq_model
         ),
         "transcription": bool(
             settings.sarvam_api_key and settings.sarvam_api_key.get_secret_value()

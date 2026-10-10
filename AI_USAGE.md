@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 02:18 IST - Provider wiring
+
+Codex inspected key presence without displaying values, researched official Groq API capabilities, switched the adapter and consent copy to Groq, and validated synthetic ticket/audio requests. Corrected Aviationstack free-plan live queries while preserving exact date filtering. Regression checks: 53 backend and eight frontend tests passed; local Turbopack build panic remains unresolved. Human review pending. No personal ticket/audio or credential was committed.
+
 ## 2026-10-11 02:01 IST - Deployment verification
 
 Codex verified Vercel READY, successful GitHub API/web CI for `17e7aef`, and the live Clerk sign-in modal. Updated README evidence. Human review and completed user-session testing remain pending; provider credentials are still missing. No credentials were committed.

@@ -26,9 +26,9 @@ services:
         sync: false
       - key: GOOGLE_MAPS_API_KEY
         sync: false
-      - key: GROK_API_KEY
+      - key: GROQ_API_KEY
         sync: false
-      - key: GROK_MODEL
+      - key: GROQ_MODEL
         sync: false
       - key: SARVAM_API_KEY
         sync: false

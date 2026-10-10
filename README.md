@@ -7,11 +7,11 @@
 - Passenger, driver and operator web workspaces connected to FastAPI, with Clerk bearer sessions and server-owned roles.
 - PostgreSQL/PostGIS persistence; deterministic grouping by airport, ready/wait window, whole-cluster destination proximity, seats, luggage, women-only policy, wheelchair spaces, child seats and pets. Google road-distance verification is required before a group is created.
 - Driver/vehicle operator approval, availability, expiring offers, atomic acceptance, passenger cancellation and trip start/completion. Exact drop-offs and private notes are available only to the assigned driver; other passengers receive aggregate group information.
-- Optional Grok ticket extraction (JPG/PNG or text PDF), user-confirmed autofill, and Sarvam WAV transcription with reviewed notes. Explicit structured needs affect matching; free text does not automatically reserve equipment.
+- Optional Groq ticket extraction (JPG/PNG or text PDF), user-confirmed autofill, and Sarvam WAV transcription with reviewed notes. Explicit structured needs affect matching; free text does not automatically reserve equipment.
 - Automatic Aviationstack flight polling adjusts ready times from the original baseline, preserves feasible groups, and releases incompatible/cancelled groups for rematching. A PostgreSQL advisory lock coordinates maintenance across processes; no queue service is required.
 - Generated OpenAPI/TypeScript contracts, SQL migration runner, PR template, GitHub CI and [collaboration guide](CONTRIBUTING.md).
 
-Local regression coverage includes real PostgreSQL 17/PostGIS 3.5, signed JWT validation, concurrency and provider contract fixtures. **The website and backend are deployed and connected to Supabase and a Clerk development instance; live external provider credentials and the signed-in ride flow have not been verified.** The keyless preview shows a setup state instead of fabricated bookings. Adding keys also requires applying migrations, enabling provider products, selecting a compatible Grok model and approving real drivers/vehicles. No claim of guaranteed rides or zero defects is made.
+Local regression coverage includes real PostgreSQL 17/PostGIS 3.5, signed JWT validation, concurrency and provider contract fixtures. **The website and backend are deployed and connected to Supabase and a Clerk development instance; Groq ticket extraction and Sarvam transcription passed synthetic live checks; Aviationstack live-query access passed, while a matching real flight and the signed-in ride flow remain unverified.** The keyless preview shows a setup state instead of fabricated bookings. Adding keys also requires applying migrations, enabling provider products, selecting a compatible Groq vision model and approving real drivers/vehicles. No claim of guaranteed rides or zero defects is made.
 
 This is a coordination MVP. Payments, fare quotes, GPS tracking, emergency dispatch, passenger identity verification and commercial operating procedures are not implemented. Driver approval records an operator decision; kootu does not verify government documents automatically. See [competitor research](docs/competitor-analysis.md) and [validation](docs/backend-validation.md).
 
@@ -42,7 +42,7 @@ kootu/
 ├── integrations/             # External API setup guides and code locations
 │   ├── clerk/
 │   ├── google-maps/
-│   ├── grok/
+│   ├── groq/
 │   ├── sarvam/
 │   └── aviationstack/
 ├── docs/                     # Architecture, contracts and validation
@@ -91,7 +91,7 @@ Open `http://localhost:3000`. Use that same origin in `FRONTEND_URL`; `localhost
 | API `.env` | `CLERK_ISSUER`, optional `CLERK_AUDIENCE` | Exact trusted instance origin; JWKS derived from it |
 | API `.env` | `BOOTSTRAP_ADMIN_SUBJECT` | Trusted operator's Clerk user ID; creates ADMIN after that user signs in |
 | API `.env` | `GOOGLE_MAPS_API_KEY` | Enable Routes API and Geocoding API for this server key |
-| API `.env` | `GROK_API_KEY`, `GROK_MODEL` | Account-supported vision model with structured output |
+| API `.env` | `GROQ_API_KEY`, `GROQ_MODEL` | Groq vision model with JSON mode and server validation |
 | API `.env` | `SARVAM_API_KEY`, `SARVAM_MODEL=saaras:v3` | Speech-to-text; WAV under 30 seconds in this MVP |
 | API `.env` | `AVIATIONSTACK_API_KEY` | Plan with HTTPS flight lookup and the necessary coverage/date access |
 | API `.env` | `FRONTEND_URL`, `APP_ENV` | Exact origin; production requires HTTPS |
@@ -137,7 +137,7 @@ Vercel root `frontend`, Node 22.12+, install `npm ci`, build `npm run build`. Re
 
 The existing `krthik20050` account owns the project. GitHub `krthik20050/kootu` is connected, with root `frontend`, Next.js preset, Node project setting `22.x` and install command `npm ci`. The initial production deployment reached READY, and its homepage and passenger setup state were browser-verified on 11 October 2026. Vercel warns that the package's `>=22.12.0` engine range can select a later major runtime.
 
-Production uses `NEXT_PUBLIC_AUTH_ENABLED=true` and `NEXT_PUBLIC_API_URL=https://kootu-api-k5eh.onrender.com`, with Clerk credentials stored in Vercel. Preview stays auth-disabled because the backend authorizes only the stable public origin. Clerk uses development keys for the hackathon demo on the Vercel-provided domain; no production Clerk instance is configured. External provider credentials remain missing, so routing, ticket extraction, transcription and flight updates are not operational. The website calls FastAPI; only FastAPI receives the Supabase database connection string.
+Production uses `NEXT_PUBLIC_AUTH_ENABLED=true` and `NEXT_PUBLIC_API_URL=https://kootu-api-k5eh.onrender.com`, with Clerk credentials stored in Vercel. Preview stays auth-disabled because the backend authorizes only the stable public origin. Clerk uses development keys for the hackathon demo on the Vercel-provided domain; no production Clerk instance is configured. Groq, Sarvam and Aviationstack settings have been stored privately. Synthetic Groq/Sarvam requests passed; Aviationstack live access passed. Google Maps remains missing, so road matching is unavailable. The website calls FastAPI; only FastAPI receives the Supabase database connection string.
 
 For future CLI deployments, run from the repository root (the project already specifies `frontend`):
 
@@ -170,4 +170,4 @@ Free Render services sleep after 15 minutes without inbound traffic and can take
 
 ## Sources
 
-[Clerk](https://clerk.com/docs/nextjs/getting-started/quickstart), [FastAPI](https://fastapi.tiangolo.com/), [SQLAlchemy](https://docs.sqlalchemy.org/en/20/), [PostGIS](https://postgis.net/documentation/), [Google Routes](https://developers.google.com/maps/documentation/routes/compute_route_directions), [Grok structured output](https://docs.x.ai/developers/model-capabilities/text/structured-outputs), [Sarvam transcription](https://docs.sarvam.ai/api-reference/speech-to-text/transcribe), [Aviationstack](https://docs.apilayer.com/apilayer/docs/aviationstack), [Vitest](https://vitest.dev/guide/), [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/). No external dataset or live credentials are bundled.
+[Clerk](https://clerk.com/docs/nextjs/getting-started/quickstart), [FastAPI](https://fastapi.tiangolo.com/), [SQLAlchemy](https://docs.sqlalchemy.org/en/20/), [PostGIS](https://postgis.net/documentation/), [Google Routes](https://developers.google.com/maps/documentation/routes/compute_route_directions), [Groq vision and JSON mode](https://console.groq.com/docs/vision), [Sarvam transcription](https://docs.sarvam.ai/api-reference/speech-to-text/transcribe), [Aviationstack](https://docs.apilayer.com/apilayer/docs/aviationstack), [Vitest](https://vitest.dev/guide/), [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/). No external dataset or live credentials are bundled.

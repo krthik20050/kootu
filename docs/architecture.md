@@ -1,6 +1,6 @@
 # kootu architecture
 
-The implemented system has one Next.js frontend, one FastAPI application and PostgreSQL/PostGIS. Matching is deterministic. Grok suggests flight fields; Sarvam returns words for human review. Neither decides safety eligibility or ride compatibility.
+The implemented system has one Next.js frontend, one FastAPI application and PostgreSQL/PostGIS. Matching is deterministic. Groq suggests flight fields; Sarvam returns words for human review. Neither decides safety eligibility or ride compatibility.
 
 ## Responsibility map
 
@@ -12,7 +12,7 @@ The implemented system has one Next.js frontend, one FastAPI application and Pos
 | `backend/app/models/domain.py` | Persistent profiles, requests, drivers, vehicles, groups, memberships, offers and events |
 | `backend/app/services/matching.py` | Pure whole-cluster constraints and deterministic ordering |
 | `services/rides.py` | Candidate retrieval, road verification and locked state transitions |
-| `services/providers.py` | Bounded Google, Grok, Sarvam and Aviationstack adapters |
+| `services/providers.py` | Bounded Google, Groq, Sarvam and Aviationstack adapters |
 | `services/flight_updates.py` | Flight adjustments, stale offers and bounded rematching |
 
 FastAPI's OpenAPI owns wire contracts. `export_contracts.py` generates the committed OpenAPI snapshot and frontend model types. CI rejects drift. Domain-specific response models prevent accidentally serializing private ORM fields.
@@ -27,7 +27,7 @@ All private endpoints verify authentication. Passengers access their own request
 
 Database mutations commit before returning success. Conflicts roll back with 409; unavailable storage returns 503. Requests have client UUIDs for safe retries and versions for matching revalidation. Membership primary keys and unique active driver/vehicle indexes back application checks. Road calls run after releasing the candidate read transaction, then locked snapshots are revalidated before the proposal is committed. Concurrent conflicts may require a retry; no zero-error guarantee is made.
 
-Private provider-backed endpoints have PostgreSQL-shared hourly limits. Upload files are bounded, validated, stripped of image metadata where possible, and closed after processing. Grok's prompt treats document text as untrusted. Extraction/transcription results require review; only explicit structured needs affect eligibility. Provider failures return safe errors, never synthetic success or unverified road matches.
+Private provider-backed endpoints have PostgreSQL-shared hourly limits. Upload files are bounded, validated, stripped of image metadata where possible, and closed after processing. Groq's prompt treats document text as untrusted. Extraction/transcription results require review; only explicit structured needs affect eligibility. Provider failures return safe errors, never synthetic success or unverified road matches.
 
 ## Maintenance
 
