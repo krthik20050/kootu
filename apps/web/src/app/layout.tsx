@@ -3,7 +3,7 @@ import { AuthProvider } from "@/components/auth-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "COOTU | Land together. Leave together.",
+  title: "kootu | Land together. Leave together.",
   description: "An airport shared-cab coordination platform, built around nearby destinations and compatible arrival times.",
 };
 

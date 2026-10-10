@@ -1,12 +1,15 @@
-# COOTU
+# kootu
 
 **Land together. Leave together.** Airport shared-cab coordination for passengers arriving at similar times and travelling to one small destination cluster.
 
-Airport arrivals often mean solo cab fares or a long wait to find company. COOTU's planned matching system groups compatible passengers by airport, ready time, real destination coordinates, seats/luggage and safety preferences. Thrissur and nearby destinations may share a cab; Guruvayur normally forms a separate group. This is not a long multi-stop route service.
+Airport arrivals often mean solo cab fares or a long wait to find company. kootu's planned matching system groups compatible passengers by airport, ready time, real destination coordinates, seats/luggage and safety preferences. Thrissur and nearby destinations may share a cab; Guruvayur normally forms a separate group. This is not a long multi-stop route service.
 
 Built from scratch for the **DevDay Exchange Community Hackathon: Kochi**, 10–11 October 2026. Read [RULES.md](RULES.md) and [AGENTS.md](AGENTS.md). Participant identities and final submission details remain for the team to complete in [SUBMISSION.md](SUBMISSION.md).
 
 ## Current status
+
+Backend milestone in progress (11 October 2026): persistent ride APIs, Clerk verification, matching, driver/admin workflow, Grok/Sarvam/Google/flight adapters and polling are implemented. 45 local backend tests passed, including real PostgreSQL/PostGIS tests. Frontend screens and final documentation are being connected next. The older bootstrap description below records the starting point and will be replaced before handoff.
+
 
 **IMPLEMENTED:** responsive public concept landing, strict frontend configuration checks, optional configured Clerk provider/proxy/sign-in controls with shadcn theme, API client boundary, FastAPI health/OpenAPI, environment settings, CORS, startup logging, sanitized error responses, six API tests, provider contracts, PostGIS extension migration and CI configuration.
 
@@ -16,7 +19,7 @@ The public shell runs without credentials with authentication explicitly disable
 
 ## Architecture and stack
 
-Next.js 16, React 19, strict TypeScript and Tailwind 4 own the user experience; shadcn/ui configuration and `cn` utility are prepared. Clerk owns authentication, distinct from COOTU driver verification. FastAPI/Python/Pydantic own future authorization, business logic and matching. Supabase PostgreSQL/PostGIS will own persistence and spatial queries. Routing and ticket extraction sit behind provider contracts. Deployment targets are Vercel and Render, not yet deployed.
+Next.js 16, React 19, strict TypeScript and Tailwind 4 own the user experience; shadcn/ui configuration and `cn` utility are prepared. Clerk owns authentication, distinct from kootu driver verification. FastAPI/Python/Pydantic own future authorization, business logic and matching. Supabase PostgreSQL/PostGIS will own persistence and spatial queries. Routing and ticket extraction sit behind provider contracts. Deployment targets are Vercel and Render, not yet deployed.
 
 No microservices, queues, Docker prerequisite or AI matching. See [architecture](docs/architecture.md), [API contracts](docs/api-contracts.md), [database](docs/database.md), and [matching engine](docs/matching-engine.md).
 

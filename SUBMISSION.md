@@ -4,7 +4,7 @@ Complete this file during the hackathon and use it to prepare your submission th
 
 ## Project
 
-- **Project name:** COOTU
+- **Project name:** kootu
 - **Short description:** Airport shared-cab coordination around compatible arrival times and small destination clusters. Current implementation is a public concept shell and API architecture bootstrap; working matching/booking is planned.
 - **Code repository URL:** https://github.com/krthik20050/kootu
 - **Final submitted implementation commit SHA:** TODO

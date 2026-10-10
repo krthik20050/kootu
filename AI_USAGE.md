@@ -15,3 +15,7 @@ Codex bootstrapped COOTU from the event documentation scaffold. Human review rem
 On 10 October 2026, Codex prepared this documentation template from the organizer's supplied rules and checked the linked Luma page for the event name and dates. This covered `README.md`, `RULES.md`, `AGENTS.md`, `CHANGELOG.md`, `AI_USAGE.md`, `SUBMISSION.md`, `.gitignore`, and the pull request checklist. Agent validation covered local links, event consistency, required documents, and diff whitespace; organizer review is pending.
 
 This preparation is separate from participant project implementation and participant AI usage during the event.
+
+## 2026-10-11 00:34 IST - Backend implementation
+
+Codex implemented the persistent ride lifecycle, authentication/authorization, deterministic matching, driver review/availability/offers, provider adapters and polling, collaboration guidance and regression tests. Clarification corrected Serum to Sarvam and ticket exchange to ticket extraction. Human review pending. 45 backend tests passed; live credentials and frontend integration remain.

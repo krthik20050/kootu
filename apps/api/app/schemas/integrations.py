@@ -16,6 +16,6 @@ class RouteEstimate(BaseModel):
 class ExtractedFlight(BaseModel):
     """Unconfirmed suggestions only. Excludes ticket numbers, names and document contents."""
 
-    flight_number: str | None = None
+    flight_number: str | None = Field(default=None, pattern=r"^[A-Z0-9]{2,3}[0-9]{1,4}$")
     flight_date: date | None = None
-    arrival_airport: str | None = None
+    arrival_airport: str | None = Field(default=None, pattern=r"^[A-Z]{3}$")

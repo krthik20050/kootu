@@ -11,7 +11,7 @@ export default function Home() {
   return <>
     <a className="skip-link" href="#main">Skip to content</a>
     <header className="site-header">
-      <Link href="/" className="wordmark" aria-label="COOTU home">cootu<span className="brand-dot" /></Link>
+      <Link href="/" className="wordmark" aria-label="kootu home">kootu<span className="brand-dot" /></Link>
       <span className="header-note">A little company. A better journey.</span>
       {process.env.NEXT_PUBLIC_AUTH_ENABLED === "true" ? <AuthControls /> : <span className="stage-badge">Hackathon foundation</span>}
     </header>
@@ -39,6 +39,6 @@ export default function Home() {
         <div className="principle-grid">{principles.map(([number, title, description]) => <article key={number}><span className="number">{number}</span><h3>{title}</h3><p>{description}</p></article>)}</div>
       </section>
     </main>
-    <footer><Link href="/" className="footer-brand">cootu</Link><p>Airport → destination cluster → shared cab</p><span>Built in Kochi · 2026</span></footer>
+    <footer><Link href="/" className="footer-brand">kootu</Link><p>Airport → destination cluster → shared cab</p><span>Built in Kochi · 2026</span></footer>
   </>;
 }

@@ -1,7 +1,7 @@
 from typing import Literal
 from urllib.parse import urlsplit
 
-from pydantic import field_validator, model_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -10,6 +10,21 @@ class Settings(BaseSettings):
 
     app_env: Literal["development", "test", "production"] = "development"
     frontend_url: str = "http://localhost:3000"
+    database_url: SecretStr | None = None
+    clerk_issuer: str = ""
+    clerk_audience: str = ""
+    bootstrap_admin_subject: str = ""
+    google_maps_api_key: SecretStr | None = None
+    grok_api_key: SecretStr | None = None
+    grok_model: str = ""
+    sarvam_api_key: SecretStr | None = None
+    sarvam_model: str = "saaras:v3"
+    aviationstack_api_key: SecretStr | None = None
+    flight_poll_seconds: int = Field(default=900, ge=60, le=86400)
+    cluster_radius_metres: int = Field(default=3000, ge=100, le=10000)
+    max_group_seats: int = Field(default=4, ge=2, le=8)
+    max_group_luggage: int = Field(default=4, ge=0, le=12)
+    offer_ttl_seconds: int = Field(default=300, ge=30, le=1800)
 
     @field_validator("frontend_url")
     @classmethod
@@ -32,3 +47,15 @@ class Settings(BaseSettings):
         if self.app_env == "production" and urlsplit(self.frontend_url).scheme != "https":
             raise ValueError("Production requires an explicit HTTPS FRONTEND_URL")
         return self
+
+    @field_validator("clerk_issuer")
+    @classmethod
+    def validate_issuer(cls, value: str) -> str:
+        if not value:
+            return value
+        origin = urlsplit(value)
+        if origin.scheme != "https" or not origin.hostname or origin.path not in {"", "/"}:
+            raise ValueError("CLERK_ISSUER must be the trusted HTTPS Clerk instance origin")
+        if origin.username or origin.password or origin.query or origin.fragment:
+            raise ValueError("Invalid CLERK_ISSUER")
+        return value.rstrip("/")

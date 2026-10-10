@@ -17,3 +17,10 @@ Record each meaningful project change during the event, newest first. Update thi
 - Why: Give participants a consistent starting point for event rules, basic coding patterns, documented changes, and regular commits.
 - Validation: Checked local Markdown links, event detail consistency, required documents, and diff whitespace before publishing.
 - Limitations: Documentation scaffolding only; no participant project, application, or working demo is included. GitHub publication and template status are verified separately after creation.
+
+## 2026-10-11 00:34 IST - Persistent backend milestone
+
+- Added Clerk verification, PostgreSQL ride domain and PostGIS matching, driver/operator approval, offers, cancellation and trip lifecycle. Added confirmed ticket extraction with Grok, WAV transcription with Sarvam, Google road verification and automatic flight polling/rematching. Latest user naming is kootu.
+- Added collaboration guidance and real PostgreSQL/PostGIS CI service, migrations and exported API contracts.
+- Validation: 45 backend checks passed locally using disposable PostgreSQL17/PostGIS3.5; Ruff passed before adding migration runner. Provider tests use contract fixtures and signed-token tests use generated RSA keys.
+- Remaining: frontend screens, final docs, full checks and live credential smoke tests. No live provider accounts or deployment verified.

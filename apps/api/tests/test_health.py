@@ -12,12 +12,14 @@ def test_health_and_openapi_contract() -> None:
         assert response.status_code == 200
         assert response.json() == {
             "status": "ok",
-            "service": "cootu-api",
+            "service": "kootu-api",
             "version": "0.1.0",
             "environment": "test",
         }
         schema = client.get("/openapi.json").json()
-        assert set(schema["paths"]) == {"/health"}
+        assert {"/health", "/ride-requests", "/tickets/extract", "/audio/transcribe"} <= set(
+            schema["paths"]
+        )
         assert schema["paths"]["/health"]["get"]["responses"]["200"]
 
 
@@ -44,5 +46,5 @@ def test_invalid_cors_configuration_rejected(origin: str) -> None:
 def test_production_requires_https_frontend() -> None:
     with pytest.raises(ValidationError):
         Settings(app_env="production", _env_file=None)
-    settings = Settings(app_env="production", frontend_url="https://cootu.example", _env_file=None)
-    assert settings.frontend_url == "https://cootu.example"
+    settings = Settings(app_env="production", frontend_url="https://kootu.example", _env_file=None)
+    assert settings.frontend_url == "https://kootu.example"

@@ -1,1 +1,1 @@
-"""COOTU API application."""
+"""kootu API application."""

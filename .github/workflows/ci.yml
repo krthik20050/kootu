@@ -1,7 +1,8 @@
-name: COOTU checks
+name: kootu checks
 on:
   push:
   pull_request:
+  merge_group:
 permissions:
   contents: read
 jobs:
@@ -26,6 +27,20 @@ jobs:
       - run: npm run build
   api:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:17-3.5
+        env:
+          POSTGRES_DB: kootu_test
+          POSTGRES_USER: kootu_test
+          POSTGRES_PASSWORD: ci-disposable-test-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kootu_test -d kootu_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql+psycopg://kootu_test:ci-disposable-test-password@localhost:5432/kootu_test
     defaults:
       run:
         working-directory: apps/api
@@ -41,3 +56,4 @@ jobs:
       - run: python -m ruff check .
       - run: python -m ruff format --check .
       - run: python -m pytest
+      - run: python export_contracts.py --check
