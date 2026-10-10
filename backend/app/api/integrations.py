@@ -38,12 +38,9 @@ def locations(
 def ticket(
     request: Request,
     file: UploadFile = File(),
-    consent: bool = Form(),
     identity: Identity = Depends(verify_token),
 ) -> dict:
     try:
-        if not consent:
-            raise HTTPException(422, "Consent is required before sending this file to the provider")
         result = extract_ticket(
             request.app.state.settings, read_bounded(file, 5 * 1024 * 1024), file.content_type or ""
         )
@@ -58,15 +55,12 @@ def ticket(
 def audio(
     request: Request,
     file: UploadFile = File(),
-    consent: bool = Form(),
     language: Literal["unknown", "ml-IN", "en-IN", "hi-IN", "ta-IN", "kn-IN"] = Form(
         default="unknown"
     ),
     identity: Identity = Depends(verify_token),
 ) -> dict:
     try:
-        if not consent:
-            raise HTTPException(422, "Consent is required before sending this file to the provider")
         result = transcribe_audio(
             request.app.state.settings, read_bounded(file, 5 * 1024 * 1024), language
         )

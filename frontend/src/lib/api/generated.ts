@@ -32,13 +32,11 @@ export type AvailabilityInput = {
 
 export type Body_audio_audio_transcribe_post = {
   "file": string;
-  "consent": boolean;
   "language"?: "unknown" | "ml-IN" | "en-IN" | "hi-IN" | "ta-IN" | "kn-IN";
 };
 
 export type Body_ticket_tickets_extract_post = {
   "file": string;
-  "consent": boolean;
 };
 
 export type Coordinates = {
@@ -69,6 +67,9 @@ export type ExtractedFlight = {
   "arrival_airport"?: string | null;
   "display_name"?: string | null;
   "passengers"?: number | null;
+  "arrival_at"?: string | null;
+  "luggage"?: number | null;
+  "destination_name"?: string | null;
 };
 
 export type GroupResponse = {

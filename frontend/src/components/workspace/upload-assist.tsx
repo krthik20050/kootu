@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ExtractedFlight, TicketResponse } from "@/lib/api/generated";
 import { message, type Api } from "./shared";
 
@@ -12,61 +12,51 @@ export function UploadAssist({ api, onTicket, onBusy, disabled = false }: {
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  async function upload(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const input = event.currentTarget.elements.namedItem("file") as HTMLInputElement;
-    const file = input.files?.[0];
+  const [filename, setFilename] = useState("");
+  const operation = useRef(false);
+
+  async function upload(file?: File) {
+    if (operation.current || !file) return;
     setError("");
-    setNotice("");
-    if (!(file instanceof File) || !file.size || file.size > 5 * 1024 * 1024) {
-      setError("Choose a PDF, JPG or PNG ticket of up to 5 MB.");
+    if (!file.size || file.size > 5 * 1024 * 1024) {
+      setError("Choose a PDF, JPG or PNG ticket under 5 MB.");
       return;
     }
-    if (!form.get("consent")) {
-      setError("Agree to ticket processing before uploading.");
-      return;
-    }
-    form.set("file", file);
+    operation.current = true;
     setBusy(true);
     onBusy?.(true);
     try {
+      const body = new FormData();
+      body.set("file", file);
       const result = await api<TicketResponse>("/tickets/extract", {
-        method: "POST", body: form, timeout: 45000,
+        method: "POST", body, timeout: 45000,
       });
       onTicket(result.details);
-      const missing = [
-        !result.details.flight_number && "flight number",
-        !result.details.flight_date && "flight date",
-        !result.details.arrival_airport && "arrival airport",
-      ].filter(Boolean);
-      setNotice(missing.length
-        ? `Ticket read. Please enter the missing ${missing.join(", ")} and review all details below.`
-        : "Your details are filled in. Review them below before saving your arrival.");
+      setFilename(file.name);
     } catch (error) {
       setError(message(error));
     } finally {
+      operation.current = false;
       setBusy(false);
       onBusy?.(false);
     }
   }
+
   return (
-    <section className="assist ticket-assist" aria-labelledby="ticket-title">
-      <p className="eyebrow">START WITH YOUR TICKET</p>
-      <h2 id="ticket-title">Upload once. Check, then go.</h2>
-      <p>We’ll fill the flight details, name and passenger count we can read. You can edit every suggestion.</p>
-      <form onSubmit={(event) => void upload(event)}>
-        <fieldset disabled={busy || disabled}>
-          <label>Ticket<input name="file" type="file" accept="image/jpeg,image/png,application/pdf" required /></label>
-          <p className="quiet">PDF (including scans), JPG or PNG · up to 5 MB · up to 3 PDF pages</p>
-          <label className="check"><input type="checkbox" name="consent" value="true" required />I agree to send this ticket to Groq for extraction.</label>
-          <button className="action">{busy ? "Reading your ticket…" : "Fill from ticket ↗"}</button>
-        </fieldset>
-      </form>
-      {notice && <p role="status">{notice}</p>}
-      {error && <p className="error" role="alert">{error} You can enter the details below.</p>}
-      <p className="quiet">kootu does not save your upload. Groq’s retention terms apply. Your drop-off address and pickup readiness still need your input.</p>
-    </section>
+    <div className="ticket-upload">
+      <label className={`upload-dropzone ${busy ? "is-reading" : ""}`}>
+        <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <path d="M14 7h14l7 7v27H14V7Z" stroke="currentColor" strokeWidth="2" />
+          <path d="M28 7v8h7M20 25h9M20 31h9" stroke="currentColor" strokeWidth="2" />
+        </svg>
+        <span>{busy ? "Reading your ticket…" : filename ? "Change ticket" : "Upload Your Ticket"}</span>
+        <small>PDF or photo</small>
+        <input className="upload-input" aria-label="Upload Your Ticket" type="file"
+          accept="image/jpeg,image/png,application/pdf" disabled={busy || disabled}
+          onChange={(event) => { void upload(event.target.files?.[0]); event.target.value = ""; }} />
+      </label>
+      {filename && !busy && <p className="ticket-file" role="status">✓ {filename}</p>}
+      {error && <p className="error" role="alert">{error} You can enter the details instead.</p>}
+    </div>
   );
 }

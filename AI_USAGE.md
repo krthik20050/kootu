@@ -84,3 +84,7 @@ Codex connected the passenger, driver and operator screens, implemented reviewed
 ## 2026-10-11 01:05 IST - CI evidence
 
 Codex verified the public GitHub Actions result for the final implementation and recorded its exact SHA/run link. No implementation changed after that validated checkpoint. Human review and live account testing remain pending.
+
+## 2026-10-11 04:01 IST - Simpler booking flow
+
+At the user's direction Codex removed provider/consent and recording-panel clutter, implemented three guided booking steps, inline automatic Sarvam dictation, arrival-time/luggage/drop-off suggestions and a reduced-motion-aware save celebration. Researched official Sarvam API options and GOV.UK question-page patterns, retained bounded REST requests through lossless segmentation, updated contracts/docs and regression coverage. Human review pending. 119 backend and 23 frontend tests passed; lint/types/format/contracts/build passed. Synthetic mobile/desktop browser review found and corrected a Next-click validation race and native date event synchronization. Target-phone multilingual dictation and real signed-in rides remain unverified; temporary synthetic QA code removed.

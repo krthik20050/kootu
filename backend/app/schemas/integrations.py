@@ -1,6 +1,6 @@
 from datetime import date
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 
 class Coordinates(BaseModel):
@@ -22,4 +22,7 @@ class ExtractedFlight(BaseModel):
     flight_date: date | None = None
     arrival_airport: str | None = Field(default=None, pattern=r"^[A-Z]{3}$")
     display_name: str | None = Field(default=None, min_length=1, max_length=80)
-    passengers: int | None = Field(default=None, ge=1, le=4, strict=True)
+    passengers: int | None = Field(default=None, ge=1, le=8, strict=True)
+    arrival_at: AwareDatetime | None = None
+    luggage: int | None = Field(default=None, ge=0, le=12, strict=True)
+    destination_name: str | None = Field(default=None, min_length=3, max_length=160)

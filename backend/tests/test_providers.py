@@ -157,7 +157,7 @@ def test_invalid_ticket_rejected(document, kind):
         providers.ticket_content(document, kind)
 
 
-@pytest.mark.parametrize("document", [b"not audio", wav_bytes(31)], ids=["invalid", "too-long"])
+@pytest.mark.parametrize("document", [b"not audio", wav_bytes(121)], ids=["invalid", "too-long"])
 def test_invalid_or_long_audio_rejected(document):
     with pytest.raises(HTTPException) as caught:
         providers.transcribe_audio(
@@ -166,14 +166,13 @@ def test_invalid_or_long_audio_rejected(document):
     assert caught.value.status_code == 422
 
 
-def test_upload_consent_and_missing_keys(client):
+def test_upload_action_without_checkbox_and_missing_keys(client):
     assert (
         client.post(
             "/tickets/extract",
             files={"file": ("ticket.png", image_bytes(), "image/png")},
-            data={"consent": "false"},
         ).status_code
-        == 422
+        == 503
     )
     assert (
         client.post(
@@ -233,7 +232,7 @@ def test_unsupported_pdf_rejected(encrypted, pages):
 @pytest.mark.parametrize(
     "details",
     [
-        {"passengers": 6},
+        {"passengers": 9},
         {"passengers": "2"},
         {"display_name": "X" * 81},
         {"flight_date": "2026-02-30"},
@@ -271,7 +270,7 @@ def test_ticket_name_and_passenger_count_are_unconfirmed_suggestions(monkeypatch
     result = providers.extract_ticket(
         Settings(groq_api_key=SecretStr("test"), _env_file=None), image_bytes(), "image/png"
     )
-    assert result.model_dump(mode="json") == details
+    assert result.model_dump(mode="json", exclude_none=True) == details
 
 
 @pytest.mark.parametrize(
@@ -302,3 +301,62 @@ def test_empty_or_truncated_wav_rejected_before_provider(monkeypatch, document):
             Settings(sarvam_api_key=SecretStr("test"), _env_file=None), document, "unknown"
         )
     assert caught.value.status_code == 422
+
+
+def test_long_dictation_is_split_without_dropping_pcm(monkeypatch):
+    original = wav_bytes(61)
+    segments = providers.audio_segments(original)
+    duration = []
+    recovered = []
+    for segment in segments:
+        with wave.open(io.BytesIO(segment)) as part:
+            duration.append(part.getnframes() / part.getframerate())
+            recovered.append(part.readframes(part.getnframes()))
+    assert duration == [29, 29, 3]
+    with wave.open(io.BytesIO(original)) as full:
+        assert b"".join(recovered) == full.readframes(full.getnframes())
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(
+            200, json={"transcript": f"part {len(calls)}", "language_code": "en-IN"}
+        )
+
+    transport(monkeypatch, handler)
+    result = providers.transcribe_audio(
+        Settings(sarvam_api_key=SecretStr("test"), _env_file=None), original, "unknown"
+    )
+    assert result["transcript"] == "part 1 part 2 part 3"
+    assert len(calls) == 3
+
+
+def test_failed_later_dictation_segment_never_returns_partial_success(monkeypatch):
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        if len(calls) == 2:
+            return httpx.Response(500, json={"error": "SECRET"})
+        return httpx.Response(200, json={"transcript": "first words"})
+
+    transport(monkeypatch, handler)
+    with pytest.raises(HTTPException) as caught:
+        providers.transcribe_audio(
+            Settings(sarvam_api_key=SecretStr("test"), _env_file=None), wav_bytes(31), "unknown"
+        )
+    assert caught.value.status_code == 502
+    assert "SECRET" not in caught.value.detail
+
+
+def test_arrival_timezone_and_luggage_are_validated():
+    from pydantic import ValidationError
+
+    from app.schemas.integrations import ExtractedFlight
+
+    details = ExtractedFlight(arrival_at="2026-10-12T01:30:00+05:30", luggage=2)
+    assert details.arrival_at.utcoffset().total_seconds() == 19800
+    with pytest.raises(ValidationError):
+        ExtractedFlight(arrival_at="2026-10-12T01:30:00")
+    with pytest.raises(ValidationError):
+        ExtractedFlight(luggage=-1)

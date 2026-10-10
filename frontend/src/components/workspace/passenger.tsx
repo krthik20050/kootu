@@ -12,6 +12,8 @@ import type {
 import { localTime, message, readable, type Api } from "./shared";
 import { UploadAssist } from "./upload-assist";
 import { VoicePreferences } from "./voice-preferences";
+import { ArrivalCelebration } from "./arrival-celebration";
+import { readyFromArrival } from "@/lib/ticket-draft";
 
 const active = new Set(["WAITING", "MATCHED", "ASSIGNED"]);
 
@@ -23,6 +25,16 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [extracting, setExtracting] = useState(false);
+  const [step, setStep] = useState(0);
+  const [ticketRead, setTicketRead] = useState(false);
+  const [draftVersion, setDraftVersion] = useState(0);
+  const [readyAt, setReadyAt] = useState("");
+  const [luggageCount, setLuggageCount] = useState("1");
+  const [dictating, setDictating] = useState(false);
+  const [savedId, setSavedId] = useState("");
+  const [showJourneys, setShowJourneys] = useState(false);
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const heading = useRef<HTMLHeadingElement | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [passengerCount, setPassengerCount] = useState("1");
   const [flightConfirmed, setFlightConfirmed] = useState(false);
@@ -125,8 +137,54 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
     });
   }
 
+  useEffect(() => { heading.current?.focus(); }, [step]);
+
+  function validateStep() {
+    const fields = formRef.current?.querySelectorAll<HTMLInputElement>(`[data-step="${step}"] input`);
+    const invalid = fields && Array.from(fields).find((input) => !input.checkValidity());
+    if (invalid) {
+      const details = invalid.closest("details");
+      if (details) details.open = true;
+      invalid.reportValidity();
+      return false;
+    }
+    return true;
+  }
+
+  function advance() {
+    if (!validateStep()) return;
+    setError("");
+    if (step === 1) setFlightConfirmed(true);
+    setStep(step + 1);
+  }
+
+  function newArrival() {
+    formRef.current?.reset();
+    submission.current = null;
+    setDraftVersion((version) => version + 1);
+    setTicketRead(false);
+    setFlightConfirmed(false);
+    setFlight({ airport: "COK", number: "", date: "" });
+    setDisplayName(null);
+    setPassengerCount("1");
+    setLuggageCount("1");
+    setReadyAt("");
+    setDestination("");
+    setCoordinates({ latitude: "", longitude: "" });
+    setLocations([]);
+    setNotes("");
+    setWomenOnly(false);
+    setShowJourneys(false);
+    setSavedId("");
+    setNotice("");
+    setError("");
+    setStep(0);
+  }
+
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (step !== 2) { advance(); return; }
+    if (busy || extracting || dictating || notes.length > 2000 || !validateStep()) return;
     const form = new FormData(event.currentTarget);
     const text = (key: string) => String(form.get(key) || "");
     const count = (key: string) => Number(form.get(key));
@@ -180,6 +238,8 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
         method: "POST",
         body,
       });
+      setSavedId(saved.id);
+      setStep(3);
       setNotice("Your arrival is saved. Looking for a compatible group…");
       const result = await api<MatchResponse>(
         `/ride-requests/${saved.id}/match`,
@@ -195,321 +255,103 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
 
   return (
     <>
-      <div className="workspace-title">
-        <p className="eyebrow">YOUR NEXT LEG</p>
-        <h1>
-          Where to,
-          <br />
-          <em>together?</em>
+      <div className="workspace-title intake-title">
+        <p className="eyebrow">YOUR AIRPORT RIDE</p>
+        <h1 ref={heading} tabIndex={-1}>
+          {["Let’s start with your ticket.", "Everything look right?", "Where should we drop you?", "Your arrival is saved."][step]}
         </h1>
-        <p>
-          Tell us when you’re ready to leave the airport and where you’re going.
-          We’ll look for people heading close by.
-        </p>
+        <p>{["Upload it and we’ll fill in your arrival.", "Check your details, then continue.", "Add your destination and any instructions for your driver.", "We’ll look for people heading your way."][step]}</p>
       </div>
-      <div className="workspace-grid">
+      {step < 3 && <ol className="intake-progress" aria-label="Booking progress">
+        {["Ticket", "Arrival", "Your ride"].map((title, index) =>
+          <li key={title} aria-current={step === index ? "step" : undefined} className={index <= step ? "reached" : ""}>
+            <span>{index < step ? "✓" : index + 1}</span>{title}
+          </li>)}
+      </ol>}
+      <div className={`workspace-grid guided-intake ${step === 3 || showJourneys ? "with-journeys" : ""}`}>
         <section className="booking">
-          <UploadAssist
-            api={api}
-            disabled={busy || loading || !profile}
-            onBusy={setExtracting}
-            onTicket={(details) => {
-              setFlight({
-                airport: details.arrival_airport || "",
-                number: details.flight_number || "",
-                date: details.flight_date || "",
-              });
-              setFlightConfirmed(false);
-              setDisplayName(details.display_name || profile?.display_name || accountName);
-              setPassengerCount(details.passengers ? String(details.passengers) : "");
-              setNotice(
-                "Check the extracted flight details, then confirm them before submitting.",
-              );
-            }}
-          />
-          <form onSubmit={(event) => void submit(event)}>
-            <fieldset disabled={busy || extracting || loading || !profile}>
-              <legend>
-                <span>01</span> Your arrival
-              </legend>
-              <label>
-                Your name
-                <input
-                  name="display_name"
-                  value={displayName ?? (profile?.display_name || accountName)}
-                  onChange={(event) => setDisplayName(event.target.value)}
-                  required
-                  maxLength={80}
-                  autoComplete="name"
-                />
-              </label>
+          <div hidden={step !== 0}>
+            <UploadAssist key={draftVersion} api={api} disabled={busy || loading || !profile} onBusy={setExtracting}
+              onTicket={(details) => {
+                setFlight({ airport: details.arrival_airport || "", number: details.flight_number || "", date: details.flight_date || "" });
+                setFlightConfirmed(false);
+                setDisplayName(details.display_name || profile?.display_name || accountName);
+                setPassengerCount(details.passengers ? String(details.passengers) : "");
+                setLuggageCount(details.luggage == null ? "" : String(details.luggage));
+                setReadyAt(readyFromArrival(details.arrival_at));
+                setDestination(details.destination_name || "");
+                setCoordinates({ latitude: "", longitude: "" });
+                setLocations([]);
+                setTicketRead(true);
+              }} />
+            <div className="step-actions">
+              <button type="button" className="text-button" disabled={extracting || loading || !profile} onClick={() => setStep(1)}>Enter details instead</button>
+              <button type="button" className="action" disabled={!ticketRead || extracting} onClick={() => setStep(1)}>Next →</button>
+            </div>
+            {requests.length > 0 && <button type="button" className="text-button" onClick={() => setShowJourneys(!showJourneys)}>{showJourneys ? "Hide saved arrivals" : "View saved arrivals"}</button>}
+          </div>
+          <form noValidate ref={formRef} hidden={step === 0 || step === 3} onSubmit={(event) => void submit(event)}>
+            <fieldset data-step="1" hidden={step !== 1} disabled={busy || extracting || loading || !profile}>
+              <legend className="sr-only">Your arrival</legend>
+              <label>Your name<input name="display_name" value={displayName ?? (profile?.display_name || accountName)} onChange={(event) => setDisplayName(event.target.value)} required maxLength={80} autoComplete="name" /></label>
               <div className="form-row">
-                <label>
-                  Arrival airport
-                  <input
-                    value={flight.airport}
-                    onChange={(event) => {
-                      setFlightConfirmed(false);
-                      setFlight({
-                        ...flight,
-                        airport: event.target.value.toUpperCase(),
-                      });
-                    }}
-                    required
-                    pattern="[A-Z]{3}"
-                    maxLength={3}
-                  />
-                </label>
-                <label>
-                  Flight number
-                  <input
-                    value={flight.number}
-                    onChange={(event) => {
-                      setFlightConfirmed(false);
-                      setFlight({
-                        ...flight,
-                        number: event.target.value.toUpperCase(),
-                      });
-                    }}
-                    required
-                    placeholder="AI123"
-                  />
-                </label>
+                <label>Arrival airport<input value={flight.airport} onChange={(event) => { setFlightConfirmed(false); setFlight({ ...flight, airport: event.target.value.toUpperCase() }); }} required pattern="[A-Z]{3}" maxLength={3} /></label>
+                <label>Flight number<input value={flight.number} onChange={(event) => { setFlightConfirmed(false); setFlight({ ...flight, number: event.target.value.toUpperCase() }); }} required pattern="[A-Z0-9]{2,3}[0-9]{1,4}" placeholder="AI123" /></label>
               </div>
               <div className="form-row">
-                <label>
-                  Flight date
-                  <input
-                    type="date"
-                    value={flight.date}
-                    onChange={(event) => {
-                      setFlightConfirmed(false);
-                      setFlight({ ...flight, date: event.target.value });
-                    }}
-                    required
-                  />
-                </label>
-                <label>
-                  Ready to leave
-                  <input name="ready_at" type="datetime-local" required />
-                </label>
+                <label>Flight date<input type="date" value={flight.date} onInput={(event) => { setFlightConfirmed(false); setFlight({ ...flight, date: event.currentTarget.value }); }} onChange={(event) => { setFlightConfirmed(false); setFlight({ ...flight, date: event.target.value }); }} required /></label>
+                <label>Ready to leave<input name="ready_at" type="datetime-local" value={readyAt} onInput={(event) => setReadyAt(event.currentTarget.value)} onChange={(event) => setReadyAt(event.target.value)} required /></label>
               </div>
-              <p className="quiet">
-                Use your local time. Allow time for baggage and immigration.
-                Flight updates adjust this ready time when a verified arrival
-                estimate changes.
-              </p>
-              <label className="check">
-                <input type="checkbox" required checked={flightConfirmed} onChange={(event) => setFlightConfirmed(event.target.checked)} />
-                I’ve checked the flight number, arrival airport and date.
-              </label>
+              {ticketRead && readyAt && <p className="quiet">Pickup readiness starts 45 minutes after arrival. Adjust it for baggage or immigration.</p>}
+              <div className="form-row">
+                <label>Passengers<input name="passengers" type="number" min={1} max={6} value={passengerCount} onChange={(event) => setPassengerCount(event.target.value)} required /></label>
+                <label>Luggage pieces<input name="luggage" type="number" min={0} max={6} value={luggageCount} onChange={(event) => setLuggageCount(event.target.value)} required /></label>
+              </div>
             </fieldset>
-            <fieldset disabled={busy || extracting || loading || !profile}>
-              <legend>
-                <span>02</span> Your destination
-              </legend>
-              <label>
-                Exact drop-off address
-                <input
-                  value={destination}
-                  onChange={(event) => {
-                    setDestination(event.target.value);
-                    setCoordinates({ latitude: "", longitude: "" });
-                    setLocations([]);
-                  }}
-                  required
-                  minLength={3}
-                  maxLength={160}
-                  placeholder="Building, street and town"
-                />
-              </label>
-              <button
-                className="secondary"
-                type="button"
-                onClick={() => void search()}
-                disabled={destination.trim().length < 3}
-              >
-                Find destination
-              </button>
-              {locations.length > 0 && (
-                <ul className="location-options">
-                  {locations.map((place) => (
-                    <li key={place.place_id}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setDestination(place.name.slice(0, 160));
-                          setCoordinates({
-                            latitude: String(place.coordinates.latitude),
-                            longitude: String(place.coordinates.longitude),
-                          });
-                          setLocations([]);
-                        }}
-                      >
-                        {place.name}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {coordinates.latitude && (
-                <p className="quiet">
-                  Destination selected: {coordinates.latitude},{" "}
-                  {coordinates.longitude}
-                </p>
-              )}
+            <fieldset data-step="2" hidden={step !== 2} disabled={busy || extracting || loading || !profile}>
+              <legend className="sr-only">Your ride</legend>
+              <label>Exact drop-off address<input value={destination} onChange={(event) => { setDestination(event.target.value); setCoordinates({ latitude: "", longitude: "" }); setLocations([]); }} required minLength={3} maxLength={160} placeholder="Building, street and town" /></label>
+              <button className="secondary" type="button" onClick={() => void search()} disabled={dictating || destination.trim().length < 3}>Find destination</button>
+              {locations.length > 0 && <ul className="location-options">{locations.map((place) =>
+                <li key={place.place_id}><button type="button" onClick={() => { setDestination(place.name.slice(0, 160)); setCoordinates({ latitude: String(place.coordinates.latitude), longitude: String(place.coordinates.longitude) }); setLocations([]); }}>{place.name}</button></li>)}</ul>}
+              {coordinates.latitude && <p className="quiet">✓ Drop-off selected</p>}
               <details className="manual-location">
-                <summary>Enter coordinates manually</summary>
-                <p className="quiet">
-                  Use the exact drop-off pin from your map.
-                </p>
+                <summary>Enter a map pin instead</summary>
                 <div className="form-row">
-                  <label>
-                    Latitude
-                    <input
-                      type="number"
-                      step="any"
-                      min={-90}
-                      max={90}
-                      value={coordinates.latitude}
-                      onChange={(event) =>
-                        setCoordinates({
-                          ...coordinates,
-                          latitude: event.target.value,
-                        })
-                      }
-                    />
-                  </label>
-                  <label>
-                    Longitude
-                    <input
-                      type="number"
-                      step="any"
-                      min={-180}
-                      max={180}
-                      value={coordinates.longitude}
-                      onChange={(event) =>
-                        setCoordinates({
-                          ...coordinates,
-                          longitude: event.target.value,
-                        })
-                      }
-                    />
-                  </label>
+                  <label>Latitude<input type="number" step="any" min={-90} max={90} value={coordinates.latitude} onChange={(event) => setCoordinates({ ...coordinates, latitude: event.target.value })} /></label>
+                  <label>Longitude<input type="number" step="any" min={-180} max={180} value={coordinates.longitude} onChange={(event) => setCoordinates({ ...coordinates, longitude: event.target.value })} /></label>
                 </div>
               </details>
+              <VoicePreferences key={draftVersion} api={api} value={notes} onChange={setNotes} onBusy={setDictating} />
+              <details className="ride-options">
+                <summary>Ride preferences & accessibility</summary>
+                <label>Maximum wait · minutes<input name="max_wait_minutes" type="number" min={5} max={120} defaultValue={30} required /></label>
+                <div className="form-row">
+                  <label>Wheelchair spaces<input name="wheelchair_spaces" type="number" min={0} max={2} defaultValue={0} required /></label>
+                  <label>Child seats<input name="child_seats" type="number" min={0} max={4} defaultValue={0} required /></label>
+                </div>
+                <label className="check"><input name="pet_friendly" type="checkbox" />Travelling with a pet</label>
+                <label className="check"><input type="checkbox" checked={womenOnly} onChange={(event) => setWomenOnly(event.target.checked)} />Women-only group</label>
+                {womenOnly && <label className="check eligibility"><input name="eligible" type="checkbox" required />Every passenger in my party is eligible for a women-only ride.</label>}
+                <p className="quiet">Select seat or accessibility needs here so we can match the right vehicle.</p>
+              </details>
             </fieldset>
-            <fieldset disabled={busy || extracting || loading || !profile}>
-              <legend>
-                <span>03</span> Room for your needs
-              </legend>
-              <div className="form-row">
-                <label>
-                  Passengers
-                  <input
-                    name="passengers"
-                    type="number"
-                    min={1}
-                    max={4}
-                    value={passengerCount}
-                    onChange={(event) => setPassengerCount(event.target.value)}
-                    required
-                  />
-                </label>
-                <label>
-                  Luggage pieces
-                  <input
-                    name="luggage"
-                    type="number"
-                    min={0}
-                    max={4}
-                    defaultValue={1}
-                    required
-                  />
-                </label>
-                <label>
-                  Maximum wait · minutes
-                  <input
-                    name="max_wait_minutes"
-                    type="number"
-                    min={5}
-                    max={120}
-                    defaultValue={30}
-                    required
-                  />
-                </label>
-              </div>
-              <div className="form-row">
-                <label>
-                  Wheelchair spaces
-                  <input
-                    name="wheelchair_spaces"
-                    type="number"
-                    min={0}
-                    max={2}
-                    defaultValue={0}
-                    required
-                  />
-                </label>
-                <label>
-                  Child seats
-                  <input
-                    name="child_seats"
-                    type="number"
-                    min={0}
-                    max={4}
-                    defaultValue={0}
-                    required
-                  />
-                </label>
-              </div>
-              <label className="check">
-                <input name="pet_friendly" type="checkbox" />
-                Travelling with a pet
-              </label>
-              <label className="check">
-                <input
-                  type="checkbox"
-                  checked={womenOnly}
-                  onChange={(event) => setWomenOnly(event.target.checked)}
-                />
-                Women-only group
-              </label>
-              {womenOnly && (
-                <label className="check eligibility">
-                  <input name="eligible" type="checkbox" required />
-                  Every passenger in my party is eligible for a women-only ride.
-                </label>
-              )}
-              <VoicePreferences api={api} onNote={setNotes} />
-              <label>
-                Anything else the driver should know?
-                <textarea
-                  value={notes}
-                  onChange={(event) => setNotes(event.target.value)}
-                  maxLength={500}
-                  rows={3}
-                  placeholder="Pickup assistance or other useful details"
-                />
-              </label>
-              <p className="quiet">
-                Notes are shared with your assigned driver. Seat and
-                accessibility requirements must be selected above; notes alone
-                do not change matching.
-              </p>
-            </fieldset>
-            <button className="action" disabled={busy || extracting || loading || !profile}>
-              {busy
-                ? "Saving and finding company…"
-                : "Save arrival & find a group ↗"}
-            </button>
-            <p className="quiet">
-              A request is not a confirmed ride. Matching depends on compatible
-              passengers and an approved, available driver and vehicle.
-            </p>
+            <div className="step-actions">
+              <button className="text-button" type="button" disabled={busy || dictating} onClick={() => setStep(step - 1)}>← Back</button>
+              {step === 1 ? <button className="action" key="next" type="button" disabled={busy || loading || !profile} onClick={(event) => { event.preventDefault(); advance(); }}>Next →</button>
+                : <button key="save" type="submit" className="action" disabled={busy || extracting || dictating || loading || !profile || notes.length > 2000}>{busy ? "Saving…" : "Find my ride →"}</button>}
+            </div>
           </form>
+          {step === 3 && <div className="arrival-success" role="status">
+            <ArrivalCelebration />
+            <div className="success-mark" aria-hidden="true">✓</div>
+            <h2>One step closer.</h2>
+            <p>{flight.airport} → {destination}</p>
+            <p className="quiet">Your request is saved. Your ride is confirmed when a driver accepts.</p>
+            {!busy && savedId && <button className="secondary" type="button" onClick={newArrival}>Add another arrival</button>}
+          </div>}
         </section>
-        <aside className="ride-list" aria-labelledby="rides-title">
+        <aside className="ride-list" hidden={step !== 3 && !showJourneys} aria-labelledby="rides-title">
           <div className="aside-title">
             <p className="eyebrow">SAVED ARRIVALS</p>
             <button

@@ -1,5 +1,13 @@
 # Change log
 
+## 2026-10-11 04:01 IST - Guided ticket booking and inline dictation
+
+- Replaced the long passenger form with ticket upload, arrival review and destination/instructions steps. Removed provider explanations, consent checkboxes, WAV upload and separate transcript acceptance controls. The comment box has an inline microphone; stopping dictation appends editable text. Saved arrivals remain accessible, and adding another arrival clears the previous draft. Brief confetti follows successful persistence and respects reduced motion.
+- Added nullable timezone-aware arrival, booked luggage and explicit drop-off extraction fields. Suggest pickup readiness 45 minutes after arrival without guessing missing details. Review Next validates and confirms flight data. Updated schemas/contracts, passenger components/styles, intake research, README and provider/API guides.
+- Extended server dictation to 120 seconds using lossless 29-second WAV segmentation (at most five Sarvam calls); browser automatic stop is 118 seconds. Notes accept 2,000 characters; overlong transcripts remain visible until shortened. Failed segments fail the whole transcription, with retained browser audio for retry.
+- Validation: 119 backend tests passed in an isolated disposable PostgreSQL/PostGIS database; 23 frontend tests, Ruff/format, lint/types and contract checks passed. Production build passed. Synthetic local browser review at 325px and 1280px confirmed step navigation, inline mic, save completion and no horizontal overflow. Corrected a browser-only Next/button reuse validation race and native date input synchronization. Temporary QA route removed before the final production build; stale generated dev-route types initially blocked the build, and clearing that generated cache resolved it.
+- Limits: multilingual long dictation on target phones, real ticket accuracy and signed-in real rides remain unverified. Segmentation preserves all audio frames but recognition across word boundaries is not guaranteed. No new live paid provider request was made. Human review pending. Push/deployment verification follows.
+
 ## 2026-10-11 02:51 IST - Destination clusters and concurrent ride integrity
 
 - Updated matching to favor nearby destination pins and fuller feasible groups; six seats/six bags by default, always bounded by approved vehicle capacity. Filter fleet equipment before limiting, fetch driver/vehicle together and exclude a driver from their own passenger group. Added `docs/database-architecture.md` with ER diagram, invariants, what-if cases and explicit scaling limits.

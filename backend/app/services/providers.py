@@ -175,6 +175,12 @@ def extract_ticket(settings: Settings, document: bytes, media_type: str) -> Extr
                             "count (not seat number, baggage allowance or aircraft capacity). "
                             "Use an explicit count or count distinct named travellers, "
                             "otherwise null. "
+                            "Extract arrival_at as ISO 8601 with the actual arrival date and UTC "
+                            "offset. Use the printed timezone or a known arrival airport timezone "
+                            "(Indian airports use +05:30); if uncertain, null. "
+                            "Extract luggage only as booked pieces, never a baggage allowance. "
+                            "Extract destination_name only for an explicitly printed cab drop-off "
+                            "or hotel street address, never a flight destination city or airport. "
                             "For multiple passengers use the lead passenger name only if clear. "
                             "For connections use the final arriving leg; if multiple journeys "
                             "or return legs are ambiguous, leave flight fields null. "
@@ -204,35 +210,66 @@ def extract_ticket(settings: Settings, document: bytes, media_type: str) -> Extr
         ) from error
 
 
-def transcribe_audio(settings: Settings, document: bytes, language: str) -> dict:
-    key = require_key(settings.sarvam_api_key, "Sarvam transcription")
+def audio_segments(document: bytes) -> list[bytes]:
+    """Keep one continuous dictation within each provider request's 30-second limit."""
     try:
         with wave.open(io.BytesIO(document)) as audio:
-            if audio.getnframes() / audio.getframerate() > 30:
-                raise HTTPException(422, "Keep voice notes under 30 seconds")
             frames = audio.getnframes()
-            expected = frames * audio.getnchannels() * audio.getsampwidth()
-            if frames <= 0 or len(audio.readframes(frames)) != expected:
-                raise HTTPException(
-                    422, "The recording is empty or incomplete. Try recording again"
-                )
+            rate = audio.getframerate()
+            channels, width = audio.getnchannels(), audio.getsampwidth()
+            if frames / rate > 120:
+                raise HTTPException(422, "Please keep a single dictation within two minutes")
+            pcm = audio.readframes(frames)
+            if frames <= 0 or len(pcm) != frames * channels * width:
+                raise HTTPException(422, "The recording is empty or incomplete. Try again")
+            # No missing boundary audio: each PCM frame appears in exactly one WAV segment.
+            step = rate * 29 * channels * width
+            segments = []
+            for offset in range(0, len(pcm), step):
+                output = io.BytesIO()
+                with wave.open(output, "wb") as part:
+                    part.setnchannels(channels)
+                    part.setsampwidth(width)
+                    part.setframerate(rate)
+                    part.writeframes(pcm[offset : offset + step])
+                segments.append(output.getvalue())
+            return segments
     except (wave.Error, EOFError, ZeroDivisionError) as error:
-        raise HTTPException(422, "Upload a valid WAV recording under 30 seconds") from error
+        raise HTTPException(422, "The recording could not be read. Try again") from error
+
+
+def transcribe_audio(settings: Settings, document: bytes, language: str) -> dict:
+    key = require_key(settings.sarvam_api_key, "Voice transcription")
+    segments = audio_segments(document)
+    transcripts = []
+    detected_language = language
     with httpx.Client(timeout=30) as client:
-        response = client.post(
-            "https://api.sarvam.ai/speech-to-text",
-            headers={"api-subscription-key": key},
-            data={"model": settings.sarvam_model, "language_code": language, "mode": "transcribe"},
-            files={"file": ("voice-note.wav", document, "audio/wav")},
-        )
-    data = provider_json(response, "Sarvam")
-    if not isinstance(data.get("transcript"), str) or len(data["transcript"]) > 5000:
-        raise HTTPException(502, "Sarvam returned an invalid transcript")
-    if not data["transcript"].strip():
+        for segment in segments:
+            response = client.post(
+                "https://api.sarvam.ai/speech-to-text",
+                headers={"api-subscription-key": key},
+                data={
+                    "model": settings.sarvam_model,
+                    "language_code": language,
+                    "mode": "transcribe",
+                },
+                files={"file": ("voice-note.wav", segment, "audio/wav")},
+            )
+            data = provider_json(response, "Voice transcription")
+            transcript = data.get("transcript")
+            if not isinstance(transcript, str) or len(transcript) > 5000:
+                raise HTTPException(502, "Transcription returned an invalid response")
+            if data.get("language_code") is not None and not isinstance(data["language_code"], str):
+                raise HTTPException(502, "Transcription returned an invalid language")
+            # Quiet segments are allowed; only a wholly silent recording fails.
+            if transcript.strip():
+                transcripts.append(transcript.strip())
+                detected_language = data.get("language_code") or detected_language
+            if sum(len(text) for text in transcripts) > 10000:
+                raise HTTPException(502, "Transcription returned too much text")
+    if not transcripts:
         raise HTTPException(422, "No speech was detected. Try again closer to the microphone")
-    if data.get("language_code") is not None and not isinstance(data["language_code"], str):
-        raise HTTPException(502, "Sarvam returned an invalid language")
-    return {"transcript": data["transcript"], "language_code": data.get("language_code", language)}
+    return {"transcript": " ".join(transcripts), "language_code": detected_language}
 
 
 def flight_status(settings: Settings, number: str, flight_date: date, airport: str) -> dict | None:

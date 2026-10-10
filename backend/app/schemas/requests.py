@@ -29,7 +29,7 @@ class RideRequestInput(InputModel):
     wheelchair_spaces: int = Field(default=0, ge=0, le=2)
     child_seats: int = Field(default=0, ge=0, le=4)
     pet_friendly: bool = False
-    notes: str = Field(default="", max_length=500)
+    notes: str = Field(default="", max_length=2000)
     flight_details_confirmed: Literal[True]
     # One logical submission uses one client-generated UUID; retries are idempotent.
     client_request_id: str = Field(
