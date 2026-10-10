@@ -21,3 +21,5 @@ The chat composer includes “Record voice”: allow microphone access, record u
 “Scan ticket” sits beside “Record voice” and opens the camera. Capture and review a photo, then consent and select “Read ticket” to autofill flight number and arrival date via the existing API. Retake or choose a JPG/PNG/text PDF up to 5 MB. Camera access needs permission and HTTPS or localhost; closing the dialog releases it.
 
 On mobile, the chat uses larger touch targets and a compact composer with camera and voice actions. Tap a completed step or answer bubble to edit it; arrival date has Today/Tomorrow shortcuts using the browser's local date. The conversation scrolls to each new question and respects reduced-motion settings.
+
+Drop-off suggestions appear automatically after 3 typed characters and a 400ms pause. Select a Google Maps result to store its coordinates; keyboard arrows/Enter work too. This uses the existing authenticated backend `/locations/search` Google Geocoding endpoint (India), requiring backend `GOOGLE_MAPS_API_KEY` and Geocoding API access. Manual pin entry remains available.

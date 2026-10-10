@@ -1,5 +1,13 @@
 # Change log
 
+## 2026-10-11 05:25 IST - Google drop-off suggestions
+
+- Changed: Drop-off input now automatically searches after 3 characters with a 400ms debounce, ignores stale responses, and displays Google Maps address results with loading/empty/error states. Selecting a result saves its coordinates; keyboard arrows/Enter and manual pin fallback are supported.
+- Why: User requested Google Maps suggestions while typing an address.
+- Validation: Frontend lint/typecheck run; no tests or live Google/browser checks run.
+- Limitations: Reuses the authenticated `/locations/search` endpoint and its Google Geocoding implementation, restricted to India. Requires backend `GOOGLE_MAPS_API_KEY` and the Geocoding API; this is not a new Google Places autocomplete integration.
+
+
 ## 2026-10-11 05:22 IST - Interactive mobile request chat
 
 - Changed: Added step navigation, tappable answers for editing, local-date Today/Tomorrow shortcuts, and automatic feed scrolling with reduced-motion support. Mobile styling uses dynamic viewport height, compact bubbles, 44px+ action targets, 16px inputs, two-column camera/voice controls, safe-area spacing and scrollable destination results.

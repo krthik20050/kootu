@@ -1,5 +1,10 @@
 # AI usage record
 
+## 2026-10-11 05:25 IST - Google drop-off suggestions
+
+Codex connected typing in the drop-off input to the existing Google Maps geocoding search endpoint, added debounce/stale-response handling, keyboard selection and loading feedback, and retained manual coordinates. No public Google key or new provider integration added. Frontend lint/typecheck run; no tests or live provider/browser checks run. Human review pending.
+
+
 ## 2026-10-11 05:22 IST - Interactive mobile request chat
 
 Codex added chat step navigation, direct answer editing, arrival-date shortcuts and automatic conversation scrolling. Adjusted mobile spacing, viewport sizing, input typography, safe-area padding and touch targets using the existing dashboard theme. Frontend lint/typecheck passed; no tests or mobile browser checks run. Human review pending.

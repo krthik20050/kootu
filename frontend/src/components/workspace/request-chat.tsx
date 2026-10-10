@@ -47,6 +47,7 @@ export function RequestChat({
   const [manualPin, setManualPin] = useState(false);
   const [locations, setLocations] = useState<LocationResponse[]>([]);
   const [searching, setSearching] = useState(false);
+  const [activeLocation, setActiveLocation] = useState(-1);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const feed = useRef<HTMLDivElement | null>(null);
@@ -82,22 +83,29 @@ export function RequestChat({
     setStepIndex((current) => current + 1);
   }
 
-  async function searchDestination() {
-    if (draft.destinationName.trim().length < 3) return;
-    setSearching(true);
-    setError("");
-    setNotice("");
-    try {
-      const results = await api<LocationResponse[]>(
-        `/locations/search?q=${encodeURIComponent(draft.destinationName)}`,
-      );
-      setLocations(results);
-      if (!results.length) setNotice("No places found. Try a more specific address or enter a map pin instead.");
-    } catch (caught) {
-      setError(message(caught));
-    } finally {
-      setSearching(false);
-    }
+  useEffect(() => {
+    if (stepIndex !== 2 || manualPin || draft.latitude || draft.destinationName.trim().length < 3) return;
+    let live = true;
+    const timer = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const results = await api<LocationResponse[]>(`/locations/search?q=${encodeURIComponent(draft.destinationName.trim())}`);
+        if (!live) return;
+        setLocations(results);
+        setActiveLocation(-1);
+        if (!results.length) setNotice("No matching addresses. Add a street or town, or enter a map pin.");
+      } catch (caught) {
+        if (live) setError(message(caught));
+      } finally {
+        if (live) setSearching(false);
+      }
+    }, 400);
+    return () => { live = false; clearTimeout(timer); };
+  }, [api, draft.destinationName, draft.latitude, manualPin, stepIndex]);
+
+  function selectDestination(place: LocationResponse) {
+    setDraft(current => ({ ...current, destinationName: place.name.slice(0, 160), latitude: String(place.coordinates.latitude), longitude: String(place.coordinates.longitude) }));
+    setLocations([]); setActiveLocation(-1); setSearching(false); setManualPin(false); setError(""); setNotice("");
   }
 
   function handleContinue(event: React.FormEvent<HTMLFormElement>) {
@@ -168,25 +176,29 @@ export function RequestChat({
           )}
           {question.key === "destinationName" && (
             <div className="chat-destination">
-              <label className="chat-input-label">Drop-off address<input required minLength={2} maxLength={160} placeholder="Building, street and town" value={draft.destinationName} onChange={(event) => {
-                setDraft((current) => ({ ...current, destinationName: event.target.value, latitude: "", longitude: "" }));
-                setLocations([]);
+              <label className="chat-input-label">Drop-off address<input required minLength={3} maxLength={160} autoComplete="off" role="combobox" aria-autocomplete="list" aria-expanded={locations.length > 0} aria-controls="dropoff-suggestions" aria-activedescendant={activeLocation >= 0 && locations[activeLocation] ? `dropoff-option-${activeLocation}` : undefined} aria-busy={searching} placeholder="Start typing a street, building or town" value={draft.destinationName} onChange={(event) => {
+                const value = event.target.value;
+                setDraft(current => ({ ...current, destinationName: value, latitude: "", longitude: "" }));
+                setLocations([]); setActiveLocation(-1); setManualPin(false); setError(""); setNotice(""); setSearching(value.trim().length >= 3);
+              }} onKeyDown={event => {
+                if (event.key === "Escape") { setLocations([]); setActiveLocation(-1); }
+                if (!locations.length) return;
+                if (event.key === "ArrowDown") { event.preventDefault(); setActiveLocation(index => (index + 1) % locations.length); }
+                if (event.key === "ArrowUp") { event.preventDefault(); setActiveLocation(index => index <= 0 ? locations.length - 1 : index - 1); }
+                if (event.key === "Enter" && activeLocation >= 0) { event.preventDefault(); selectDestination(locations[activeLocation]); }
               }} /></label>
+              {searching && <p role="status" className="chat-address-hint">Finding addresses…</p>}
+              {!searching && !draft.latitude && draft.destinationName.trim().length < 3 && <p className="chat-address-hint">Type at least 3 characters for Google Maps suggestions.</p>}
+              <ul id="dropoff-suggestions" role="listbox" className="chat-location-options" aria-label="Google Maps address suggestions" hidden={!locations.length}>{locations.map((place, index) => (
+                <li key={place.place_id} role="presentation"><button id={`dropoff-option-${index}`} role="option" aria-selected={activeLocation === index} type="button" onClick={() => selectDestination(place)}><span>{place.name}</span><span aria-hidden="true">↗</span></button></li>
+              ))}</ul>
+              {locations.length > 0 && <p className="chat-address-hint">Addresses from Google Maps · Choose your exact drop-off</p>}
               <div className="chat-destination-actions">
-                <button className="chat-secondary" type="button" disabled={searching || draft.destinationName.trim().length < 3} onClick={() => void searchDestination()}>{searching ? "Searching…" : "Find destination"}</button>
                 <button className="chat-text-action" type="button" disabled={draft.destinationName.trim().length < 2} onClick={() => {
-                  setManualPin(true);
-                  setDraft((current) => ({ ...current, latitude: "", longitude: "" }));
-                  setLocations([]);
+                  setManualPin(true); setSearching(false); setActiveLocation(-1); setError(""); setNotice("");
+                  setDraft(current => ({ ...current, latitude: "", longitude: "" })); setLocations([]);
                 }}>Enter a map pin instead</button>
               </div>
-              {locations.length > 0 && <ul className="chat-location-options" aria-label="Destination search results">{locations.map((place) => (
-                <li key={place.place_id}><button type="button" aria-pressed={draft.destinationName === place.name} onClick={() => {
-                  setDraft((current) => ({ ...current, destinationName: place.name.slice(0, 160), latitude: String(place.coordinates.latitude), longitude: String(place.coordinates.longitude) }));
-                  setLocations([]);
-                  setError("");
-                }}><span>{place.name}</span><span aria-hidden="true">↗</span></button></li>
-              ))}</ul>}
               {draft.latitude && <p className="chat-selection">Pin selected · {draft.latitude}, {draft.longitude}</p>}
             </div>
           )}
@@ -211,7 +223,7 @@ export function RequestChat({
           <div className="request-chat-controls">
             <button type="button" className="chat-back" disabled={stepIndex === 0 || disabled} onClick={() => { setError(""); setNotice(""); setStepIndex((current) => Math.max(0, current - 1)); }}>← Back</button>
             <div className="chat-continue-actions">
-                <button className="chat-send" disabled={disabled || searching || (question.key === "destinationName" && (!draft.latitude || !draft.longitude))}>
+                <button className="chat-send" disabled={disabled || (question.key === "destinationName" && (searching || !draft.latitude || !draft.longitude))}>
                   {question.key === "destinationName" ? "Review details" : "Continue"} <span aria-hidden="true">→</span>
                 </button>
             </div>

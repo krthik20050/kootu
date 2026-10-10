@@ -386,3 +386,7 @@ button:disabled { opacity: .5; cursor: wait; }
   .request-workspace .ride-list { padding: 20px; }
 }
 @media (prefers-reduced-motion: reduce) { .request-workspace .request-chat-feed { scroll-behavior: auto; } }
+
+.request-workspace .chat-address-hint { margin: 8px 0 0; color: var(--muted-foreground); font-size: 12px; line-height: 1.5; }
+.request-workspace .chat-location-options[hidden] { display: none; }
+.request-workspace .chat-location-options button[aria-selected="true"] { background: var(--secondary); color: var(--secondary-foreground); }
