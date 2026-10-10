@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 02:36 IST - Local credential recovery
+
+Codex checked configuration presence without revealing credentials, recovered the available provider values from the user-approved Render environment into ignored backend/.env, and removed obsolete blank Grok entries. Verified all three restored keys remain present. No unrelated in-progress backend changes were modified; no credentials were committed.
+
 ## 2026-10-11 02:23 IST - Live authentication review
 
 Codex verified deployed desktop/mobile auth screens and signup/return navigation, captured screenshots, and checked opaque computed form backgrounds and absence of horizontal overflow. CI passed for `4796756`, Vercel READY, Render live. Recorded actual health/readiness and 401 behavior. Human login and full ride test remain pending.

@@ -1,5 +1,9 @@
 # Change log
 
+## 2026-10-11 02:36 IST - Local credential recovery
+
+Restored missing local Groq, Sarvam and Aviationstack settings from the existing private Render environment after finding blank entries and obsolete Grok variable names in backend/.env. Verified key presence without printing values. Clerk frontend keys remained present. Google Maps was not configured. Only ignored local settings changed; origin of the file replacement is unknown.
+
 ## 2026-10-11 02:23 IST - Authentication browser and hosted verification
 
 - Auth checkpoint `4796756` passed GitHub API/web CI; Vercel READY and Render live. Verified deployed sign-in/sign-up pages, passenger entry and driver return link. At 390px width, the Clerk card background is opaque and the page has no horizontal overflow.
