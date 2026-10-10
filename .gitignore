@@ -22,3 +22,17 @@ Thumbs.db
 *.log
 
 # Add entries appropriate to your chosen language or framework.
+*.tsbuildinfo
+*.egg-info/
+.ruff_cache/
+.vercel/
+credentials/
+credentials*.json
+service-account*.json
+*-service-account.json
+id_rsa*
+id_ed25519*
+*.p12
+*.pfx
+supabase/.temp/
+supabase/.branches/

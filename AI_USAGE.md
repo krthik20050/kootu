@@ -4,11 +4,11 @@ Use Codex during the hackathon and briefly document its actual contribution here
 
 ## Event build log
 
-No participant AI usage has been recorded yet. Replace the placeholder row as you build. Mark human review as pending until someone has reviewed the contribution.
+Codex bootstrapped COOTU from the event documentation scaffold. Human review remains pending.
 
 | Date and time with timezone | Tool / model, if known | Task | Assistance and affected files | Human review / corrections | Validation and result |
 | --- | --- | --- | --- | --- | --- |
-| TODO | Codex | TODO | TODO | Pending | TODO |
+| 2026-10-10T23:53:48+05:30 | Codex | COOTU architecture bootstrap | Next.js shell and Clerk boundary, FastAPI health/settings/tests, PostGIS migration, CI, architecture/setup/validation docs; no full product features | Pending; corrected Next.js links, dependency compatibility and test-client deprecation | Frontend install/lint/typecheck/build; six API tests, Ruff, import and live HTTP; desktop/mobile browser review; production npm audit clean, tooling advisories disclosed. |
 
 ## Template preparation
 

@@ -1,0 +1,1 @@
+"""COOTU API application."""
