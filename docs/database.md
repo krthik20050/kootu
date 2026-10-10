@@ -1,6 +1,6 @@
 # PostgreSQL/PostGIS persistence
 
-Apply ordered SQL through `apps/api/migrate.py` using a migration-owner connection. It serializes migration runs with an advisory transaction lock, records SHA256 hashes and refuses edited applied migrations. No production `create_all`, SQLite or in-memory fallback exists.
+Apply ordered SQL through `backend/migrate.py` using a migration-owner connection. It serializes migration runs with an advisory transaction lock, records SHA256 hashes and refuses edited applied migrations. No production `create_all`, SQLite or in-memory fallback exists.
 
 Domain tables: profiles, passenger_requests, drivers, vehicles, ride_groups, ride_members, driver_offers, trip_events. `provider_usage` tracks hashed Clerk subjects and hourly provider request budgets; maintenance deletes buckets older than two days. Passenger geography is a stored WGS84 point generated from longitude/latitude with a GiST index. The application search path is `public,extensions`, supporting PostGIS installed in either of those schemas.
 

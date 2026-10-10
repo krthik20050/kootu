@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: apps/web
+        working-directory: frontend
     env:
       NEXT_PUBLIC_API_URL: http://localhost:8000
       NEXT_PUBLIC_AUTH_ENABLED: "false"
@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: apps/web/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
@@ -44,14 +44,14 @@ jobs:
       TEST_DATABASE_URL: postgresql+psycopg://kootu_test:ci-disposable-test-password@localhost:5432/kootu_test
     defaults:
       run:
-        working-directory: apps/api
+        working-directory: backend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
           cache: pip
-          cache-dependency-path: apps/api/requirements-dev.lock
+          cache-dependency-path: backend/requirements-dev.lock
       - run: python -m pip install -r requirements-dev.lock
       - run: python -m pip install --no-deps -e .
       - run: python -m ruff check .

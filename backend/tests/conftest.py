@@ -27,7 +27,9 @@ def database_url():
     engine = create_engine(value)
     with engine.begin() as connection:
         connection.execute(text("DROP SCHEMA public CASCADE; CREATE SCHEMA public;"))
-        for path in sorted(Path("../../supabase/migrations").glob("*.sql")):
+        for path in sorted(
+            (Path(__file__).resolve().parents[2] / "database/migrations").glob("*.sql")
+        ):
             connection.exec_driver_sql(path.read_text())
     engine.dispose()
     return value

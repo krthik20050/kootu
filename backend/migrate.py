@@ -22,7 +22,7 @@ def main() -> None:
         connection.exec_driver_sql("ALTER TABLE public.kootu_migrations ENABLE ROW LEVEL SECURITY")
         connection.exec_driver_sql("REVOKE ALL ON public.kootu_migrations FROM PUBLIC")
         for path in sorted(
-            (Path(__file__).resolve().parents[2] / "supabase/migrations").glob("*.sql")
+            (Path(__file__).resolve().parents[1] / "database/migrations").glob("*.sql")
         ):
             sql = path.read_text(encoding="utf-8")
             digest = hashlib.sha256(sql.encode()).hexdigest()

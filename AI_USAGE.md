@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 01:35 IST - Team navigation and folder move
+
+Codex reorganized the repository into frontend/backend/database/integrations at the user's request, added contributor-facing guides, repaired all current tooling paths and updated the existing Vercel root. Corrected database test relative paths and cleared stale generated Next.js output after moving folders. Human review pending. 53 backend/8 frontend tests, Ruff, frontend lint/typecheck and generated contract checks passed. Provider adapters stay server-side. No credentials committed; Supabase CLI capability was checked against official documentation, without claiming installation or login.
+
 ## 2026-10-11 01:26 IST - Vercel setup
 
 At the user's direction, Codex used the existing Vercel CLI account to create/link kootu, deploy the public setup website and connect its GitHub repository. Added a deployment upload exclusion file and documented the deployed URL, disabled booking state and outstanding Supabase/backend work. Verified the upload manifest, Vercel READY build and public homepage/passenger page. Human review pending. No private environment files or credentials were committed.

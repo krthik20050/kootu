@@ -15,7 +15,7 @@ git switch main
 git pull --ff-only origin main
 git switch -c feat/passenger-request-form
 # Make a small, complete change. Run checks. Update relevant docs and changelog.
-git add apps/web/src/components/workspace/passenger.tsx
+git add frontend/src/components/workspace/passenger.tsx
 git commit -m "feat: add passenger request form"
 git push -u origin feat/passenger-request-form
 ```
@@ -37,10 +37,11 @@ Never choose “keep mine” for every conflict. A conflict means two changes ne
 
 | Area | Main paths | Coordination needed |
 | --- | --- | --- |
-| Frontend | `apps/web/src` | API field names, states and errors |
-| Backend | `apps/api/app` | OpenAPI contracts, role/ownership rules |
-| Database | `supabase/migrations` | Migration IDs, schema compatibility |
-| Integration/testing | `apps/api/tests`, CI, docs | End-to-end flows and release checks |
+| Frontend | `frontend/src` | API field names, states and errors |
+| Backend | `backend/app` | OpenAPI contracts, role/ownership rules |
+| Database | `database/migrations` | Migration IDs, schema compatibility |
+| Provider setup | `integrations` | Keys, account products and backend adapter configuration |
+| Integration/testing | `backend/tests`, CI, docs | End-to-end flows and release checks |
 
 Two developers: one frontend, one backend; agree on the request/response contract first. Three or four: add database/matching and integration/testing owners. Twenty-three outside this event: use small feature teams, an owner per area, short-lived branches, small PRs and one integration/release coordinator. Do not create 23 long-lived personal copies of the architecture.
 

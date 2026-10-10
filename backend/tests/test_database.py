@@ -26,7 +26,9 @@ def test_rls_denies_browser_but_server_role_has_explicit_access(client):
         """)
         assert connection.scalar(text("SELECT count(*) FROM profiles")) == 0
         connection.exec_driver_sql("RESET ROLE")
-        guide = Path("../../docs/database.md").read_text(encoding="utf-8")
+        guide = (Path(__file__).resolve().parents[2] / "docs/database.md").read_text(
+            encoding="utf-8"
+        )
         sql = guide.split("```sql\n")[1].split("```")[0].replace("kootu_api", "kootu_test_server")
         connection.exec_driver_sql(sql, execution_options={"no_parameters": True})
         connection.exec_driver_sql("SET LOCAL ROLE kootu_test_server")

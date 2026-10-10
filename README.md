@@ -19,7 +19,37 @@ Built from scratch for the DevDay Exchange Community Hackathon: Kochi, 10–11 O
 
 ## Stack and ownership
 
-`apps/web`: Next.js 16, React 19, TypeScript, Tailwind 4 and Clerk. `apps/api`: FastAPI/Pydantic, SQLAlchemy/psycopg, PyJWT. `supabase/migrations`: PostgreSQL/PostGIS SQL. `docs/openapi.json` and `apps/web/src/lib/api/generated.ts` are exported from the backend, not edited independently. No microservices, Redis, AI matching, or message brokers. Docker is optional for disposable database tests, not an application prerequisite.
+Start here when choosing what to work on:
+
+```text
+kootu/
+├── frontend/                 # Website, screens and browser API client
+│   ├── src/app/              # Pages and global styles
+│   ├── src/components/       # Shared UI and passenger/driver/admin workspaces
+│   ├── src/lib/api/          # Backend client and generated contract types
+│   └── tests/                # Frontend tests
+├── backend/                  # FastAPI application and Python tooling
+│   ├── app/api/              # HTTP routes
+│   ├── app/core/             # Settings, authentication and database connection
+│   ├── app/models/           # Persistent domain models
+│   ├── app/schemas/          # Request and response validation
+│   ├── app/services/         # Matching, ride lifecycle and server API adapters
+│   └── tests/                # Backend and database integration tests
+├── database/
+│   └── migrations/           # Ordered PostgreSQL/PostGIS schema changes
+├── integrations/             # External API setup guides and code locations
+│   ├── clerk/
+│   ├── google-maps/
+│   ├── grok/
+│   ├── sarvam/
+│   └── aviationstack/
+├── docs/                     # Architecture, contracts and validation
+└── .github/workflows/        # CI checks
+```
+
+Each main folder has its own README. Provider secrets and executable adapters belong to the backend; `integrations` explains each connection without putting private keys in browser code. Previous `apps/web`, `apps/api` and `supabase/migrations` paths are now `frontend`, `backend` and `database/migrations`. Historical changelog/validation records retain their original paths.
+
+`frontend`: Next.js 16, React 19, TypeScript, Tailwind 4 and Clerk. `backend`: FastAPI/Pydantic, SQLAlchemy/psycopg, PyJWT. `database/migrations`: PostgreSQL/PostGIS SQL. `docs/openapi.json` and `frontend/src/lib/api/generated.ts` are exported from the backend, not edited independently. No microservices, Redis, AI matching, or message brokers. Docker is optional for disposable database tests, not an application prerequisite.
 
 [Architecture](docs/architecture.md) · [Database](docs/database.md) · [Matching](docs/matching-engine.md) · [API](docs/api-contracts.md)
 
@@ -27,7 +57,7 @@ Built from scratch for the DevDay Exchange Community Hackathon: Kochi, 10–11 O
 
 Use Node **22.12+**, npm, Python **3.13** (project requires 3.12+), Git and a PostgreSQL database with PostGIS. Python uses pip + venv.
 
-PowerShell, in `apps/api`:
+PowerShell, in `backend`:
 
 ```powershell
 python -m venv .venv
@@ -39,7 +69,7 @@ Copy-Item .env.example .env
 .\.venv\Scripts\python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 --no-access-log
 ```
 
-In `apps/web`, another terminal:
+In `frontend`, another terminal:
 
 ```powershell
 Copy-Item .env.example .env.local
@@ -70,9 +100,9 @@ Keys never go in Git, screenshots or chat. Public Next.js variables are baked in
 
 ## Checks
 
-In `apps/web`: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, `npm audit --omit=dev`.
+In `frontend`: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, `npm audit --omit=dev`.
 
-In `apps/api`:
+In `backend`:
 
 ```powershell
 .\.venv\Scripts\python -m ruff check .
@@ -97,24 +127,24 @@ After a contract change run `python export_contracts.py`, review both generated 
 
 ## Deployment
 
-Vercel root `apps/web`, Node 22.12+, install `npm ci`, build `npm run build`. Render root `apps/api`, Python 3.13, build `python -m pip install -r requirements.lock` then `python -m pip install --no-deps .`; start `uvicorn app.main:app --host 0.0.0.0 --port $PORT --no-access-log`. Set production HTTPS origins and server secrets. Apply reviewed migrations separately before releasing; use a direct/session-pooled PostgreSQL connection for advisory locks, not transaction-mode pooling. Set an ingress upload limit around 6MB and provider/request timeouts that permit bounded matching. A host that sleeps requires a continuously running worker or a later approved scheduled-job setup for continuous flight refresh. The Vercel public setup website has been deployed as documented below; the backend and Supabase connection remain pending.
+Vercel root `frontend`, Node 22.12+, install `npm ci`, build `npm run build`. Render root `backend`, Python 3.13, build `python -m pip install -r requirements.lock` then `python -m pip install --no-deps .`; start `uvicorn app.main:app --host 0.0.0.0 --port $PORT --no-access-log`. Set production HTTPS origins and server secrets. Apply reviewed migrations separately before releasing; use a direct/session-pooled PostgreSQL connection for advisory locks, not transaction-mode pooling. Set an ingress upload limit around 6MB and provider/request timeouts that permit bounded matching. A host that sleeps requires a continuously running worker or a later approved scheduled-job setup for continuous flight refresh. The Vercel public setup website has been deployed as documented below; the backend and Supabase connection remain pending.
 
 ### Current Vercel deployment
 
 [Public website](https://kootu-five.vercel.app) · [Vercel project](https://vercel.com/krthik20050s-projects/kootu)
 
-The existing `krthik20050` account owns the project. GitHub `krthik20050/kootu` is connected, with root `apps/web`, Next.js preset, Node project setting `22.x` and install command `npm ci`. The initial production deployment reached READY, and its homepage and passenger setup state were browser-verified on 11 October 2026. Vercel warns that the package's `>=22.12.0` engine range can select a later major runtime.
+The existing `krthik20050` account owns the project. GitHub `krthik20050/kootu` is connected, with root `frontend`, Next.js preset, Node project setting `22.x` and install command `npm ci`. The initial production deployment reached READY, and its homepage and passenger setup state were browser-verified on 11 October 2026. Vercel warns that the package's `>=22.12.0` engine range can select a later major runtime.
 
 Production and Preview currently use `NEXT_PUBLIC_AUTH_ENABLED=false` and `NEXT_PUBLIC_API_URL=https://kootu-api.invalid`. That reserved invalid domain intentionally cannot reach a backend. Booking is disabled. Replace it with the real HTTPS API URL and configure Clerk before enabling booking; then redeploy. Supabase migrations, server-role provisioning and provider authentication remain pending. The website calls FastAPI; only FastAPI receives the Supabase database connection string.
 
-For future CLI deployments, run from the repository root (the project already specifies `apps/web`):
+For future CLI deployments, run from the repository root (the project already specifies `frontend`):
 
 ```powershell
 vercel link --yes --project kootu --scope krthik20050s-projects
 vercel deploy --prod --scope krthik20050s-projects
 ```
 
-Do not deploy from `apps/web` after setting the remote root directory, since that can apply the subdirectory twice. `.vercelignore` excludes local environment files, dependencies and build output. Keep real credentials in the appropriate hosting environment. GitHub deploys are subject to Vercel's account/commit-author permissions; a connected repository does not grant teammates deployment access.
+Do not deploy from `frontend` after setting the remote root directory, since that can apply the subdirectory twice. `.vercelignore` excludes local environment files, dependencies and build output. Keep real credentials in the appropriate hosting environment. GitHub deploys are subject to Vercel's account/commit-author permissions; a connected repository does not grant teammates deployment access.
 
 ## Sources
 

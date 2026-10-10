@@ -1,6 +1,6 @@
 # API contracts
 
-`GET /openapi.json` and `/docs` describe the running API; `docs/openapi.json` is the committed snapshot. Generate frontend types with `python export_contracts.py` from `apps/api`. CI uses `--check`. Input models forbid extra fields, including attempted role/approval escalation.
+`GET /openapi.json` and `/docs` describe the running API; `docs/openapi.json` is the committed snapshot. Generate frontend types with `python export_contracts.py` from `backend`. CI uses `--check`. Input models forbid extra fields, including attempted role/approval escalation.
 
 | API area | Implemented routes |
 | --- | --- |

@@ -6,11 +6,11 @@ The implemented system has one Next.js frontend, one FastAPI application and Pos
 
 | Module | Owns |
 | --- | --- |
-| `apps/web/src/components/workspace` | Passenger booking/intake, driver offers/trips and operator review |
-| `apps/api/app/core` | Settings, trusted Clerk verification, transaction dependencies, shared provider budgets |
-| `apps/api/app/api` | Input/output contracts, roles, resource ownership and lifecycle routes |
-| `apps/api/app/models/domain.py` | Persistent profiles, requests, drivers, vehicles, groups, memberships, offers and events |
-| `apps/api/app/services/matching.py` | Pure whole-cluster constraints and deterministic ordering |
+| `frontend/src/components/workspace` | Passenger booking/intake, driver offers/trips and operator review |
+| `backend/app/core` | Settings, trusted Clerk verification, transaction dependencies, shared provider budgets |
+| `backend/app/api` | Input/output contracts, roles, resource ownership and lifecycle routes |
+| `backend/app/models/domain.py` | Persistent profiles, requests, drivers, vehicles, groups, memberships, offers and events |
+| `backend/app/services/matching.py` | Pure whole-cluster constraints and deterministic ordering |
 | `services/rides.py` | Candidate retrieval, road verification and locked state transitions |
 | `services/providers.py` | Bounded Google, Grok, Sarvam and Aviationstack adapters |
 | `services/flight_updates.py` | Flight adjustments, stale offers and bounded rematching |

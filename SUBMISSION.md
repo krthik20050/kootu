@@ -23,9 +23,9 @@ Participate solo or in a team of up to 4. Remove unused rows.
 ## Run and demonstrate
 
 - **Prerequisites and versions:** Node 22.12+, npm, Python 3.13 recommended; see README.
-- **Install command:** Web: `npm ci` in `apps/web`; API: pip/venv locked installation in README.
+- **Install command:** Web: `npm ci` in `frontend`; API: pip/venv locked installation in README.
 - **Required environment variable names:** Web Clerk keys, API database/Clerk issuer/Google/Grok/Sarvam/Aviationstack settings; complete list and sanitized examples in README.
-- **Start command:** Web: `npm run dev`; API: `python -m uvicorn app.main:app --reload --no-access-log` inside the configured venv and `apps/api`.
+- **Start command:** Web: `npm run dev`; API: `python -m uvicorn app.main:app --reload --no-access-log` inside the configured venv and `backend`.
 - **Demo walkthrough:** Follow the configured multi-account booking/approval/offer/trip walkthrough in README; keyless mode demonstrates setup and regression checks only.
 - **Checks performed and results:** Frontend lint/typecheck/build and 8 interaction tests; 53 backend tests using real PostgreSQL/PostGIS, Ruff and contract checks. Details: [validation](docs/backend-validation.md).
 - **Known limitations or incomplete features:** Live Clerk/provider accounts and deployment remain unverified. No fares/payments, GPS/emergency dispatch or automatic document verification. Dev-tool advisories are disclosed in validation. Participant names and final submitted SHA remain for the team.
