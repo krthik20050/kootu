@@ -1,5 +1,11 @@
 # Change log
 
+## 2026-10-11 01:56 IST - Hosted API and Clerk connection
+
+- Created/linked a dedicated kootu Clerk app, pulled local development keys, verified RSA JWKS, and saved keys in Vercel after explicit credential-transfer approval. Enabled local sign-in and built successfully. Production Vercel settings now target the real API and enable sign-in; previews stay disabled under the backend's exact-origin policy.
+- Installed/checksummed the official Render CLI in ignored tooling, completed user login, validated `render.yaml`, and created a free Singapore Python service `srv-db59t3nlot8c73e7be60` with its private Supabase runtime connection and Clerk issuer. API deployment reached live; health200 and readiness503 correctly report database/auth configured and four providers missing.
+- Fast-forwarded the teammate's route grouping commit `feece27` without overwriting it. Render's initial build used that commit. No provider keys, paid plans or operator identity were invented. Free-host sleep prevents continuous idle flight polling. User sign-in/provider dashboard access and full live ride testing remain pending.
+
 ## 2026-10-11 01:43 IST - Supabase connection
 
 - With explicit approval for the organization and Mumbai region, created and linked Supabase project `hsxahwksjlvtrgpbrwvc` (`kootu`) through CLI 2.120.0. No paid upgrade selected. Added tracked CLI config under `database/supabase`; all credentials/link metadata remain ignored.

@@ -39,5 +39,6 @@ database/supabase/.branches/
 database/.temp/
 database/.branches/
 supabase/.temp/
+.tools/
 
 .vitest/

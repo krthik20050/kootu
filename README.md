@@ -11,7 +11,7 @@
 - Automatic Aviationstack flight polling adjusts ready times from the original baseline, preserves feasible groups, and releases incompatible/cancelled groups for rematching. A PostgreSQL advisory lock coordinates maintenance across processes; no queue service is required.
 - Generated OpenAPI/TypeScript contracts, SQL migration runner, PR template, GitHub CI and [collaboration guide](CONTRIBUTING.md).
 
-Local regression coverage includes real PostgreSQL 17/PostGIS 3.5, signed JWT validation, concurrency and provider contract fixtures. **The public website is deployed and the local backend is connected to Supabase; live Clerk/provider credentials and backend hosting have not been verified.** The keyless preview shows a setup state instead of fabricated bookings. Adding keys also requires applying migrations, enabling provider products, selecting a compatible Grok model and approving real drivers/vehicles. No claim of guaranteed rides or zero defects is made.
+Local regression coverage includes real PostgreSQL 17/PostGIS 3.5, signed JWT validation, concurrency and provider contract fixtures. **The website and backend are deployed and connected to Supabase and a Clerk development instance; live external provider credentials and the signed-in ride flow have not been verified.** The keyless preview shows a setup state instead of fabricated bookings. Adding keys also requires applying migrations, enabling provider products, selecting a compatible Grok model and approving real drivers/vehicles. No claim of guaranteed rides or zero defects is made.
 
 This is a coordination MVP. Payments, fare quotes, GPS tracking, emergency dispatch, passenger identity verification and commercial operating procedures are not implemented. Driver approval records an operator decision; kootu does not verify government documents automatically. See [competitor research](docs/competitor-analysis.md) and [validation](docs/backend-validation.md).
 
@@ -129,7 +129,7 @@ After a contract change run `python export_contracts.py`, review both generated 
 
 ## Deployment
 
-Vercel root `frontend`, Node 22.12+, install `npm ci`, build `npm run build`. Render root `backend`, Python 3.13, build `python -m pip install -r requirements.lock` then `python -m pip install --no-deps .`; start `uvicorn app.main:app --host 0.0.0.0 --port $PORT --no-access-log`. Set production HTTPS origins and server secrets. Apply reviewed migrations separately before releasing; use a direct/session-pooled PostgreSQL connection for advisory locks, not transaction-mode pooling. Set an ingress upload limit around 6MB and provider/request timeouts that permit bounded matching. A host that sleeps requires a continuously running worker or a later approved scheduled-job setup for continuous flight refresh. The Vercel public setup website has been deployed as documented below; backend hosting remains pending; the local Supabase connection is verified below.
+Vercel root `frontend`, Node 22.12+, install `npm ci`, build `npm run build`. Render root `backend`, Python 3.13, build `python -m pip install -r requirements.lock` then `python -m pip install --no-deps .`; start `uvicorn app.main:app --host 0.0.0.0 --port $PORT --no-access-log`. Set production HTTPS origins and server secrets. Apply reviewed migrations separately before releasing; use a direct/session-pooled PostgreSQL connection for advisory locks, not transaction-mode pooling. Set an ingress upload limit around 6MB and provider/request timeouts that permit bounded matching. A host that sleeps requires a continuously running worker or a later approved scheduled-job setup for continuous flight refresh. The Vercel public setup website has been deployed as documented below; the hosted backend and Supabase connection are verified below.
 
 ### Current Vercel deployment
 
@@ -137,7 +137,7 @@ Vercel root `frontend`, Node 22.12+, install `npm ci`, build `npm run build`. Re
 
 The existing `krthik20050` account owns the project. GitHub `krthik20050/kootu` is connected, with root `frontend`, Next.js preset, Node project setting `22.x` and install command `npm ci`. The initial production deployment reached READY, and its homepage and passenger setup state were browser-verified on 11 October 2026. Vercel warns that the package's `>=22.12.0` engine range can select a later major runtime.
 
-Production and Preview currently use `NEXT_PUBLIC_AUTH_ENABLED=false` and `NEXT_PUBLIC_API_URL=https://kootu-api.invalid`. That reserved invalid domain intentionally cannot reach a backend. Booking is disabled. Replace it with the real HTTPS API URL and configure Clerk before enabling booking; then redeploy. Supabase migrations and the server role are provisioned and verified; provider authentication and backend hosting remain pending. The website calls FastAPI; only FastAPI receives the Supabase database connection string.
+Production uses `NEXT_PUBLIC_AUTH_ENABLED=true` and `NEXT_PUBLIC_API_URL=https://kootu-api-k5eh.onrender.com`, with Clerk credentials stored in Vercel. Preview stays auth-disabled because the backend authorizes only the stable public origin. Clerk uses development keys for the hackathon demo on the Vercel-provided domain; no production Clerk instance is configured. External provider credentials remain missing, so routing, ticket extraction, transcription and flight updates are not operational. The website calls FastAPI; only FastAPI receives the Supabase database connection string.
 
 For future CLI deployments, run from the repository root (the project already specifies `frontend`):
 
@@ -152,7 +152,21 @@ Do not deploy from `frontend` after setting the remote root directory, since tha
 
 [Supabase project](https://supabase.com/dashboard/project/hsxahwksjlvtrgpbrwvc): `kootu`, Mumbai (`ap-south-1`), existing approved organization. CLI 2.120.0 is linked via `database/supabase`. All three migrations, nine application tables with RLS and nine policies restricted to `kootu_api` were verified remotely, along with backend-role login and session advisory locks. `backend/.env` now connects the local API to the session pooler with TLS. Owner and API passwords remain in ignored files, outside Git and the frontend.
 
-The hosted website still shows setup: no hosted FastAPI endpoint or live Clerk/provider credentials are configured. A deployed API must receive its own server-role `DATABASE_URL` and secrets; then set Vercel's `NEXT_PUBLIC_API_URL` to that HTTPS endpoint and enable Clerk. The database connection alone does not activate bookings.
+The hosted FastAPI service now uses the dedicated server-role connection and verified Clerk issuer. Provider keys and an operator identity still need configuring before the full ride workflow can run.
+
+
+
+### Current backend and Clerk setup
+
+[Render API](https://kootu-api-k5eh.onrender.com/health) · [Render service dashboard](https://dashboard.render.com/web/srv-db59t3nlot8c73e7be60)
+
+`kootu-api` runs Python 3.13.9 on a free Render service in Singapore, from `backend`, with GitHub auto-deploy. `render.yaml` records the deployment settings and passed Render blueprint validation; its `sync: false` values are supplied privately, never committed. The current service was created through the CLI. Do not create another service just to apply this file.
+
+Clerk application `app_3KWBNZTTRjtIZHSHZSAgL8Fc6wt` has development instance `ins_3KWBNbW7Wcy2xQRybxK7x40CiQB`, issuer `https://dear-lionfish-4707.clerk.accounts.dev`. Its RSA JWKS endpoint was verified, and its keys were saved to Vercel after explicit user approval. The Render backend requires only the issuer for session verification, not the Clerk secret key. Public-site sign-in is enabled; end-user authentication is verified separately from key configuration.
+
+The API's `/health` returns 200. `/ready` returns 503 with database/authentication configured and routing/ticket/transcription/flight integrations unconfigured. Health checks use `/health` so incomplete optional provider setup does not restart the service continually. Real rides still require Google routing, approved drivers/vehicles and an operator. Set `BOOTSTRAP_ADMIN_SUBJECT` to the intended operator's Clerk user ID after that person signs in; never assign the first arbitrary user administrator privileges.
+
+Free Render services sleep after 15 minutes without inbound traffic and can take about a minute to wake. Flight maintenance runs only while this host is awake; an always-running host is needed for continuous updates. This deployment does not bypass sleep restrictions. See [Render free-service limits](https://render.com/docs/free) and [Clerk environments](https://clerk.com/docs/guides/development/managing-environments).
 
 ## Sources
 

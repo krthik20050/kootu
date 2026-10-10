@@ -1,0 +1,38 @@
+# Supabase is already provisioned separately. No additional database is created.
+services:
+  - type: web
+    name: kootu-api
+    runtime: python
+    plan: free
+    region: singapore
+    repo: https://github.com/krthik20050/kootu
+    branch: main
+    rootDir: backend
+    buildCommand: python -m pip install -r requirements.lock && python -m pip install --no-deps .
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --no-access-log
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.9
+      - key: APP_ENV
+        value: production
+      - key: FRONTEND_URL
+        value: https://kootu-five.vercel.app
+      - key: DATABASE_URL
+        sync: false
+      - key: CLERK_ISSUER
+        value: https://dear-lionfish-4707.clerk.accounts.dev
+      - key: BOOTSTRAP_ADMIN_SUBJECT
+        sync: false
+      - key: GOOGLE_MAPS_API_KEY
+        sync: false
+      - key: GROK_API_KEY
+        sync: false
+      - key: GROK_MODEL
+        sync: false
+      - key: SARVAM_API_KEY
+        sync: false
+      - key: SARVAM_MODEL
+        value: saaras:v3
+      - key: AVIATIONSTACK_API_KEY
+        sync: false
