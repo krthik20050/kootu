@@ -2,7 +2,7 @@
 
 ## 2026-10-11 01:35 IST - Team navigation and folder move
 
-Codex reorganized the repository into frontend/backend/database/integrations at the user's request, added contributor-facing guides, repaired all current tooling paths and updated the existing Vercel root. Corrected database test relative paths and cleared stale generated Next.js output after moving folders. Human review pending. 53 backend/8 frontend tests, Ruff, frontend lint/typecheck and generated contract checks passed. Provider adapters stay server-side. No credentials committed; Supabase CLI capability was checked against official documentation, without claiming installation or login.
+Codex reorganized the repository into frontend/backend/database/integrations at the user's request, added contributor-facing guides, repaired all current tooling paths and updated the existing Vercel root. Corrected database test relative paths and cleared stale generated Next.js output after moving folders. Human review pending. 53 backend/8 frontend tests, Ruff, frontend lint/typecheck, clean production build and generated contract checks passed. GitHub CI for ee40be9 passed (run 38082348112); the automatic Vercel deployment reached READY using frontend. Both local previews restarted. Provider adapters stay server-side. No credentials committed; Supabase CLI capability was checked against official documentation, without claiming installation or login.
 
 ## 2026-10-11 01:26 IST - Vercel setup
 
