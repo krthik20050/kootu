@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 01:43 IST - Supabase provisioning
+
+Codex discovered existing CLI authentication, obtained explicit user approval after automatic review blocked initial project creation, then created/linked kootu in the named organization and Mumbai region. Applied existing migrations, configured a dedicated backend database role and stored generated credentials only in ignored local files. Verified remote table/RLS/policy/migration counts, backend-role login and session advisory locks; restarted the local API. Added CLI configuration and truthful setup records. Human review pending. No hosted API or live provider authentication claimed.
+
 ## 2026-10-11 01:35 IST - Team navigation and folder move
 
 Codex reorganized the repository into frontend/backend/database/integrations at the user's request, added contributor-facing guides, repaired all current tooling paths and updated the existing Vercel root. Corrected database test relative paths and cleared stale generated Next.js output after moving folders. Human review pending. 53 backend/8 frontend tests, Ruff, frontend lint/typecheck, clean production build and generated contract checks passed. GitHub CI for ee40be9 passed (run 38082348112); the automatic Vercel deployment reached READY using frontend. Both local previews restarted. Provider adapters stay server-side. No credentials committed; Supabase CLI capability was checked against official documentation, without claiming installation or login.

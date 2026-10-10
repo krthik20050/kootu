@@ -38,5 +38,6 @@ database/supabase/.temp/
 database/supabase/.branches/
 database/.temp/
 database/.branches/
+supabase/.temp/
 
 .vitest/
