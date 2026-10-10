@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { LocationResponse, ProfileResponse } from "@/lib/api/generated";
 import { message, type Api } from "./shared";
-import { UploadAssist } from "./upload-assist";
+import { TicketCamera } from "./ticket-camera";
 import { VoiceRecorder } from "./voice-recorder";
 
 type Draft = {
@@ -176,7 +176,15 @@ export function RequestChat({
           )}
           </fieldset>
 
-          <VoiceRecorder disabled={disabled} />
+          <VoiceRecorder disabled={disabled} actions={<TicketCamera api={api} disabled={disabled} onTicket={(details) => {
+            setDraft((current) => ({
+              ...current,
+              flightNumber: details.flight_number || current.flightNumber,
+              flightDate: details.flight_date || current.flightDate,
+            }));
+            setStepIndex(0);
+            setNotice("Ticket details filled in. Check each answer as you continue.");
+          }} />} />
 
           <div className="request-chat-controls">
             <button type="button" className="chat-back" disabled={stepIndex === 0 || disabled} onClick={() => { setError(""); setNotice(""); setStepIndex((current) => Math.max(0, current - 1)); }}>← Back</button>
@@ -204,24 +212,7 @@ export function RequestChat({
         </div>
       )}
 
-      <details className="assist request-chat-assist">
-        <summary>Scan ticket</summary>
-        <UploadAssist
-          api={api}
-          onTicket={(details) => {
-            setDraft((current) => ({
-              ...current,
-              flightNumber: details.flight_number || current.flightNumber,
-              flightDate: details.flight_date || current.flightDate,
-            }));
-            setStepIndex(0);
-            setNotice("Ticket details filled in. Check each answer as you continue.");
-          }}
-          onNote={() => {
-            setNotice("Voice notes are not included in this preview flow.");
-          }}
-        />
-      </details>
+
     </section>
   );
 }

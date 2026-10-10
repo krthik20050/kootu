@@ -17,3 +17,5 @@ The dashboard header has a light/dark mode toggle. It follows your system prefer
 The request workspace uses the dashboard's blue/neutral theme, responsive sidebar and header, and shared light/dark preference. Its chat, ticket upload controls and saved journey list follow the active theme.
 
 The chat composer includes “Record voice”: allow microphone access, record up to 30 seconds, then play back, discard or re-record. Audio remains local and does not fill answers or upload to the backend. Requires a MediaRecorder-capable browser on HTTPS or localhost.
+
+“Scan ticket” sits beside “Record voice” and opens the camera. Capture and review a photo, then consent and select “Read ticket” to autofill flight number and arrival date via the existing API. Retake or choose a JPG/PNG/text PDF up to 5 MB. Camera access needs permission and HTTPS or localhost; closing the dialog releases it.

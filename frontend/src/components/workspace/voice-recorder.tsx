@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Mic, Square, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function VoiceRecorder({ disabled }: { disabled: boolean }) {
+export function VoiceRecorder({ disabled, actions }: { disabled: boolean; actions?: ReactNode }) {
   const [status, setStatus] = useState<"idle" | "requesting" | "recording">("idle");
   const [seconds, setSeconds] = useState(0);
   const [preview, setPreview] = useState("");
@@ -92,6 +92,7 @@ export function VoiceRecorder({ disabled }: { disabled: boolean }) {
 
   return <div className="chat-voice-recorder">
     <div className="flex flex-wrap items-center gap-3">
+      {actions}
       {status === "recording" ? <Button type="button" variant="outline" size="sm" onClick={stop}><Square className="mr-2 size-4" />Stop recording</Button>
         : <Button type="button" variant="outline" size="sm" disabled={disabled || status === "requesting"} onClick={() => void start()}><Mic className="mr-2 size-4" />{status === "requesting" ? "Allow microphone…" : preview ? "Record again" : "Record voice"}</Button>}
       <span role="status" className="text-xs text-muted-foreground">{status === "recording" ? `Recording · ${seconds}s / 30s` : "Up to 30 seconds"}</span>

@@ -1,5 +1,13 @@
 # Change log
 
+## 2026-10-11 05:18 IST - Camera ticket scan action
+
+- Changed: Moved Scan ticket beside Record voice in the chat composer. It opens a themed camera dialog with rear-camera preference, capture/review/retake, permission errors and file fallback. Consent and Read ticket send the reviewed file through the existing extraction endpoint and autofill only flight number/arrival date. Camera tracks and preview URLs are released on close/unmount.
+- Why: User requested a repositioned button that opens the camera.
+- Validation: Frontend lint/typecheck run; no tests or physical camera/browser checks run.
+- Limitations: Camera requires HTTPS or localhost and permission. Extraction still requires the configured backend/provider; ride saving remains disabled.
+
+
 ## 2026-10-11 05:15 IST - Chat voice recording
 
 - Changed: Added a microphone action beside the request chat input, with permission handling, stop control, 30-second limit, local audio preview, discard/re-record controls and microphone/object URL cleanup. Checkpoint includes the existing three-question request preview and `/request` route that host the control.

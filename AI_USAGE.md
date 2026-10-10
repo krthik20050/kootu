@@ -1,5 +1,10 @@
 # AI usage record
 
+## 2026-10-11 05:18 IST - Camera ticket scan action
+
+Codex moved Scan ticket into the composer action row and added camera capture, review/retake, file fallback, permission handling and camera resource cleanup. Reused the existing consent-based ticket extraction API and kept the three-question UI-only ride flow. Frontend lint/typecheck run; no tests or physical camera/browser checks run. Human review pending.
+
+
 ## 2026-10-11 05:15 IST - Chat voice recording
 
 Codex added browser microphone recording to the existing request-chat composer, with a 30-second limit, permission/error handling, playback/discard and resource cleanup. Kept recording local under the user's UI-only scope; no transcription or backend upload added. Frontend lint/typecheck run; no tests or microphone/browser checks run. Human review pending.
