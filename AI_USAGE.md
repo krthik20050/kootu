@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 02:23 IST - Live authentication review
+
+Codex verified deployed desktop/mobile auth screens and signup/return navigation, captured screenshots, and checked opaque computed form backgrounds and absence of horizontal overflow. CI passed for `4796756`, Vercel READY, Render live. Recorded actual health/readiness and 401 behavior. Human login and full ride test remain pending.
+
 ## 2026-10-11 02:20 IST - Authentication usability repair
 
 Codex reproduced the unreadable live Clerk modal, identified missing shadcn surface tokens, and applied Clerk custom appearance and Impeccable product guidance. Added dedicated auth routes, safe workspace return links, readable form surfaces and Clerk name prefill. Ten frontend tests plus lint/typecheck passed; production webpack build passed; browser review in progress. Human review and completed login pending.

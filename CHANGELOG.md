@@ -1,5 +1,10 @@
 # Change log
 
+## 2026-10-11 02:23 IST - Authentication browser and hosted verification
+
+- Auth checkpoint `4796756` passed GitHub API/web CI; Vercel READY and Render live. Verified deployed sign-in/sign-up pages, passenger entry and driver return link. At 390px width, the Clerk card background is opaque and the page has no horizontal overflow.
+- API health200, unauthenticated me401 and readiness503 verified: only routing is missing from configuration. Full human login, routing alternative and live ride approval remain outstanding. Updated README/AI usage evidence; no implementation changes in this checkpoint.
+
 ## 2026-10-11 02:20 IST - Readable authentication and workspace return
 
 - Reproduced transparent Clerk modal in the deployed website: shadcn theme referenced absent card/input tokens. Added those tokens and explicit Clerk appearance colors. Replaced modal entry points with dedicated, responsive sign-in/sign-up pages with prominent Google/email options, booking context and back links.
