@@ -9,6 +9,15 @@
   --muted: #e7ebdf;
   --muted-foreground: #51685d;
   --border: #d9dfd2;
+  --card: #fffef9;
+  --card-foreground: #183d33;
+  --popover: #fffef9;
+  --popover-foreground: #183d33;
+  --input: #ffffff;
+  --accent: #e7ebdf;
+  --accent-foreground: #183d33;
+  --ring: #a74916;
+  --destructive: #9a351b;
   --radius: 0.75rem;
 }
 @theme inline {
@@ -34,6 +43,17 @@ a:focus-visible, button:focus-visible { outline: 3px solid #a74916; outline-offs
 .header-note { font-size: 13px; color: var(--muted-foreground); }
 .stage-badge { font-size: 11px; letter-spacing: .06em; border: 1px solid var(--border); padding: 10px 14px; border-radius: 40px; }
 .auth-button { border: 1px solid var(--border); border-radius: 40px; padding: 10px 20px; background: white; }
+.auth-layout { max-width: 1120px; margin: 36px auto 72px; padding: 0 32px; display: grid; grid-template-columns: 1fr minmax(0, 440px); gap: 80px; align-items: start; }
+.auth-context { padding-top: 24px; }
+.auth-context h1 { font-size: 48px; line-height: 1.12; letter-spacing: -.04em; margin: 24px 0; }
+.auth-context > p { line-height: 1.7; max-width: 420px; }
+.auth-steps { list-style: none; counter-reset: steps; padding: 0; margin: 32px 0; }
+.auth-steps li { counter-increment: steps; display: flex; align-items: center; gap: 16px; padding: 15px 0; border-top: 1px solid var(--border); font-size: 15px; }
+.auth-steps li::before { content: counter(steps); border: 1px solid var(--border); border-radius: 50%; width: 30px; height: 30px; display: grid; place-items: center; flex-shrink: 0; font-size: 12px; }
+.auth-form-panel { background: #fffef9; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; min-width: 0; color-scheme: light; }
+.auth-help { margin: 0; padding: 20px 28px; border-bottom: 1px solid var(--border); font-size: 13px; line-height: 1.6; color: var(--muted-foreground); }
+.auth-back { font-size: 14px; padding: 12px 0; }
+@media (max-width: 760px) { .auth-layout { grid-template-columns: minmax(0, 1fr); gap: 24px; padding: 0 20px; margin: 12px auto 40px; max-width: 480px; }.auth-context { padding-top: 0; }.auth-context h1 { font-size: 32px; margin: 16px 0; }.auth-steps { display: none; }.auth-context > .quiet { display: none; }.auth-help { padding: 18px 24px; } }
 .hero { max-width: 1440px; margin: auto; padding: 90px 6% 100px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 7%; align-items: center; }
 .eyebrow { font-size: 10px; letter-spacing: .15em; font-weight: 700; display: flex; align-items: center; gap: 8px; }
 .eyebrow > span { width: 7px; height: 7px; border-radius: 50%; background: #d05b2b; }

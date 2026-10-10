@@ -1,10 +1,11 @@
 "use client";
 
-import { SignInButton, useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { useCallback } from "react";
 import { AuthControls } from "@/components/auth-controls";
 import { apiRequest } from "@/lib/api/client";
+import { signInHref } from "@/lib/auth-navigation";
 import { Passenger } from "./passenger";
 import { DriverDesk } from "./driver";
 import { AdminDesk } from "./admin";
@@ -13,6 +14,7 @@ import type { Api } from "./shared";
 
 function SignedWorkspace({ area }: { area: "passenger" | "driver" | "admin" }) {
   const { isLoaded, isSignedIn, getToken } = useAuth();
+  const { user } = useUser();
   const api: Api = useCallback(
     async (path, options) => {
       const token = await getToken();
@@ -25,23 +27,17 @@ function SignedWorkspace({ area }: { area: "passenger" | "driver" | "admin" }) {
   if (!isSignedIn)
     return (
       <section className="setup-state">
-        <p className="eyebrow">YOUR JOURNEY</p>
-        <h1>
-          Start with
-          <br />
-          <em>a hello.</em>
-        </h1>
+        <p className="eyebrow">{area === "passenger" ? "YOUR AIRPORT RIDE" : area === "driver" ? "DRIVER WORKSPACE" : "OPERATOR WORKSPACE"}</p>
+        <h1>{area === "passenger" ? "Find your shared ride." : area === "driver" ? "Manage your rides." : "Manage ride operations."}</h1>
         <p>
-          Sign in to save your arrival, find a group and keep track of your
-          ride.
+          {area === "passenger" ? "Sign in, add your flight and drop-off, then find passengers heading your way." : area === "driver" ? "Sign in to register your vehicle, manage availability and review ride offers." : "Sign in with your approved operator account to review drivers and vehicles."}
         </p>
-        <SignInButton mode="modal">
-          <button className="action">Sign in to continue</button>
-        </SignInButton>
+        <Link className="action" href={signInHref(`/${area}`)}>Continue to sign in →</Link>
+        <p className="quiet">Use Google or email. New to kootu? You can create an account on the next screen.</p>
       </section>
     );
   return area === "passenger" ? (
-    <Passenger api={api} />
+    <Passenger api={api} accountName={user?.fullName || user?.firstName || ""} />
   ) : area === "driver" ? (
     <DriverDesk api={api} />
   ) : (

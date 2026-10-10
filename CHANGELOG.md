@@ -1,5 +1,11 @@
 # Change log
 
+## 2026-10-11 02:20 IST - Readable authentication and workspace return
+
+- Reproduced transparent Clerk modal in the deployed website: shadcn theme referenced absent card/input tokens. Added those tokens and explicit Clerk appearance colors. Replaced modal entry points with dedicated, responsive sign-in/sign-up pages with prominent Google/email options, booking context and back links.
+- Restricted return destinations to passenger/driver/operator workspaces and preserved the selection through sign-in/sign-up. Prefill passenger names from Clerk when no saved name exists. Added product context from existing docs and the user feedback. Backend roles are unchanged.
+- Validation: frontend lint/typecheck and ten tests passed, including return destination security coverage. Production webpack build passed; browser checks in progress; completed user authentication still requires human login.
+
 ## 2026-10-11 02:18 IST - Live provider validation and Groq switch
 
 - Switched ticket extraction to Groq at user request, using the current account-supported Qwen vision model, JSON mode and local field validation. Updated upload consent, environment names and integration docs. Synthetic image extraction returned all expected flight fields; Sarvam transcribed synthetic spoken needs successfully. Stored available provider settings in the approved private Render environment.

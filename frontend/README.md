@@ -5,3 +5,5 @@ The Next.js website lives here. Driver routes live in `src/app/(driver_app)`; ho
 Run `npm ci`, copy `.env.example` to `.env.local`, fill browser-safe settings and server-only Clerk credentials as described in [root setup](../README.md), then `npm run dev`. Checks: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`.
 
 Do not edit `src/lib/api/generated.ts` manually; regenerate it using `backend/export_contracts.py`. Vercel's project root is `frontend`. Do not put database passwords or provider secrets in this folder's browser code.
+
+Authentication uses dedicated `/sign-in` and `/sign-up` pages with opaque Clerk forms, Google/email options, and allowlisted return destinations for passenger, driver and operator workspaces. The provider sets explicit colors and the global CSS supplies shadcn card/popover/input tokens. Existing Clerk names prefill the passenger name when no saved profile name exists. Run `npx next typegen` before typecheck after moving routes to refresh `.next` generated types.

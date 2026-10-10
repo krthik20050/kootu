@@ -14,7 +14,7 @@ import { UploadAssist } from "./upload-assist";
 
 const active = new Set(["WAITING", "MATCHED", "ASSIGNED"]);
 
-export function Passenger({ api }: { api: Api }) {
+export function Passenger({ api, accountName = "" }: { api: Api; accountName?: string }) {
   const [requests, setRequests] = useState<RequestResponse[]>([]);
   const [groups, setGroups] = useState<Record<string, GroupResponse>>({});
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
@@ -228,7 +228,7 @@ export function Passenger({ api }: { api: Api }) {
                 Your name
                 <input
                   name="display_name"
-                  defaultValue={profile?.display_name}
+                  defaultValue={profile?.display_name || accountName}
                   key={profile?.id}
                   required
                   maxLength={80}

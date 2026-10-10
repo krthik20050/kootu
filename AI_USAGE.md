@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 02:20 IST - Authentication usability repair
+
+Codex reproduced the unreadable live Clerk modal, identified missing shadcn surface tokens, and applied Clerk custom appearance and Impeccable product guidance. Added dedicated auth routes, safe workspace return links, readable form surfaces and Clerk name prefill. Ten frontend tests plus lint/typecheck passed; production webpack build passed; browser review in progress. Human review and completed login pending.
+
 ## 2026-10-11 02:18 IST - Provider wiring
 
 Codex inspected key presence without displaying values, researched official Groq API capabilities, switched the adapter and consent copy to Groq, and validated synthetic ticket/audio requests. Corrected Aviationstack free-plan live queries while preserving exact date filtering. Regression checks: 53 backend and eight frontend tests passed; local Turbopack build panic remains unresolved. Human review pending. No personal ticket/audio or credential was committed.

@@ -171,3 +171,7 @@ Free Render services sleep after 15 minutes without inbound traffic and can take
 ## Sources
 
 [Clerk](https://clerk.com/docs/nextjs/getting-started/quickstart), [FastAPI](https://fastapi.tiangolo.com/), [SQLAlchemy](https://docs.sqlalchemy.org/en/20/), [PostGIS](https://postgis.net/documentation/), [Google Routes](https://developers.google.com/maps/documentation/routes/compute_route_directions), [Groq vision and JSON mode](https://console.groq.com/docs/vision), [Sarvam transcription](https://docs.sarvam.ai/api-reference/speech-to-text/transcribe), [Aviationstack](https://docs.apilayer.com/apilayer/docs/aviationstack), [Vitest](https://vitest.dev/guide/), [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/). No external dataset or live credentials are bundled.
+
+### Authentication experience
+
+Sign-in links open `/sign-in`; new users can switch to `/sign-up`. Google and email remain available. After authentication, users return to the selected passenger, driver or operator workspace; return URLs are restricted to these internal routes. Forms use opaque surfaces and explicit Clerk colors to prevent the previous transparent-card issue. Passenger names are prefilled from Clerk when there is no saved profile name. Driver approval and operator authorization are still enforced by the backend.
