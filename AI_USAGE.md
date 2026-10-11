@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 07:25 IST - Ticket transport follow-up
+
+Codex repeated signed-in hosted testing and observed a direct upload transport failure after GET proxy recovery. Routed ticket/short writes through the external rewrite while preserving backend token checks, multipart boundaries and long audio/matching direct timeouts. Excluded only backend-proxy streams from frontend Clerk middleware. All 39 frontend tests, lint and production build/types passed; hosted large synthetic PDF verification follows. Fixed a regression assertion type error caught by build. No production synthetic booking/profile save submitted. Human review pending.
+
 ## 2026-10-11 07:17 IST - Same-origin reads and polling guard
 
 Codex continued testing after a follow-up screenshot showed another transient background warning. Verified no application errors in the bounded backend log window, added fixed-upstream same-origin GET routing with Bearer headers/no cookies/private cache policy, and prevented overlapping passenger polls. Long uploads and writes retain direct routing. Context7 tools were unavailable, so official Next.js external rewrite documentation supplied the API reference. Read/poll regressions failed before the fix; 37 frontend tests, lint and build/types passed. Hosted proxy verification and original private ticket remain pending; human review pending.

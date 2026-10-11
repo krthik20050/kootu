@@ -7,5 +7,6 @@ export default function proxy(request: NextRequest, event: NextFetchEvent) {
   return clerk(request, event);
 }
 
-// No protected resource exists yet. Clerk authentication is not role authorization.
-export const config = { matcher: ["/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ico|ttf|woff2?)).*)", "/(api|trpc)(.*)"] };
+// The external backend verifies Bearer tokens itself. Keep its upload stream out
+// of Clerk middleware so large PDFs do not encounter middleware body limits.
+export const config = { matcher: ["/((?!api/backend(?:/|$)|_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ico|ttf|woff2?)).*)"] };

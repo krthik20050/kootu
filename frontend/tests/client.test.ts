@@ -38,7 +38,7 @@ describe("authenticated API client", () => {
       body: { passengers: 2 },
     });
     expect(fetcher.mock.calls[0]).toMatchObject([
-      "https://api.example/ride-requests",
+      "/api/backend/ride-requests",
       {
         method: "POST",
         headers: {
@@ -63,6 +63,26 @@ describe("authenticated API client", () => {
       "https://api.example/audio/transcribe",
       { headers: { Authorization: "Bearer token" }, body: form },
     ]);
+  });
+  it("routes ticket uploads through the app origin without replaying them", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "https://api.example");
+    const fetcher = vi.fn(async () => new Response("{}"));
+    vi.stubGlobal("fetch", fetcher);
+    const form = new FormData();
+    form.set("file", new File(["pdf"], "ticket.pdf", { type: "application/pdf" }));
+    await apiRequest("/tickets/extract", "token", { method: "POST", body: form, timeout: 90000 });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(fetcher.mock.calls[0]).toMatchObject([
+      "/api/backend/tickets/extract",
+      { headers: { Authorization: "Bearer token" }, body: form, credentials: "omit" },
+    ]);
+  });
+  it("preserves the direct route for matching beyond the host proxy timeout", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "https://api.example");
+    const fetcher = vi.fn(async () => new Response("{}"));
+    vi.stubGlobal("fetch", fetcher);
+    await apiRequest("/ride-requests/id/match", "token", { method: "POST", timeout: 150000 });
+    expect(fetcher).toHaveBeenCalledWith("https://api.example/ride-requests/id/match", expect.objectContaining({ method: "POST" }));
   });
   it("shows a backend configuration error", async () => {
     vi.stubEnv("NEXT_PUBLIC_API_URL", "https://api.example");

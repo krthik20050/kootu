@@ -1,5 +1,11 @@
 # Change log
 
+## 2026-10-11 07:25 IST - Stabilize ticket upload transport
+
+- The signed-in hosted account loaded through the GET proxy, but a repeated direct PDF POST still failed at browser transport. Short writes and ticket uploads now use the fixed upstream external rewrite, retaining Bearer verification, no cookies and no automatic write replay. Long audio/matching requests retain direct routing to preserve timeout contracts beyond Vercel's 120-second external proxy timeout.
+- Excluded only the external backend prefix from Clerk frontend middleware so upload streams avoid middleware body processing. Backend JWT/role checks remain the resource authorization boundary. Ordinary frontend Clerk routes remain covered.
+- Validation: all 39 frontend tests, lint and production build/types passed. Hosted large-PDF checks follow. Fixed a test assertion TypeScript tuple error caught by the build. The original private ticket has not been supplied. References: https://vercel.com/docs/limits and https://nextjs.org/docs/app/api-reference/config/next-config-js/rewrites.
+
 ## 2026-10-11 07:17 IST - Stabilize short browser reads
 
 - Production follow-up still observed intermittent cross-origin read failures while PDF upload and address search succeeded. Backend application error logs for the verification window were empty; no server-side exception cause is claimed. Added a fixed-upstream Next rewrite for browser GET reads at /api/backend, retaining Bearer verification and private/no-store responses. Cookies are omitted. Writes and long ticket/audio uploads retain the direct backend path and existing timeout contract.

@@ -51,8 +51,10 @@ export async function apiRequest<T = unknown>(
     : {};
   if (options.body && !multipart) headers["Content-Type"] = "application/json";
   const method = options.method || "GET";
-  // Short reads use the app origin. Long uploads retain the direct API timeout contract.
-  const url = method === "GET" && typeof window !== "undefined"
+  // External rewrites avoid browser cross-origin transport. Long transcription
+  // and matching can exceed the host's 120-second proxy timeout.
+  const direct = path === "/audio/transcribe" || (options.timeout || 0) >= 120000;
+  const url = !direct && typeof window !== "undefined"
     ? `/api/backend${path}`
     : `${base.replace(/\/$/, "")}${path}`;
   let response: Response;
