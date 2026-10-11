@@ -118,3 +118,7 @@ Codex removed arrival/local-time inputs, changed the landing buffer to 30 minute
 ## 2026-10-11 06:41 IST - Correct concurrent staging contamination
 
 Codex corrected two driver-location references accidentally included while staging the concurrently edited passenger component. Initial frontend CI/deploy failed while backend CI passed. Validated the corrected committed snapshot with 28 tests, lint/types and isolated build; driver work remains locally preserved. No history rewrite; corrective commit and fresh deployment checks. Human review pending.
+
+### 2026-10-11 06:48 IST - Maps rollout follow-up
+
+Codex pushed `220d842`, verified successful CI and Vercel/Render rollout, checked hosted readiness and location endpoints, and added explicit upload exclusions. The signed-out passenger page loads; authenticated phone GPS was not exercised. Environment sync tests passed and production dependency audit returned zero advisories. Human review pending.

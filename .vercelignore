@@ -1,0 +1,11 @@
+# Vercel builds only frontend; credentials and backend administration stay local.
+.environment/**
+.env*
+backend/**
+database/**
+.tools/**
+.qa*/**
+**/.env*
+**/node_modules/**
+**/.next/**
+**/*.tsbuildinfo

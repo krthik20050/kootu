@@ -42,3 +42,5 @@ supabase/.temp/
 .tools/
 
 .vitest/
+.vercel
+.env*

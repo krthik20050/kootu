@@ -1,5 +1,10 @@
 # Change log
 
+## 2026-10-11 06:48 IST - Maps integration hosted verification
+
+- Published implementation `220d842` to GitHub; [CI passed](https://github.com/krthik20050/kootu/actions/runs/38101166557). Existing Vercel project reached READY (deployment `dpl_AZmmEnx57Hi33rUmggDss3Qd11U7`) at kootu-five.vercel.app; Render deployment `dep-db5e5trbc2fs738mlf3g` is live at the implementation commit. Hosted `/ready` returned HTTP 200 with all configuration checks true, and OpenAPI includes location PUT/DELETE. This does not certify live identity/GPS workflows.
+- Added explicit Vercel upload exclusions for credentials, backend/database administration and local QA/build files; retained CLI-generated secret ignores. Three environment-sync tests passed; frontend lint/types/30 tests passed after cleanup ordering was hardened. Production npm audit returned zero advisories; existing development-tool warnings remain outside this feature. Passenger signed-out entry loads in the browser; real-phone permission/movement and assigned passenger navigation remain human checks.
+
 ## 2026-10-11 06:43 IST - Geoapify routing and trip location sharing
 
 - Replaced the default Google routing/search selection with a server-only Geoapify adapter, bounded five-minute cache and process request pacing. Configured the supplied key in the central local env and authorized Render private env, without committing values. Google remains an explicit optional adapter. Added provider attribution and documentation.
