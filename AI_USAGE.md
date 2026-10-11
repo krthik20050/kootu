@@ -1,5 +1,10 @@
 # AI usage record
 
+## 2026-10-11 06:27 IST - White workspace palette
+
+Codex changed shared workspace theme tokens from beige to white/neutral gray. Source and whitespace inspected; no tests or browser checks run. Human review pending.
+
+
 ## 2026-10-11 06:24 IST - Beige workspace palette
 
 Codex replaced the shared blue/navy workspace palette with beige/taupe colors and a matching warm dark mode. Source tokens and diff whitespace inspected; no tests or browser checks run. Human review pending.

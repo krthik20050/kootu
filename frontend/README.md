@@ -16,7 +16,7 @@ Visit `/dashboard` for your authenticated passenger dashboard: upcoming rides, r
 
 The dashboard header has a light/dark mode toggle. It follows your system preference until you choose a mode, then remembers that choice in browser storage. The preference is shared with `/request` and applies to cards and mobile navigation.
 
-The request workspace uses the dashboard's beige/taupe theme, responsive sidebar and header, and shared light/dark preference. Its chat, ticket upload controls and saved journey list follow the active theme.
+The request workspace uses the dashboard's white/neutral theme, responsive sidebar and header, and shared light/dark preference. Its chat, ticket upload controls and saved journey list follow the active theme.
 
 The chat composer includes “Record voice”: allow microphone access, record up to 30 seconds, then play back, discard or re-record. Audio remains local and does not fill answers or upload to the backend. Requires a MediaRecorder-capable browser on HTTPS or localhost.
 
@@ -30,4 +30,4 @@ Drop-off suggestions appear automatically after 3 typed characters and a 400ms p
 
 The three chat answers now feed POST `/ride-requests`. Final review collects the airport (default COK), pickup-ready time in IST on the selected arrival date, passengers (default 1), bags (default 1), maximum wait (default 30 minutes), optional accessibility/preferences and confirmation. Values remain editable before submission. The frontend maps the address to Google/manual coordinates, converts the confirmed time to ISO UTC, and reuses a UUID for unchanged retries. Success refreshes saved journeys and links to the dashboard. Opening an existing ride creates a new submission draft; it does not update the original, and duplicate active arrivals are rejected. Local voice recordings are not sent as notes.
 
-The dashboard and request page now share a beige/taupe light theme and warm brown dark theme with beige accents.
+The dashboard and request page share a white light theme and neutral-gray dark theme with charcoal/white accents.

@@ -204,4 +204,4 @@ The `/request` drop-off input now shows Google Maps address suggestions as you t
 
 Chat submission: `/request` now sends confirmed flight/drop-off inputs and final-review pickup details to POST `/ride-requests`, with retry-safe request identifiers. Existing rides can seed a new draft but are not updated.
 
-The dashboard and request page now share a beige/taupe light theme and warm brown dark theme with beige accents.
+The dashboard and request page share a white light theme and neutral-gray dark theme with charcoal/white accents.

@@ -153,51 +153,51 @@ button:disabled { opacity: .5; cursor: wait; }
 @media (max-width: 900px) { .workspace-grid { gap: 32px; grid-template-columns: minmax(0, 1fr); }.ride-list { padding: 24px; }.workspace { padding: 32px 24px 64px; } }
 @media (max-width: 460px) { .workspace-nav { gap: 14px; font-size: 12px; }.site-header { gap: 16px; flex-wrap: wrap; }.form-row { grid-template-columns: minmax(0, 1fr); gap: 0; }.workspace h1 { font-size: 46px; }.workspace-grid { gap: 24px; } }
 
-/* Shared beige palette for dashboard, request chat and their overlays. */
+/* Shared white and neutral-gray palette for dashboard, request chat and their overlays. */
 .app1-dashboard {
-  --dashboard-chart-opened: #b9ab96;
-  --dashboard-chart-completed: #75624a;
-  --background: #f5f0e8;
-  --foreground: #332d25;
-  --card: #fffaf2;
-  --card-foreground: #332d25;
-  --popover: #fffaf2;
-  --popover-foreground: #332d25;
-  --primary: #75624a;
-  --primary-foreground: #fffaf2;
-  --secondary: #ede1cf;
-  --secondary-foreground: #5a4834;
-  --muted: #ece5da;
-  --muted-foreground: #766b5c;
-  --accent: #ece5da;
-  --accent-foreground: #332d25;
-  --border: #ded3c2;
-  --input: #ded3c2;
-  --ring: #75624a;
+  --dashboard-chart-opened: #a3a3a3;
+  --dashboard-chart-completed: #262626;
+  --background: #ffffff;
+  --foreground: #171717;
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+  --primary: #262626;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #404040;
+  --muted: #f5f5f5;
+  --muted-foreground: #737373;
+  --accent: #f5f5f5;
+  --accent-foreground: #171717;
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: #262626;
   --destructive: #dc2626;
   color-scheme: light;
   font-size: 14px;
 }
 .app1-dashboard[data-theme="dark"] {
-  --background: #201c17;
-  --foreground: #efe6d8;
-  --card: #2b251e;
-  --card-foreground: #efe6d8;
-  --popover: #2b251e;
-  --popover-foreground: #efe6d8;
-  --primary: #d9c6a5;
-  --primary-foreground: #201c17;
-  --secondary: #3b3227;
-  --secondary-foreground: #eadbc2;
-  --muted: #352e25;
-  --muted-foreground: #b9ab96;
-  --accent: #352e25;
-  --accent-foreground: #ece5da;
-  --border: #4c4133;
-  --input: #4c4133;
-  --ring: #d9c6a5;
-  --dashboard-chart-opened: #b9ab96;
-  --dashboard-chart-completed: #d9c6a5;
+  --background: #171717;
+  --foreground: #fafafa;
+  --card: #202020;
+  --card-foreground: #fafafa;
+  --popover: #202020;
+  --popover-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #171717;
+  --secondary: #303030;
+  --secondary-foreground: #e5e5e5;
+  --muted: #292929;
+  --muted-foreground: #a3a3a3;
+  --accent: #292929;
+  --accent-foreground: #f5f5f5;
+  --border: #404040;
+  --input: #404040;
+  --ring: #fafafa;
+  --dashboard-chart-opened: #a3a3a3;
+  --dashboard-chart-completed: #fafafa;
   color-scheme: dark;
 }
 .app1-dashboard .recharts-cartesian-axis-tick text { fill: var(--muted-foreground); }

@@ -1,5 +1,11 @@
 # Change log
 
+## 2026-10-11 06:27 IST - White workspace palette
+
+- Replaced beige/taupe theme colors with white surfaces, charcoal controls and neutral-gray dark mode across dashboard/request and overlays.
+- Validation: Scoped token inspection and diff whitespace check; no tests or browser checks run.
+
+
 ## 2026-10-11 06:24 IST - Beige workspace palette
 
 - Replaced blue/navy dashboard and request theme tokens with cream/beige surfaces, taupe controls and warm brown dark-mode surfaces with beige accents. Cards, navigation, chat, camera overlays and charts share the palette.
