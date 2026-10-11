@@ -92,7 +92,10 @@ describe("guided ride screens", () => {
     expect((screen.getByLabelText("Flight number") as HTMLInputElement).value).toBe("AI123");
     expect((screen.getByLabelText("Flight date") as HTMLInputElement).value).toBe("2026-10-11");
     expect((screen.getByLabelText("Passengers") as HTMLInputElement).value).toBe("2");
+    // Browsers may emit input on the date field even when its value is unchanged.
+    fireEvent.input(screen.getByLabelText("Flight date"), { target: { value: "2026-10-11" } });
     await user.click(screen.getByRole("button", { name: "Next →" }));
+    expect(screen.getByRole("heading", { name: "Where should we drop you?" })).toBeTruthy();
     expect((screen.getByLabelText("Exact drop-off address") as HTMLInputElement).value).toBe("Aluva station");
     await user.type(screen.getByLabelText(/Special instructions/), "Help with bags");
     await user.click(screen.getByRole("button", { name: "← Back" }));
@@ -149,6 +152,36 @@ describe("guided ride screens", () => {
     await user.click(screen.getByRole("button", { name: "Next →" }));
     await screen.findByRole("heading", { name: "Where should we drop you?" });
     expect(lookups).toHaveLength(2);
+  });
+
+  it("recovers a missing provider arrival with confirmed itinerary timing and saves the buffered time", async () => {
+    const user = userEvent.setup();
+    const api = vi.fn(async (path, options) => {
+      if (path === "/me") return profile;
+      if (path === "/ride-requests") return options?.method === "POST" ? { id: "saved" } : [];
+      if (path === "/tickets/extract") return { details: { flight_number: "AI123", flight_date: "2026-10-11", arrival_airport: "COK", passengers: 1, luggage: 0 } };
+      if (path.startsWith("/flights/arrival?")) throw new Error("Arrival time is unavailable");
+      if (path.endsWith("/match")) return { matched: false, message: "Waiting for company." };
+      throw new Error(`Unexpected ${path}`);
+    }) as Api;
+    render(<Passenger api={api} />);
+    await waitFor(() => expect((screen.getByLabelText("Upload Your Ticket") as HTMLInputElement).disabled).toBe(false));
+    await user.upload(screen.getByLabelText("Upload Your Ticket"), new File(["PDF"], "boarding.pdf", { type: "application/pdf" }));
+    await screen.findByText(/boarding.pdf/);
+    await user.click(screen.getByRole("button", { name: "Next →" }));
+    await screen.findByText("Let’s confirm your landing.");
+    expect(api).not.toHaveBeenCalledWith("/ride-requests", expect.objectContaining({ method: "POST" }));
+    fireEvent.change(screen.getByLabelText("Landing date and time on your itinerary"), { target: { value: "2026-10-12T00:15" } });
+    expect(screen.getByText("Time at COK, India (IST).")).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Next →" }));
+    await screen.findByRole("heading", { name: "Where should we drop you?" });
+    await user.type(screen.getByLabelText("Exact drop-off address"), "Aluva station");
+    await user.click(screen.getByText("Enter a map pin instead"));
+    fireEvent.change(screen.getByLabelText("Latitude"), { target: { value: "10.108" } });
+    fireEvent.change(screen.getByLabelText("Longitude"), { target: { value: "76.351" } });
+    await user.click(screen.getByRole("button", { name: "Find my ride →" }));
+    await screen.findByText("One step closer.");
+    expect(api).toHaveBeenCalledWith("/ride-requests", expect.objectContaining({ body: expect.objectContaining({ ready_at: "2026-10-11T19:15:00.000Z" }) }));
   });
 
   it("shows indeterminate extraction progress until the server actually succeeds", async () => {

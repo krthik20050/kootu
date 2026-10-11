@@ -29,7 +29,8 @@ def flight_arrival(
     if not data:
         raise HTTPException(
             404,
-            "Arrival time is unavailable for this flight. Check the flight details or retry later.",
+            "No arrival was found in the live flight feed. "
+            "Upload the full itinerary or confirm its printed landing time.",
         )
     if data.get("flight_status") in {"cancelled", "incident", "diverted"}:
         raise HTTPException(409, "This flight is unavailable. Check its status with the airline.")

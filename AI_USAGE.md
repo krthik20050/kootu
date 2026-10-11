@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 06:55 IST - Diagnose Next arrival failure
+
+Codex reproduced an unchanged date event clearing extracted timing with a failing UI regression, fixed normalized flight invalidation, and implemented exceptional itinerary-time recovery without guessing arrivals or changing the 30-minute buffer. Added safe flight-network failure handling and regressions, and reviewed existing matching/lifecycle concurrency behavior using diagnose, frontend, code-review and DevOps skills. Agent Reach's Jina reader retrieved official Aviationstack documentation confirming plan limitations. Checks: 140 isolated backend tests, 33 frontend tests, lint/types, Ruff/format, contracts and production build passed; live Groq synthetic PDF extraction returned the expected arrival. No private passenger data was used in live verification. Human review and original-ticket retry pending; hosted deployment recorded after verification.
+
 ## 2026-10-11 06:43 IST - Free maps integration and location sharing
 
 Codex researched official Geoapify routing/geocoding documentation, applied engineering/code-review/DevOps guidance, implemented the selected adapter and consented trip location endpoints/UI, and added lifecycle/privacy/provider/frontend regressions. Preserved simultaneous ticket/pickup work; corrected an import conflict and migration-count assertion. The key was added to backend/.env by the user and safely preserved in central configuration. Configured authorized Render settings and applied the additive Supabase migration after schema-only metadata backup. Verified 139 backend tests in a dedicated local test database, 30 frontend tests, lint/types/build and live public-address/route calls. Windows sandbox temporary-file/network restrictions required host execution. Human review and real-device location testing pending; no unlimited service or perfect accuracy claim.

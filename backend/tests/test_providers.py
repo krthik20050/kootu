@@ -143,6 +143,23 @@ def test_flight_provider_filters_exact_arrival(monkeypatch):
     assert providers.flight_status(settings, "AI123", date(2026, 10, 12), "COK") is None
 
 
+def test_flight_network_failure_is_actionable_and_does_not_expose_credentials(monkeypatch):
+    def handler(request):
+        raise httpx.ConnectError("SECRET connection details", request=request)
+
+    transport(monkeypatch, handler)
+    with pytest.raises(HTTPException) as caught:
+        providers.flight_status(
+            Settings(aviationstack_api_key=SecretStr("SECRET"), _env_file=None),
+            "AI123",
+            date(2026, 10, 11),
+            "COK",
+        )
+    assert caught.value.status_code == 503
+    assert "itinerary" in caught.value.detail
+    assert "SECRET" not in caught.value.detail
+
+
 @pytest.mark.parametrize(
     "status,data", [(401, {"error": "SECRET"}), (200, []), (200, {"choices": []})]
 )

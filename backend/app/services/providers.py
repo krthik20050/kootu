@@ -299,16 +299,21 @@ def flight_status(settings: Settings, number: str, flight_date: date, airport: s
     key = require_key(settings.aviationstack_api_key, "Flight updates")
     # Query live flights on the free plan; flight_date requests paid historical access.
     # Still filter the returned date exactly below to avoid updating the wrong arrival.
-    with httpx.Client(timeout=10) as client:
-        response = client.get(
-            "https://api.aviationstack.com/v1/flights",
-            params={
-                "access_key": key,
-                "flight_iata": number,
-                "arr_iata": airport,
-                "limit": 100,
-            },
-        )
+    try:
+        with httpx.Client(timeout=10) as client:
+            response = client.get(
+                "https://api.aviationstack.com/v1/flights",
+                params={
+                    "access_key": key,
+                    "flight_iata": number,
+                    "arr_iata": airport,
+                    "limit": 100,
+                },
+            )
+    except httpx.RequestError as error:
+        raise HTTPException(
+            503, "Flight lookup is temporarily unavailable. Use your itinerary or retry."
+        ) from error
     data = provider_json(response, "Aviationstack")
     if "error" in data:
         raise HTTPException(502, "Flight provider could not supply this flight")

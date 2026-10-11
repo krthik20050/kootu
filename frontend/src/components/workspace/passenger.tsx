@@ -14,7 +14,8 @@ import { localTime, message, readable, type Api } from "./shared";
 import { UploadAssist } from "./upload-assist";
 import { VoicePreferences } from "./voice-preferences";
 import { ArrivalCelebration } from "./arrival-celebration";
-import { draftFromTicket, emptyPassengerDraft, readyFromArrival, type PassengerDraft } from "@/lib/ticket-draft";
+import { arrivalFromPrintedTime, draftFromTicket, emptyPassengerDraft, knownArrivalOffset, readyFromArrival, updateDraftFlight, type PassengerDraft } from "@/lib/ticket-draft";
+import { ApiError } from "@/lib/api/client";
 import { TicketReview } from "./ticket-review";
 import { DriverLocationPin } from "./driver-location";
 
@@ -29,6 +30,9 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
   const [busy, setBusy] = useState(false);
   const [extracting, setExtracting] = useState(false);
   const [checkingFlight, setCheckingFlight] = useState(false);
+  const [arrivalRecovery, setArrivalRecovery] = useState(false);
+  const [printedArrival, setPrintedArrival] = useState("");
+  const [arrivalOffset, setArrivalOffset] = useState("");
   const [step, setStep] = useState(0);
   const [ticketRead, setTicketRead] = useState(false);
   const [draftVersion, setDraftVersion] = useState(0);
@@ -47,7 +51,14 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
   const setLuggageCount = (luggageCount: string) => patchDraft({ luggageCount });
   const setDisplayName = (displayName: string) => patchDraft({ displayName });
   const setPassengerCount = (passengerCount: string) => patchDraft({ passengerCount });
-  const setFlight = (flight: PassengerDraft["flight"]) => patchDraft({ flight, readyAt: "" });
+  const setFlight = (flight: PassengerDraft["flight"]) => {
+    const updated = updateDraftFlight(draft, flight);
+    if (updated.flight.number === draft.flight.number && updated.flight.airport === draft.flight.airport && updated.flight.date === draft.flight.date) return;
+    setDraft((current) => updateDraftFlight(current, flight));
+    setArrivalRecovery(false);
+    setPrintedArrival("");
+    setArrivalOffset("");
+  };
   const setDestination = (destination: string) => patchDraft({ destination });
   const setCoordinates = (coordinates: PassengerDraft["coordinates"]) => patchDraft({ coordinates });
   const [locations, setLocations] = useState<LocationResponse[]>([]);
@@ -158,18 +169,32 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
     setError("");
     if (step === 1) {
       if (!readyAt) {
-        setCheckingFlight(true);
-        try {
-          const query = new URLSearchParams({ number: flight.number, flight_date: flight.date, airport: flight.airport });
-          const result = await api<FlightArrivalResponse>(`/flights/arrival?${query}`, { timeout: 45000 });
-          const readyAt = readyFromArrival(result.arrival_at);
-          if (!readyAt) throw new Error("We couldn’t confirm the flight’s arrival time. Please retry.");
-          patchDraft({ readyAt });
-        } catch (error) {
-          setError(message(error));
-          return;
-        } finally {
-          setCheckingFlight(false);
+        if (arrivalRecovery && printedArrival) {
+          const arrival = arrivalFromPrintedTime(printedArrival, arrivalOffset);
+          if (!arrival) { setError("Check the landing date, time and UTC offset shown on your itinerary."); return; }
+          if (Math.abs((Date.parse(`${flight.date}T00:00:00Z`) - Date.parse(`${printedArrival.slice(0, 10)}T00:00:00Z`)) / 86400000) > 1) {
+            setError("The landing date must be within one day of the flight date."); return;
+          }
+          patchDraft({ readyAt: readyFromArrival(arrival) });
+        } else {
+          setCheckingFlight(true);
+          try {
+            const query = new URLSearchParams({ number: flight.number, flight_date: flight.date, airport: flight.airport });
+            const result = await api<FlightArrivalResponse>(`/flights/arrival?${query}`, { timeout: 45000 });
+            const readyAt = readyFromArrival(result.arrival_at);
+            if (!readyAt) throw new Error("We couldn’t confirm the flight’s arrival time. Please retry.");
+            patchDraft({ readyAt });
+          } catch (error) {
+            setError(message(error));
+            const canRecover = !(error instanceof ApiError) || [404, 502, 503].includes(error.status);
+            setArrivalRecovery(canRecover);
+            if (canRecover) {
+              setArrivalOffset(knownArrivalOffset(flight.airport));
+            }
+            return;
+          } finally {
+            setCheckingFlight(false);
+          }
         }
       }
       setFlightConfirmed(true);
@@ -184,6 +209,9 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
     setTicketRead(false);
     setFlightConfirmed(false);
     setDraft(emptyPassengerDraft());
+    setArrivalRecovery(false);
+    setPrintedArrival("");
+    setArrivalOffset("");
     setLocations([]);
     setNotes("");
     setWomenOnly(false);
@@ -287,6 +315,9 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
             <UploadAssist key={draftVersion} api={api} disabled={busy || checkingFlight || loading || !profile} onBusy={setExtracting}
               onTicket={(details) => {
                 setDraft(draftFromTicket(details, profile?.display_name || accountName));
+                setArrivalRecovery(false);
+                setPrintedArrival("");
+                setArrivalOffset("");
                 setFlightConfirmed(false);
                 setLocations([]);
                 setTicketRead(true);
@@ -314,6 +345,13 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
               </div>
               <label>Flight date<input type="date" value={flight.date} onInput={(event) => { setFlightConfirmed(false); setFlight({ ...flight, date: event.currentTarget.value }); }} onChange={(event) => { setFlightConfirmed(false); setFlight({ ...flight, date: event.target.value }); }} required /></label>
               <p className="quiet" role="status">{checkingFlight ? "Checking your flight’s arrival time…" : "Pickup is planned 30 minutes after landing. We’ll work out the time from your flight."}</p>
+              {arrivalRecovery && <div className="arrival-recovery">
+                <p><strong>Let’s confirm your landing.</strong></p>
+                <p className="quiet">Upload your full itinerary using Change ticket above. Or confirm the landing time printed on it below, and we’ll add 30 minutes for pickup.</p>
+                <label>Landing date and time on your itinerary<input type="datetime-local" value={printedArrival} onChange={(event) => { setPrintedArrival(event.target.value); patchDraft({ readyAt: "" }); }} /></label>
+                {knownArrivalOffset(flight.airport) ? <p className="quiet">Time at {flight.airport}, India (IST).</p> : <label>Arrival airport UTC offset<input placeholder="For example +04:00" value={arrivalOffset} pattern="[+-][0-9]{2}:[0-9]{2}" maxLength={6} onChange={(event) => { setArrivalOffset(event.target.value); patchDraft({ readyAt: "" }); }} /></label>}
+                <p className="quiet">Use the arrival airport’s time. Boarding and departure times cannot be used as landing times.</p>
+              </div>}
               <div className="form-row">
                 <label>Passengers<input name="passengers" type="number" min={1} max={6} value={passengerCount} onChange={(event) => setPassengerCount(event.target.value)} required /></label>
                 <label>Luggage pieces<input name="luggage" type="number" min={0} max={6} value={luggageCount} onChange={(event) => setLuggageCount(event.target.value)} required /></label>

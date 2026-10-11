@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { draftFromTicket, readyFromArrival } from "@/lib/ticket-draft";
+import { arrivalFromPrintedTime, draftFromTicket, readyFromArrival, updateDraftFlight } from "@/lib/ticket-draft";
 
 describe("arrival readiness suggestion", () => {
   it("adds the baggage buffer across midnight in the browser timezone", () => {
@@ -11,7 +11,21 @@ describe("arrival readiness suggestion", () => {
   it("leaves missing or invalid arrival times blank", () => {
     expect(readyFromArrival(null)).toBe("");
     expect(readyFromArrival("invalid")).toBe("");
+    expect(readyFromArrival("2026-10-11T10:00:00")).toBe("");
   });
+});
+
+it("preserves arrival for unchanged flights and invalidates actual edits", () => {
+  const draft = draftFromTicket({ flight_number: "AI123", flight_date: "2026-10-11", arrival_airport: "COK", arrival_at: "2026-10-11T23:45:00+05:30" }, "Alice");
+  expect(updateDraftFlight(draft, { ...draft.flight, number: "ai 123" }).readyAt).toBe(draft.readyAt);
+  expect(updateDraftFlight(draft, { ...draft.flight, date: "2026-10-12" }).readyAt).toBe("");
+});
+
+it("uses an explicit arrival offset and rejects impossible printed dates", () => {
+  expect(readyFromArrival(arrivalFromPrintedTime("2026-10-12T00:15", "+05:30"))).toBe("2026-10-11T19:15:00.000Z");
+  expect(arrivalFromPrintedTime("2026-02-30T10:00", "+05:30")).toBe("");
+  expect(arrivalFromPrintedTime("2026-10-12T00:15", "")).toBe("");
+  expect(arrivalFromPrintedTime("2026-10-12T00:15", "+25:30")).toBe("");
 });
 
 

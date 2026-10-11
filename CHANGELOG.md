@@ -1,5 +1,12 @@
 # Change log
 
+## 2026-10-11 06:55 IST - Preserve extracted arrivals and recover missing flight timing
+
+- Reproduced Next failing after an unchanged date-input event erased a valid extracted arrival. Flight updates now normalize identifiers, preserve timing for unchanged fields and invalidate it only for actual edits. Timezone-free timestamps are rejected rather than interpreted in the browser's timezone.
+- Added an inline exception-only recovery: replace the boarding pass with a full itinerary, or confirm its printed landing date/time. Known Indian airports use IST automatically; other airports require an explicit UTC offset. Pickup remains landing plus 30 minutes. No arrival input appears in the normal successful extraction flow. Cancelled/incident/diverted lookup errors do not enable recovery.
+- Flight-provider connection errors now return sanitized actionable HTTP 503; missing live-feed records explain the itinerary recovery instead of suggesting an indefinite retry. Updated passenger draft/UI, provider tests, README and intake guide.
+- Validation: regression failed before the fix and passed afterward; 140 backend tests in a uniquely named disposable local PostgreSQL/PostGIS database (removed afterward), 33 frontend tests, lint/types, Ruff/format, contracts and production webpack build passed. Live Groq extraction of a fictitious synthetic PDF returned the expected flight/airport/arrival offset. Existing matching capacity, road-distance, wait windows, fleet approval, lifecycle and concurrency tests passed; matching remains a bounded greedy heuristic, not a global optimizer. Original private ticket and authenticated hosted lifecycle remain unverified. Deployment verification follows separately.
+
 ## 2026-10-11 06:48 IST - Maps integration hosted verification
 
 - Published implementation `220d842` to GitHub; [CI passed](https://github.com/krthik20050/kootu/actions/runs/38101166557). Existing Vercel project reached READY (deployment `dpl_AZmmEnx57Hi33rUmggDss3Qd11U7`) at kootu-five.vercel.app; Render deployment `dep-db5e5trbc2fs738mlf3g` is live at the implementation commit. Hosted `/ready` returned HTTP 200 with all configuration checks true, and OpenAPI includes location PUT/DELETE. This does not certify live identity/GPS workflows.
