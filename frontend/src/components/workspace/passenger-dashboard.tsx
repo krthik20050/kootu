@@ -100,9 +100,9 @@ function SignedDashboard() {
     <div className="flex flex-wrap items-center justify-between gap-4"><div><h2>Hi {name.split(" ")[0]}, where’s next?</h2><p className="mt-2 text-sm text-muted-foreground">Your airport rides and the people helping you get there.</p></div><div className="flex gap-2"><Button variant="outline" disabled={busy || loading} onClick={() => void run(async () => {})}><RefreshCw className="mr-2 size-4" />Refresh</Button><Button asChild><Link href="/request"><Plane className="mr-2 size-4" />Request a ride</Link></Button></div></div>
     {error && <p role="alert" className="rounded-lg border border-destructive bg-card p-4 text-sm">{error}</p>}
     {notice && <p role="status" className="rounded-lg border bg-secondary p-4 text-sm text-secondary-foreground">{notice}</p>}
-    <p className="text-xs text-muted-foreground">Edit preview starts a new request from your saved details. It does not update the original booking.</p>
+    {rides.some(ride => cancellable.has(ride.status)) && <p className="text-xs text-muted-foreground">Edit preview starts a new request from your saved details. It does not update the original booking.</p>}
     {loading || !hasData ? <p role="status">{loading ? "Loading your rides…" : "Ride data could not be loaded. Use Refresh to try again."}</p> : <>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[
+      <div className="passenger-summary grid grid-cols-2 gap-3 xl:grid-cols-4">{[
         { label: "Active requests", value: upcoming.length, icon: Plane },
         { label: "Completed rides", value: rides.filter(ride => ride.status === "COMPLETED").length, icon: Check },
         { label: "Group passengers", value: group?.passengers ?? "—", icon: Users },

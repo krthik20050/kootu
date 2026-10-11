@@ -1,5 +1,9 @@
 # Change log
 
+## 2026-10-11 09:07 IST - Verify live passenger access and compact mobile summary
+
+Verified 3652f58 live on Vercel and CI run 38108862739 successful. The signed-in homepage shows Passenger dashboard, the Passenger portal link opens /dashboard, and desktop/mobile have no horizontal overflow. Driver controls were checked locally with the actual component and a removed fixture. Final mobile follow-up compacts summary cards into two columns and only shows edit guidance when a cancellable booking exists. Backend and authorization unchanged. Final lint/types/build passed; one parallel request-chat test hit its 5-second timeout, then the complete single-worker suite passed all 50 tests. Human review pending.
+
 ## 2026-10-11 09:05 IST - Fix portal discovery and driver workspace CSS
 
 - Made passenger and driver portal entries explicit on the homepage and replaced generic signed-in My workspace with the database-role-specific dashboard name. Passenger navigation/header now identifies the passenger workspace.

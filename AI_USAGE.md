@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 09:07 IST - Verify live passenger access and compact mobile summary
+
+Verified 3652f58 live on Vercel and CI run 38108862739 successful. The signed-in homepage shows Passenger dashboard, the Passenger portal link opens /dashboard, and desktop/mobile have no horizontal overflow. Driver controls were checked locally with the actual component and a removed fixture. Final mobile follow-up compacts summary cards into two columns and only shows edit guidance when a cancellable booking exists. Backend and authorization unchanged. Final lint/types/build passed; one parallel request-chat test hit its 5-second timeout, then the complete single-worker suite passed all 50 tests. Human review pending.
+
 ## 2026-10-11 09:05 IST - Passenger access and driver presentation repair
 
 Codex traced unstyled driver controls to a missing workspace class, repaired shared form scope and refined responsive light/dark presentation. Added explicit passenger portal links and role-specific account labels, simplified driver overview and compacted onboarding. Used a temporary local visual fixture to inspect DriverDesk and its availability interaction without changing hosted data; removed it before build. Frontend tests (50), types and production build passed. Independent specialist review found no blocking regression; its touch-target recommendation was applied. Live follow-up and human review remain pending.
