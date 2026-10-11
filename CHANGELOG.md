@@ -1,5 +1,11 @@
 # Change log
 
+## 2026-10-11 06:42 IST - Recover local provider configuration
+
+- Recovered existing Sarvam, Groq and Aviationstack credentials from the team backend Render environment into ignored `.environment/.env`; ran the existing sync command for component environment files.
+- Verified exact value agreement between central/backend files, Git ignore protection, and exclusion of provider secrets from frontend configuration. Values are not recorded here.
+- This configuration check does not verify provider authentication or consumption limits. Restart local apps to load the recovered credentials.
+
 ## 2026-10-11 06:41 IST - Isolate passenger timing deployment
 
 - Removed two unfinished driver-location references from the committed passenger component after they slipped into the previous staged file during concurrent edits. The missing component/type caused frontend CI and Vercel to fail; backend CI passed. The in-progress driver-tracking implementation is preserved in the working tree for its own milestone.
