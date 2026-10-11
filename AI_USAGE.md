@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 06:59 IST - Arrival fix release verification
+
+Codex pushed `8fa37df`, verified both CI jobs, Render's exact implementation commit and Vercel READY/stable alias. Public passenger and backend readiness checks returned HTTP 200. Cancelled a stalled PowerShell asset-inspection request and used a bounded curl page check. Original ticket and signed-in hosted lifecycle remain human verification; human review pending.
+
 ## 2026-10-11 06:55 IST - Diagnose Next arrival failure
 
 Codex reproduced an unchanged date event clearing extracted timing with a failing UI regression, fixed normalized flight invalidation, and implemented exceptional itinerary-time recovery without guessing arrivals or changing the 30-minute buffer. Added safe flight-network failure handling and regressions, and reviewed existing matching/lifecycle concurrency behavior using diagnose, frontend, code-review and DevOps skills. Agent Reach's Jina reader retrieved official Aviationstack documentation confirming plan limitations. Checks: 140 isolated backend tests, 33 frontend tests, lint/types, Ruff/format, contracts and production build passed; live Groq synthetic PDF extraction returned the expected arrival. No private passenger data was used in live verification. Human review and original-ticket retry pending; hosted deployment recorded after verification.

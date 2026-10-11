@@ -1,5 +1,10 @@
 # Change log
 
+## 2026-10-11 06:59 IST - Arrival fix hosted verification
+
+- Pushed implementation `8fa37df`; [both CI jobs passed](https://github.com/krthik20050/kootu/actions/runs/38101860223). Render deployment `dep-db5ebljrjlhs73anium0` is live at that exact commit. Vercel deployment `dpl_8QdwXs78n9p5UqKWzZPQJXrSUmeU` reached READY and aliased kootu-five.vercel.app.
+- Hosted passenger page returned HTTP 200; backend `/ready` returned HTTP 200 with all configuration checks true. Readiness does not certify provider credentials or signed-in ride behavior. Public bundle inspection via PowerShell stalled and was cancelled; the bounded page health check succeeded. Original-ticket retry remains pending.
+
 ## 2026-10-11 06:55 IST - Preserve extracted arrivals and recover missing flight timing
 
 - Reproduced Next failing after an unchanged date-input event erased a valid extracted arrival. Flight updates now normalize identifiers, preserve timing for unchanged fields and invalidate it only for actual edits. Timezone-free timestamps are rejected rather than interpreted in the browser's timezone.
