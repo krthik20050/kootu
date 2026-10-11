@@ -15,5 +15,17 @@ if (authEnabled === "true" && (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
   throw new Error("Clerk is enabled: set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and server-only CLERK_SECRET_KEY.");
 }
 
-const config: NextConfig = { poweredByHeader: false };
+const upstream = apiUrl.replace(/\/$/, "");
+const config: NextConfig = {
+  poweredByHeader: false,
+  async rewrites() {
+    return [{ source: "/api/backend/:path*", destination: `${upstream}/:path*` }];
+  },
+  async headers() {
+    return [{
+      source: "/api/backend/:path*",
+      headers: [{ key: "Cache-Control", value: "private, no-store" }],
+    }];
+  },
+};
 export default config;

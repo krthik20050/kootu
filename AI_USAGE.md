@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 07:17 IST - Same-origin reads and polling guard
+
+Codex continued testing after a follow-up screenshot showed another transient background warning. Verified no application errors in the bounded backend log window, added fixed-upstream same-origin GET routing with Bearer headers/no cookies/private cache policy, and prevented overlapping passenger polls. Long uploads and writes retain direct routing. Context7 tools were unavailable, so official Next.js external rewrite documentation supplied the API reference. Read/poll regressions failed before the fix; 37 frontend tests, lint and build/types passed. Hosted proxy verification and original private ticket remain pending; human review pending.
+
 ## 2026-10-11 07:10 IST - Signed-in verification and recovery fixes
 
 After the user completed Google sign-in, Codex verified production synthetic PDF extraction, Next to destination and real address search. Found stale account-connection errors and missing driver GPS CORS methods, reproduced failures, and fixed them with isolated connection state, manual retry, bounded GET-only transport retry and PUT/DELETE preflight support. No production synthetic booking/profile update was submitted. Checks: 142 isolated backend and 36 frontend tests, lint, types/build, Ruff/format and contracts passed. Original private ticket and phone GPS remain human checks. Human review pending.

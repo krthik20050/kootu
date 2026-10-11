@@ -51,8 +51,12 @@ export async function apiRequest<T = unknown>(
     : {};
   if (options.body && !multipart) headers["Content-Type"] = "application/json";
   const method = options.method || "GET";
+  // Short reads use the app origin. Long uploads retain the direct API timeout contract.
+  const url = method === "GET" && typeof window !== "undefined"
+    ? `/api/backend${path}`
+    : `${base.replace(/\/$/, "")}${path}`;
   let response: Response;
-  const request = () => fetch(`${base.replace(/\/$/, "")}${path}`, {
+  const request = () => fetch(url, {
     method,
     headers,
     body: options.body
@@ -61,6 +65,7 @@ export async function apiRequest<T = unknown>(
         : JSON.stringify(options.body)
       : undefined,
     cache: "no-store",
+    credentials: "omit",
     signal: AbortSignal.timeout(options.timeout || (method === "GET" ? 30000 : REQUEST_TIMEOUT_MS)),
   });
   try {

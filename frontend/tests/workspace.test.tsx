@@ -21,6 +21,25 @@ const driver = {
 };
 
 describe("guided ride screens", () => {
+  it("does not overlap background account reads while a refresh is pending", async () => {
+    vi.useFakeTimers();
+    try {
+      let resolve!: (value: unknown) => void;
+      const api = vi.fn(async (path) => {
+        if (path === "/me") return new Promise((done) => { resolve = done; });
+        if (path === "/ride-requests") return [];
+        throw new Error(`Unexpected ${path}`);
+      }) as Api;
+      render(<Passenger api={api} />);
+      await act(async () => { await vi.advanceTimersByTimeAsync(45000); });
+      expect((api as ReturnType<typeof vi.fn>).mock.calls.filter(([path]) => path === "/me")).toHaveLength(1);
+      await act(async () => resolve(profile));
+      expect((screen.getByLabelText("Upload Your Ticket") as HTMLInputElement).disabled).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("clears an account-load error after retry and enables upload", async () => {
     const user = userEvent.setup();
     let fail = true;

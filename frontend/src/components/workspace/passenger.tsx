@@ -98,7 +98,11 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
 
   useEffect(() => {
     let live = true;
-    void load()
+    let fetching = false;
+    function refresh() {
+      if (fetching) return;
+      fetching = true;
+      void load()
       .then((data) => {
         if (live) apply(data);
       })
@@ -106,17 +110,13 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
         if (live) setConnectionError(message(error));
       })
       .finally(() => {
+        fetching = false;
         if (live) setLoading(false);
       });
+    }
+    refresh();
     const timer = setInterval(() => {
-      if (!document.hidden)
-        void load()
-          .then((data) => {
-            if (live) apply(data);
-          })
-          .catch((error) => {
-            if (live) setConnectionError(message(error));
-          });
+      if (!document.hidden) refresh();
     }, 15000);
     return () => {
       live = false;

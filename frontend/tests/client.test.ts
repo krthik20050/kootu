@@ -9,7 +9,9 @@ describe("authenticated API client", () => {
     vi.stubGlobal("fetch", fetcher);
     await expect(apiRequest("/me", "session-token")).resolves.toEqual({ display_name: "Alice" });
     expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(fetcher.mock.calls[0][0]).toBe("/api/backend/me");
     expect(fetcher.mock.calls[1][1].headers.Authorization).toBe("Bearer session-token");
+    expect(fetcher.mock.calls[1][1].credentials).toBe("omit");
   });
 
   it("does not replay writes or HTTP provider failures", async () => {

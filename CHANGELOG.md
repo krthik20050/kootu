@@ -1,5 +1,11 @@
 # Change log
 
+## 2026-10-11 07:17 IST - Stabilize short browser reads
+
+- Production follow-up still observed intermittent cross-origin read failures while PDF upload and address search succeeded. Backend application error logs for the verification window were empty; no server-side exception cause is claimed. Added a fixed-upstream Next rewrite for browser GET reads at /api/backend, retaining Bearer verification and private/no-store responses. Cookies are omitted. Writes and long ticket/audio uploads retain the direct backend path and existing timeout contract.
+- A pending-read regression showed four account loads overlapping within 45 seconds. Passenger background refresh now allows one pending poll, preventing retries from amplifying slow connections. Existing review/destination state is preserved.
+- Validation: request routing and overlapping-read regressions failed before the changes and passed afterward; all 37 frontend tests, lint and production build/types passed. Previous 142 backend tests and live synthetic booking lifecycle remain applicable because backend code did not change in this milestone. Official Next.js rewrite documentation was consulted; hosted authenticated proxy verification remains pending until deployment.
+
 ## 2026-10-11 07:10 IST - Fix issues exposed by signed-in browser verification
 
 - Real Clerk sign-in completed. A production synthetic PDF upload returned flight, landing time, seat/gate and counts; Next reached the destination step and live address search returned Aluva results. No synthetic ride was saved in the production account. The original private ticket remains unavailable.
