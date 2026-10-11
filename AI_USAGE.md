@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 08:50 IST - Hosted and provider follow-up
+
+Codex verified deployment 256a978, both successful CI jobs, hosted health/readiness and anonymous denial, and real passenger role redirects plus ticket extraction. Repeated isolated full ride lifecycle with real Groq/Geoapify and a separate real Sarvam synthetic-speech check; the disposable local database was removed. Updated SUBMISSION with the actual verified checkpoint. Three full automated passes succeeded in total; no production synthetic bookings or real payments were created. Full hosted multi-account/device journey and human review remain pending.
+
 ## 2026-10-11 08:34 IST - Role separation and MVP review
 
 Codex implemented database-backed one-time roles, API/portal authorization, account routing, homepage redesign and honest direct-payment instructions; removed only unused dashboard mock modules. Specialist review agents audited authorization, UX/state transitions and researched README structure/hosting limitations. Fixed stale onboarding responses during account switching. Two backend runs passed 148 tests each, two frontend runs passed 50 each; static checks, contracts and production build passed. Applied the preserving-role Supabase migration. Local responsive homepage inspected. Hosted follow-up pending at this checkpoint; human review pending. No payment provider or actual charge implemented.

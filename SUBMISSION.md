@@ -9,7 +9,7 @@
 - **API health:** https://kootu-api-k5eh.onrender.com/health
 - **Setup and demo steps:** [README](README.md#run-locally) and [short demo](README.md#a-short-demo)
 - **Final submitted implementation SHA:** Not recorded. The team must enter the actual commit submitted through the organizer's process.
-- **Previously verified merged checkpoint:** `53af021e964ef1bf1e4aac906890f6a4b2b5180e`; [passing CI](https://github.com/krthik20050/kootu/actions/runs/38106186355). This predates the role-separation improvements; current source and subsequent validation must not be represented as that older checkpoint.
+- **Verified deployed implementation:** `256a97888e9b81dd7d0b01534a2e7f994819d589`; [passing CI](https://github.com/krthik20050/kootu/actions/runs/38107237139). The actual event submission remains a team action.
 
 ## Participants
 
@@ -35,7 +35,7 @@ A successful live match requires enabled provider accounts, upcoming compatible 
 - **Stack:** Next.js/React/TypeScript, Clerk, FastAPI/SQLAlchemy, PostgreSQL/PostGIS; Geoapify, Groq, Sarvam and Aviationstack.
 - **Prerequisites:** Node 22.12+, Python 3.13 recommended and PostgreSQL/PostGIS. Locked setup commands and environment names are in README; no secrets belong here.
 - **Persistence:** Accounts, ride requests, groups, offers, fleet and lifecycle events are database-backed. Apply every reviewed migration before running the corresponding code.
-- **Validation:** Frontend lint/types/unit tests/build; backend Ruff, generated-contract checks and unit/database integration tests. The prior merged checkpoint passed 46 frontend and 143 backend tests. New work must use its own recorded results in [CHANGELOG](CHANGELOG.md) and CI.
+- **Validation:** Frontend lint/types/unit tests/build; backend Ruff, generated-contract checks and unit/database integration tests. Two local passes and CI passed 50 frontend and 148 backend tests, with lint/types/build/contracts. Live provider checks passed using an isolated database; hosted passenger role redirects, request intake and synthetic ticket extraction passed. See [CHANGELOG](CHANGELOG.md) for scope and limits.
 - **Combined regression:** Ticket and voice input through completed ride uses real disposable PostGIS with stubbed external providers. It does not establish a full live multi-account journey or device microphone/GPS reliability.
 - **Deployment:** Vercel frontend, Render API, Supabase database. The hackathon uses Clerk development keys and a sleeping free backend; this is a deployed demo, not a commercial service readiness claim.
 - **Known limits:** No payment processing/fare engine/emergency dispatch/automatic government-document verification. Real-account hosted end-to-end and physical-device checks must be reported separately when performed.

@@ -1,5 +1,12 @@
 # Change log
 
+## 2026-10-11 08:50 IST - Verify deployed role separation
+
+- Implementation 256a97888e9b81dd7d0b01534a2e7f994819d589 deployed successfully on Vercel; Render OpenAPI exposes /me/role. GitHub Actions run 38107237139 passed both jobs, providing a third full automated pass after two local runs (148 backend, 50 frontend tests). Environment helper tests passed 3/3; npm production dependency audit found zero vulnerabilities.
+- Hosted /health and /ready returned 200; anonymous role selection and proxied ride requests returned 401. Real signed-in passenger opening /driver/earnings and /onboarding?role=DRIVER returned to its persisted passenger dashboard. Passenger dashboard and /request loaded without driver controls; hosted fictional PDF upload extracted AI123 successfully.
+- Repeated a real Groq/Geoapify integration journey: ticket extraction, address search, idempotent requests, matching, driver acceptance, private manifest, trip start/completion and fleet release. This used a separately created disposable local PostGIS database, removed afterward. Real Sarvam transcription of 63-second synthetic speech passed separately.
+- Refreshed SUBMISSION verification checkpoint. No open PRs remain. No production test bookings were created. A full hosted journey across separate real accounts and physical microphone/GPS behavior remain unverified; payment is direct-to-driver guidance only. Human review and actual event submission remain pending.
+
 ## 2026-10-11 08:34 IST - Separate accounts and polish the MVP
 
 - Added explicit one-time passenger/driver registration with server-owned roles, role-based portal redirects, fail-closed route guards and API authorization. Existing roles are preserved; new accounts start unassigned. Applied migration 006 to hosted Supabase successfully.
