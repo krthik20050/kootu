@@ -1,5 +1,6 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/ui/themes";
+import { RoleBoundary } from "./role-boundary";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   if (process.env.NEXT_PUBLIC_AUTH_ENABLED !== "true") return children;
@@ -7,8 +8,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <ClerkProvider
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
-      signInFallbackRedirectUrl="/passenger"
-      signUpFallbackRedirectUrl="/passenger"
+      signInFallbackRedirectUrl="/onboarding"
+      signUpFallbackRedirectUrl="/onboarding"
       appearance={{
         theme: shadcn,
         variables: {
@@ -40,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       }}
     >
-      {children}
+      <RoleBoundary>{children}</RoleBoundary>
     </ClerkProvider>
   );
 }

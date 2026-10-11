@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 08:34 IST - Role separation and MVP review
+
+Codex implemented database-backed one-time roles, API/portal authorization, account routing, homepage redesign and honest direct-payment instructions; removed only unused dashboard mock modules. Specialist review agents audited authorization, UX/state transitions and researched README structure/hosting limitations. Fixed stale onboarding responses during account switching. Two backend runs passed 148 tests each, two frontend runs passed 50 each; static checks, contracts and production build passed. Applied the preserving-role Supabase migration. Local responsive homepage inspected. Hosted follow-up pending at this checkpoint; human review pending. No payment provider or actual charge implemented.
+
 ## 2026-10-11 07:35 IST - Final deployed recheck
 
 Codex verified final deployment e3f3c73 and both successful CI jobs. Hosted native itinerary-time recovery now advances; replacing a failed flight lookup with a 6 MB itinerary clears the stale error, restores extracted fields and advances again. Captured clean local screenshots of ticket review and destination with inline voice. No production test booking/profile save. Original private PDF and actual phone microphone/GPS remain unverified. Human review pending.

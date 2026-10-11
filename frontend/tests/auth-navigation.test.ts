@@ -10,7 +10,7 @@ describe("authentication return destinations", () => {
   });
   it("rejects external URLs, malformed values and arbitrary local paths", () => {
     for (const input of ["https://attacker.example", "//attacker.example", "/api", "/driver/../../api", "/driver/unknown", ["/driver"], undefined]) {
-      expect(workspaceReturn(input)).toBe("/request");
+      expect(workspaceReturn(input)).toBe("/onboarding");
     }
   });
 });

@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.auth import current_profile
+from app.core.auth import current_profile, passenger
 from app.core.database import get_session
 from app.models.domain import Profile, RideRequest
-from app.schemas.requests import ProfileUpdate, RideRequestInput
+from app.schemas.requests import ProfileUpdate, RideRequestInput, RoleInput
 from app.schemas.responses import ProfileResponse, RequestResponse
 from app.services.views import request_view
 
@@ -22,6 +22,25 @@ def me(profile: Profile = Depends(current_profile)) -> dict:
     }
 
 
+@router.post("/me/role", response_model=ProfileResponse)
+def choose_role(
+    body: RoleInput,
+    profile: Profile = Depends(current_profile),
+    session: Session = Depends(get_session, scope="function"),
+) -> dict:
+    # Serialize first-time selection so competing portal tabs cannot change roles.
+    profile = session.scalar(
+        select(Profile)
+        .where(Profile.id == profile.id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    if profile.role not in {"UNASSIGNED", body.role}:
+        raise HTTPException(409, "This account already has a role; use its existing portal")
+    profile.role = body.role
+    return me(profile)
+
+
 @router.patch("/me", response_model=ProfileResponse)
 def update_me(body: ProfileUpdate, profile: Profile = Depends(current_profile)) -> dict:
     profile.display_name = body.display_name
@@ -33,7 +52,7 @@ def update_me(body: ProfileUpdate, profile: Profile = Depends(current_profile)) 
 def create_request(
     body: RideRequestInput,
     request: Request,
-    profile: Profile = Depends(current_profile),
+    profile: Profile = Depends(passenger),
     session: Session = Depends(get_session, scope="function"),
 ) -> dict:
     # Serialize submissions for one account across API workers. A retry must see
@@ -101,7 +120,7 @@ def create_request(
 
 @router.get("/ride-requests", response_model=list[RequestResponse])
 def list_requests(
-    profile: Profile = Depends(current_profile),
+    profile: Profile = Depends(passenger),
     session: Session = Depends(get_session, scope="function"),
     limit: int = 20,
     offset: int = 0,

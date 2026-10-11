@@ -70,24 +70,7 @@ export function Workspace({
           kootu
           <span className="brand-dot" />
         </Link>
-        <nav className="workspace-nav" aria-label="Workspace">
-          <Link
-            href="/request"
-          >
-            Passenger
-          </Link>
-          <Link
-            href="/driver"
-            aria-current={area === "driver" ? "page" : undefined}
-          >
-            Driver
-          </Link>
-          {area === "admin" && (
-            <Link href="/admin" aria-current="page">
-              Operator
-            </Link>
-          )}
-        </nav>
+        <nav className="workspace-nav" aria-label="Workspace"><Link href={area === "admin" ? "/admin" : "/driver"} aria-current="page">{area === "admin" ? "Operator" : "Driver"}</Link></nav>
         {enabled && <AuthControls />}
       </header>
       <main id="workspace" className="workspace">

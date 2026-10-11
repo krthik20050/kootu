@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from app.core.auth import current_profile
+from app.core.auth import current_profile, driver_account, passenger
 from app.core.database import get_session
 from app.core.rate_limit import provider_budget
 from app.models.domain import Driver, Profile, RideGroup, RideMember, RideRequest, Vehicle, now
@@ -28,7 +28,7 @@ router = APIRouter(tags=["rides"])
 @router.get("/ride-groups/{group_id}/manifest", response_model=list[ManifestResponse])
 def manifest(
     group_id: str,
-    profile: Profile = Depends(current_profile),
+    profile: Profile = Depends(driver_account),
     session: Session = Depends(get_session, scope="function"),
 ) -> list[dict]:
     group = session.get(RideGroup, group_id)
@@ -52,7 +52,7 @@ def manifest(
 def match_request(
     request_id: str,
     request: Request,
-    profile: Profile = Depends(current_profile),
+    profile: Profile = Depends(passenger),
     session: Session = Depends(get_session, scope="function"),
 ) -> dict:
     row = session.get(RideRequest, request_id)
@@ -84,7 +84,7 @@ def match_request(
 @router.post("/ride-requests/{request_id}/cancel", response_model=RequestResponse)
 def cancel_request(
     request_id: str,
-    profile: Profile = Depends(current_profile),
+    profile: Profile = Depends(passenger),
     session: Session = Depends(get_session, scope="function"),
 ) -> dict:
     row = session.get(RideRequest, request_id)
@@ -146,7 +146,7 @@ def release_group(
 ) -> dict:
     group = locked_group(session, group_id)
     driver = session.get(Driver, group.driver_id) if group.driver_id else None
-    own_trip = bool(driver and driver.profile_id == profile.id)
+    own_trip = bool(profile.role == "DRIVER" and driver and driver.profile_id == profile.id)
     if not own_trip and profile.role != "ADMIN":
         raise HTTPException(403, "Only the assigned driver or an operator can release this group")
     if group.status != "CANCELLED":
@@ -161,7 +161,7 @@ def release_group(
 def trip_status(
     group_id: str,
     body: TripStatusInput,
-    profile: Profile = Depends(current_profile),
+    profile: Profile = Depends(driver_account),
     session: Session = Depends(get_session, scope="function"),
 ) -> dict:
     group = locked_group(session, group_id)
@@ -206,7 +206,7 @@ def trip_status(
 def update_driver_location(
     group_id: str,
     body: DriverLocationInput,
-    profile: Profile = Depends(current_profile),
+    profile: Profile = Depends(driver_account),
     session: Session = Depends(get_session, scope="function"),
 ) -> dict:
     group = locked_group(session, group_id)
@@ -237,7 +237,7 @@ def update_driver_location(
 @router.delete("/ride-groups/{group_id}/driver-location", status_code=204)
 def stop_driver_location(
     group_id: str,
-    profile: Profile = Depends(current_profile),
+    profile: Profile = Depends(driver_account),
     session: Session = Depends(get_session, scope="function"),
 ) -> None:
     group = locked_group(session, group_id)

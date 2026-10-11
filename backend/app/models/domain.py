@@ -19,7 +19,7 @@ class Profile(Base):
     __tablename__ = "profiles"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
     clerk_subject: Mapped[str] = mapped_column(String(255), unique=True)
-    role: Mapped[str] = mapped_column(String(20), default="PASSENGER")
+    role: Mapped[str] = mapped_column(String(20), default="UNASSIGNED")
     display_name: Mapped[str] = mapped_column(String(80), default="")
     women_only_eligible: Mapped[bool] = mapped_column(Boolean, default=False)
 

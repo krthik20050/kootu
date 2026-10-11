@@ -65,7 +65,7 @@ def current_profile(
 ) -> Profile:
     profile = session.scalar(select(Profile).where(Profile.clerk_subject == identity.subject))
     if profile is None:
-        profile = Profile(clerk_subject=identity.subject, role="PASSENGER")
+        profile = Profile(clerk_subject=identity.subject, role="UNASSIGNED")
         try:
             with session.begin_nested():
                 session.add(profile)
@@ -84,4 +84,16 @@ def current_profile(
 def admin(profile: Profile = Depends(current_profile)) -> Profile:
     if profile.role != "ADMIN":
         raise HTTPException(403, "Administrator access required")
+    return profile
+
+
+def passenger(profile: Profile = Depends(current_profile)) -> Profile:
+    if profile.role != "PASSENGER":
+        raise HTTPException(403, "Passenger account required")
+    return profile
+
+
+def driver_account(profile: Profile = Depends(current_profile)) -> Profile:
+    if profile.role != "DRIVER":
+        raise HTTPException(403, "Driver account required")
     return profile

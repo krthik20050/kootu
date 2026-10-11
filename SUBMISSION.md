@@ -1,49 +1,54 @@
-# Project submission
+# kootu — hackathon submission
 
-Complete this file during the hackathon and use it to prepare your submission through the method announced by the organizers. Do not submit your project to the template repository.
+## The idea
 
-## Project
+**Land together. Leave together.** kootu turns compatible airport arrivals into coordinated shared rides. Passengers confirm ticket-derived flight details, destination and travel needs; an approved driver accepts the group and manages pickup through completion. Voice instructions and flight updates reduce repetitive entry while deterministic matching keeps capacity and timing rules explicit.
 
-- **Project name:** kootu
-- **Short description:** Airport shared-cab coordination around compatible arrival times and small destination clusters. Includes connected passenger/driver/operator screens, persistent PostgreSQL/PostGIS matching and confirmed ticket/voice intake. Live provider configuration is pending.
-- **Code repository URL:** https://github.com/krthik20050/kootu
-- **Final submitted implementation commit SHA:** TODO (team must identify the actual organizer submission)
-- **Latest validated implementation checkpoint:** `3a03e7ce8cf957b783bd9a954f951a59060e21f8`; [passing CI](https://github.com/krthik20050/kootu/actions/runs/38080277973). Subsequent documentation commits do not change this implementation.
-- **Working demo URL or local demo steps:** Local configuration/demo walkthrough in [README.md](README.md#hackathon-demo); no deployed demo yet.
-- **Demo access requirements:** Node 22.12+, Python 3.13 recommended. Public preview needs no credentials; real Clerk mode requires team-configured keys.
+- **Repository:** https://github.com/krthik20050/kootu
+- **Working demo:** https://kootu-five.vercel.app
+- **API health:** https://kootu-api-k5eh.onrender.com/health
+- **Setup and demo steps:** [README](README.md#run-locally) and [short demo](README.md#a-short-demo)
+- **Final submitted implementation SHA:** Not recorded. The team must enter the actual commit submitted through the organizer's process.
+- **Previously verified merged checkpoint:** `53af021e964ef1bf1e4aac906890f6a4b2b5180e`; [passing CI](https://github.com/krthik20050/kootu/actions/runs/38106186355). This predates the role-separation improvements; current source and subsequent validation must not be represented as that older checkpoint.
 
 ## Participants
 
-Participate solo or in a team of up to 4. Remove unused rows.
+The organizer permits solo participation or a team of at most four. Actual participant attribution requires the team's confirmation; no names or contribution claims are fabricated.
 
 | Participant name | GitHub handle | Contribution |
 | --- | --- | --- |
-| TODO | TODO | TODO |
+| To be confirmed by team | To be confirmed by team | To be confirmed by team |
 
-## Run and demonstrate
+## Demonstrate the MVP
 
-- **Prerequisites and versions:** Node 22.12+, npm, Python 3.13 recommended; see README.
-- **Install command:** Web: `npm ci` in `frontend`; API: pip/venv locked installation in README.
-- **Required environment variable names:** Web Clerk keys, API database/Clerk issuer/Google/Grok/Sarvam/Aviationstack settings; complete list and sanitized examples in README.
-- **Start command:** Web: `npm run dev`; API: `python -m uvicorn app.main:app --reload --no-access-log` inside the configured venv and `backend`.
-- **Demo walkthrough:** Follow the configured multi-account booking/approval/offer/trip walkthrough in README; keyless mode demonstrates setup and regression checks only.
-- **Checks performed and results:** Frontend lint/typecheck/build and 8 interaction tests; 53 backend tests using real PostgreSQL/PostGIS, Ruff and contract checks. Details: [validation](docs/backend-validation.md).
-- **Known limitations or incomplete features:** Live Clerk/provider accounts and deployment remain unverified. No fares/payments, GPS/emergency dispatch or automatic document verification. Dev-tool advisories are disclosed in validation. Participant names and final submitted SHA remain for the team.
-- **Libraries, APIs, and public datasets used:** Library/source links in README; no external dataset or live credentials are bundled.
-- **AI usage record:** [AI_USAGE.md](AI_USAGE.md)
-- **Development change log:** [CHANGELOG.md](CHANGELOG.md)
+1. Open the homepage and show the passenger and driver registration choices.
+2. Use distinct accounts to show separate persisted roles and workspaces.
+3. Register a driver/vehicle and have the designated operator approve them; set them available.
+4. Submit two compatible passenger requests using ticket/manual intake and optional voice instructions. Review all extracted fields before saving.
+5. Find a group, accept it as the driver, inspect the assigned manifest, optionally share location, then start and complete the trip within its timing rules.
+6. Show persisted passenger/driver history. Explain direct payment to the driver: this MVP has no fare quote, checkout, payment ledger, receipt or payout.
 
-## Submission checklist
+A successful live match requires enabled provider accounts, upcoming compatible requests and approved available fleet. Waiting or provider failure is an honest outcome; do not substitute fabricated journeys. Browser location/microphone access needs permission and a supported secure browser.
 
-- [ ] The project implementation started from scratch at the event.
-- [ ] I participated solo or with no more than 4 team members in total.
-- [ ] Codex was used during development and its usage is documented.
-- [ ] The code repository URL, short description, and working demo are provided.
-- [ ] README setup and demo instructions match the submitted code.
-- [ ] Actual checks and known limitations are documented.
-- [ ] Meaningful changes are documented and committed throughout development.
-- [ ] The final implementation is committed and pushed, and its SHA is recorded above.
-- [ ] No credentials or private data are included in the repository or demo instructions.
-- [ ] The organizers' announced submission method and timing have been followed.
+## Technical delivery
 
-Event reference: [DevDay Exchange Community: Kochi on Luma](https://luma.com/z10nz8gp). The event wraps up by **10:00 AM IST on 11 October 2026**.
+- **Stack:** Next.js/React/TypeScript, Clerk, FastAPI/SQLAlchemy, PostgreSQL/PostGIS; Geoapify, Groq, Sarvam and Aviationstack.
+- **Prerequisites:** Node 22.12+, Python 3.13 recommended and PostgreSQL/PostGIS. Locked setup commands and environment names are in README; no secrets belong here.
+- **Persistence:** Accounts, ride requests, groups, offers, fleet and lifecycle events are database-backed. Apply every reviewed migration before running the corresponding code.
+- **Validation:** Frontend lint/types/unit tests/build; backend Ruff, generated-contract checks and unit/database integration tests. The prior merged checkpoint passed 46 frontend and 143 backend tests. New work must use its own recorded results in [CHANGELOG](CHANGELOG.md) and CI.
+- **Combined regression:** Ticket and voice input through completed ride uses real disposable PostGIS with stubbed external providers. It does not establish a full live multi-account journey or device microphone/GPS reliability.
+- **Deployment:** Vercel frontend, Render API, Supabase database. The hackathon uses Clerk development keys and a sleeping free backend; this is a deployed demo, not a commercial service readiness claim.
+- **Known limits:** No payment processing/fare engine/emergency dispatch/automatic government-document verification. Real-account hosted end-to-end and physical-device checks must be reported separately when performed.
+- **Sources:** [README source list](README.md#sources-and-research); no bundled external dataset.
+- **Actual Codex contribution:** [AI_USAGE.md](AI_USAGE.md); implementation history in [CHANGELOG.md](CHANGELOG.md).
+
+## Team confirmation before submission
+
+- [ ] Confirm implementation started from scratch at the event and team size is compliant.
+- [ ] Fill actual participant names, handles and contributions.
+- [ ] Verify the deployed demo matches the intended submitted code.
+- [ ] Record the actual submitted implementation SHA and its check results.
+- [ ] Confirm no credentials or private participant data are committed.
+- [ ] Submit the repository, description and working demo using the organizer's announced method.
+
+[DevDay Exchange Community: Kochi](https://luma.com/z10nz8gp) runs 10–11 October 2026, ending by **10:00 AM IST on 11 October**. These checkboxes record human submission responsibilities, not completed actions. No published scoring rubric or winning outcome is assumed.

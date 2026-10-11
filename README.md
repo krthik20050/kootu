@@ -1,81 +1,85 @@
 # kootu
 
-Latest backend: [destination clusters and database architecture](docs/database-architecture.md). Nearby-city groups now default to up to six passengers/six bags subject to actual approved vehicle capacity. Concurrent booking retries, duplicate arrival bookings, missed pickup cleanup and stale flight callbacks are covered by database regressions. Migrations through `202610110004_arrival_booking_integrity.sql` are applied to the existing Supabase database; production ride-flow verification still needs routing and signed-in users.
+**Land together. Leave together.**
 
-**Land together. Leave together.** Shared airport rides for passengers with compatible arrival times and nearby drop-offs.
+Two people land at the same airport, minutes apart, and head toward the same neighbourhood. They have a shared journey ahead of them—but no simple way to find each other. kootu connects compatible arrivals with an approved driver, turning flight details into a coordinated shared ride.
 
-## What works
+[Open the demo](https://kootu-five.vercel.app) · [API health](https://kootu-api-k5eh.onrender.com/health) · [Build checks](https://github.com/krthik20050/kootu/actions) · [Submission](SUBMISSION.md)
 
-- Passenger, driver and operator web workspaces connected to FastAPI, with Clerk bearer sessions and server-owned roles.
-- PostgreSQL/PostGIS persistence; deterministic grouping by airport, ready/wait window, whole-cluster destination proximity, seats, luggage, women-only policy, wheelchair spaces, child seats and pets. Google road-distance verification is required before a group is created.
-- Driver/vehicle operator approval, availability, expiring offers, atomic acceptance, passenger cancellation and trip start/completion. Exact drop-offs and private notes are available only to the assigned driver; other passengers receive aggregate group information.
-- Groq ticket-first autofill for JPG/PNG and PDFs (including scans, up to three pages): an upload progress bar leads directly to a ticket-style review with editable arrival fields and printed boarding time, seat, gate, terminal, cabin, allowance and booking identifiers when present. Pickup is planned 30 minutes after landing, with no arrival/local-time or Ready to leave inputs. Missing timing is looked up from flight number/date/airport on Next; only actual changes to flight details invalidate the old calculation. If the live feed has no arrival, an inline recovery offers a full itinerary upload or confirmation of its printed landing time (IST is automatic at known Indian airports). Normal ticket uploads need no timing input. Account-load failures offer Retry connection and clear after recovery; browser reads use a same-origin backend rewrite, retry a transport failure once and never overlap background polls. Ticket uploads and short writes also use the same-origin rewrite; backend Bearer authentication still applies. Long audio/matching requests retain direct routing because external rewrites time out after 120 seconds. Writes/uploads are never automatically replayed. Enter in a field does not advance or save. Unknown flight fields stay empty. All ticket-derived fields update together in one shared draft across the arrival and destination steps; Next/Back preserves them. Continue through arrival review and destination steps. Dictate directly into the optional special-instructions box; Sarvam transcription appends automatically. Brief confetti follows a successful save. Explicit structured needs affect matching; free text does not automatically reserve equipment. [Flow, research and limits](docs/ticket-voice-intake.md).
-- Automatic Aviationstack flight polling adjusts ready times from the original baseline, preserves feasible groups, and releases incompatible/cancelled groups for rematching. A PostgreSQL advisory lock coordinates maintenance across processes; no queue service is required.
-- Generated OpenAPI/TypeScript contracts, SQL migration runner, PR template, GitHub CI and [collaboration guide](CONTRIBUTING.md).
+Built from scratch for **DevDay Exchange Community Hackathon: Kochi, 10–11 October 2026**, with Codex assistance documented in [AI_USAGE.md](AI_USAGE.md). This is a deployed hackathon MVP, not a commercial transport service.
 
-Local regression coverage includes real PostgreSQL 17/PostGIS 3.5, signed JWT validation, concurrency and provider contract fixtures. **The website and backend are deployed and connected to Supabase and a Clerk development instance; Groq ticket extraction and Sarvam transcription passed synthetic live checks; Aviationstack live-query access passed, while a matching real flight and the signed-in ride flow remain unverified.** The keyless preview shows a setup state instead of fabricated bookings. Adding keys also requires applying migrations, enabling provider products, selecting a compatible Groq vision model and approving real drivers/vehicles. No claim of guaranteed rides or zero defects is made.
+## From a ticket to a shared trip
 
-This is a coordination MVP. Payments, fare quotes, GPS tracking, emergency dispatch, passenger identity verification and commercial operating procedures are not implemented. Driver approval records an operator decision; kootu does not verify government documents automatically. See [competitor research](docs/competitor-analysis.md) and [validation](docs/backend-validation.md).
+1. **Choose your account.** Register as a passenger or a driver. The database remembers the choice; subsequent sign-ins open that account's workspace. Operator access is assigned separately.
+2. **Tell us about your arrival.** Passengers upload a ticket or enter flight details, confirm the arrival and drop-off, and add their party's needs. Optional voice dictation becomes editable ride instructions.
+3. **Find a compatible group.** The server checks timing, nearby destinations, road routes and vehicle capacity. No match means waiting—not a fabricated booking.
+4. **Meet your driver.** An approved, available driver accepts an expiring offer and gets the assigned manifest. Passengers can see a fresh location pin when the driver chooses to share it.
+5. **Complete the journey.** The driver starts and completes the trip; passenger status and history follow the persisted lifecycle.
 
-Built from scratch for the DevDay Exchange Community Hackathon: Kochi, 10–11 October 2026. [RULES.md](RULES.md) permits a team of at most four; the 23-person workflow in CONTRIBUTING applies outside that event or with organizer approval. Participant identities and submission details remain in [SUBMISSION.md](SUBMISSION.md).
+**Payment in this MVP:** agree the fare with the driver and pay the driver directly. kootu does not quote fares, collect money, issue receipts, record payment settlement or calculate earnings. There is no pretend checkout or sample balance.
 
-## Stack and ownership
+## What makes the coordination work
 
-Start here when choosing what to work on:
+| Capability | Implemented behaviour |
+| --- | --- |
+| Separate portals | Passenger booking/dashboard; driver onboarding, vehicles, offers, trips and history; operator approval tools. Server-side roles and ownership checks protect API actions as well as the UI. |
+| Ticket intake | Groq-assisted JPG/PNG/PDF extraction, including scanned PDFs up to three pages; editable review before saving. Unknown fields remain empty. |
+| Voice instructions | Sarvam transcription appends to editable instructions. Structured accessibility and capacity inputs—not free-text guesses—control matching. |
+| Flight-aware pickup | Aviationstack arrival lookup suggests landing plus 30 minutes. Polling handles provider-confirmed delays and cancellations; infeasible groups can return to matching. |
+| Deterministic matching | Airport, ready/wait windows, whole-cluster destination proximity, road verification, seats, bags, women-only eligibility, wheelchair spaces, child seats and pets. Actual approved vehicle capacity is respected. |
+| Persistent ride lifecycle | PostgreSQL/PostGIS stores accounts, requests, groups, offers, fleet and events. Stable request IDs and database locking protect retries and competing acceptance. |
+| Driver operations | Operator approval of driver and vehicle, availability controls, expiring offers, assigned manifest, cancellation, start and completion. Approval records an operator decision; it does not automatically verify documents. |
+| Location sharing | Assigned drivers opt in to device location sharing. Trip passengers get map/directions links; stale pins stop being actionable, and completion clears the location. |
+| Privacy boundaries | Exact drop-offs and private notes are available to the assigned driver; other passengers receive aggregate group information. Raw ticket/audio uploads are transient. |
+| Honest empty states | No invented journeys, identities, notifications or earnings. Synthetic fixtures remain in automated tests. |
 
-```text
-kootu/
-├── frontend/                 # Website, screens and browser API client
-│   ├── src/app/(driver_app)/ # Driver routes
-│   ├── src/app/(user_app)/   # Home, passenger and operator routes
-│   ├── src/app/              # Shared layout and global styles
-│   ├── src/components/       # Shared UI and workspace components
-│   ├── src/lib/api/          # Backend client and generated contract types
-│   └── tests/                # Frontend tests
-├── backend/                  # FastAPI application and Python tooling
-│   ├── app/api/              # HTTP routes
-│   ├── app/core/             # Settings, authentication and database connection
-│   ├── app/models/           # Persistent domain models
-│   ├── app/schemas/          # Request and response validation
-│   ├── app/services/         # Matching, ride lifecycle and server API adapters
-│   └── tests/                # Backend and database integration tests
-├── database/
-│   └── migrations/           # Ordered PostgreSQL/PostGIS schema changes
-├── integrations/             # External API setup guides and code locations
-│   ├── clerk/
-│   ├── google-maps/
-│   ├── groq/
-│   ├── sarvam/
-│   └── aviationstack/
-├── docs/                     # Architecture, contracts and validation
-└── .github/workflows/        # CI checks
+## A short demo
+
+Use separate passenger and driver accounts; changing the URL cannot change an account's role.
+
+1. Register a driver, add a vehicle, and have the designated operator review and approve both at `/admin`. Set both available.
+2. Register two passengers. Use `/request` for conversational intake or `/passenger` for ticket-guided intake. Confirm compatible upcoming arrivals and nearby drop-offs.
+3. Save and find a group. A proposal requires an eligible vehicle and successful road verification; an empty result is a valid waiting state.
+4. In the driver portal, accept the offer and review the manifest. Optionally share location over HTTPS with browser permission.
+5. Start within the permitted pickup window, complete the trip, and inspect passenger/driver history. Explain the direct-payment policy rather than demonstrating a fake charge.
+
+The live deployment uses Vercel, Render and Supabase, with a Clerk **development** instance for the hackathon. A cold backend can take about a minute to wake. Operator privileges are never granted to the first arbitrary sign-in.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    P[Passenger portal] --> A[FastAPI: identity, roles and ownership]
+    D[Driver portal] --> A
+    O[Operator portal] --> A
+    A --> DB[(PostgreSQL / PostGIS)]
+    A --> R[Geoapify address and road routing]
+    A --> T[Groq ticket extraction]
+    A --> V[Sarvam transcription]
+    A --> F[Aviationstack flight updates]
 ```
 
-Each main folder has its own README. Provider secrets and executable adapters belong to the backend; `integrations` explains each connection without putting private keys in browser code. Previous `apps/web`, `apps/api` and `supabase/migrations` paths are now `frontend`, `backend` and `database/migrations`. Historical changelog/validation records retain their original paths.
+Next.js 16 / React 19 / TypeScript power the frontend. FastAPI and SQLAlchemy own business logic and provider credentials. Clerk supplies bearer sessions; the backend validates issuer, signature and authorized origin. OpenAPI and TypeScript contracts are generated together.
 
-`frontend`: Next.js 16, React 19, TypeScript, Tailwind 4 and Clerk. The `(driver_app)` and `(user_app)` folders are Next.js route groups, so they organize each role's pages without changing `/driver`, `/passenger`, `/admin` or `/`. Shared components, authentication, styles and API calls stay in `src/components`, `src/app` and `src/lib`. `backend`: FastAPI/Pydantic, SQLAlchemy/psycopg, PyJWT. `database/migrations`: PostgreSQL/PostGIS SQL. `docs/openapi.json` and `frontend/src/lib/api/generated.ts` are exported from the backend, not edited independently. No microservices, Redis, AI matching, or message brokers. Docker is optional for disposable database tests, not an application prerequisite.
+`frontend/` owns the website; `backend/` owns services and tests; `database/migrations/` holds ordered SQL; `integrations/` documents providers; `docs/` contains deeper design and verification notes. Route groups `(user_app)` and `(driver_app)` organize files without adding URL segments.
 
-[Architecture](docs/architecture.md) · [Database](docs/database.md) · [Matching](docs/matching-engine.md) · [API](docs/api-contracts.md)
+## Run locally
 
-[Backend research and hardening plan](docs/backend-research-and-plan.md) explains current parameters, competitor/research approaches, database invariants and remaining failure modes. The local hardening milestone adds distinct-account groups, prefiltered candidate selection, bounded road alternatives and fair maintenance attempts. Apply migration `202610110003_matching_integrity.sql` before deploying this backend; it has not been applied to the hosted database in this milestone. Frontend API contracts remain unchanged.
+Requirements: Node 22.12+, Python 3.13 recommended, PostgreSQL with PostGIS, and your own enabled provider/Clerk accounts. Do not reuse shared production data for tests.
 
-## Local setup
-
-Use Node **22.12+**, npm, Python **3.13** (project requires 3.12+), Git and a PostgreSQL database with PostGIS. Python uses pip + venv.
-
-PowerShell, in `backend`:
+In `backend` (PowerShell):
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python -m pip install -r requirements-dev.lock
 .\.venv\Scripts\python -m pip install --no-deps -e .
 Copy-Item .env.example .env
-# Fill server-only settings. Apply migrations using a database migration owner:
+# Fill server-only settings; apply migrations with a migration-owner connection.
 .\.venv\Scripts\python migrate.py
 .\.venv\Scripts\python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 --no-access-log
 ```
 
-In `frontend`, another terminal:
+In a second terminal, inside `frontend`:
 
 ```powershell
 Copy-Item .env.example .env.local
@@ -83,30 +87,20 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000`. Use that same origin in `FRONTEND_URL`; `localhost` and `127.0.0.1` are different origins for CORS and Clerk `azp`. Without database/keys, `/health` and the public shell work, while private functionality fails with an explicit configuration error. `/ready` checks configuration and table availability; it does not authenticate provider credentials. macOS/Linux use `cp` and `.venv/bin/python`.
+Open `http://localhost:3000` and use that exact origin in `FRONTEND_URL`. macOS/Linux use `cp` and `.venv/bin/python`. Copy examples only when creating your configuration; preserve existing configured files.
 
-## Fill these settings
+| Configuration | Required values |
+| --- | --- |
+| Frontend | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_AUTH_ENABLED=true`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, server-only `CLERK_SECRET_KEY` |
+| Database/auth | `DATABASE_URL`, `CLERK_ISSUER`, `FRONTEND_URL`, `APP_ENV`; optional `CLERK_AUDIENCE`; designated `BOOTSTRAP_ADMIN_SUBJECT` for the operator |
+| Routing | `ROUTING_PROVIDER=geoapify`, `GEOAPIFY_API_KEY`; Google routing remains an optional configured adapter |
+| Ticket/voice/flights | `GROQ_API_KEY`, compatible `GROQ_MODEL`, `SARVAM_API_KEY`, `SARVAM_MODEL`, `AVIATIONSTACK_API_KEY` |
 
-| Location | Settings | Purpose |
-| --- | --- | --- |
-| Web `.env.local` | `NEXT_PUBLIC_API_URL` | API base URL |
-| Web `.env.local` | `NEXT_PUBLIC_AUTH_ENABLED=true`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` | Enable real sign-in; secret stays server-only |
-| API `.env` | `DATABASE_URL` | PostgreSQL connection, migrations applied; [role setup](docs/database.md) |
-| API `.env` | `CLERK_ISSUER`, optional `CLERK_AUDIENCE` | Exact trusted instance origin; JWKS derived from it |
-| API `.env` | `BOOTSTRAP_ADMIN_SUBJECT` | Trusted operator's Clerk user ID; creates ADMIN after that user signs in |
-| API `.env` | `GOOGLE_MAPS_API_KEY` | Enable Routes API and Geocoding API for this server key |
-| API `.env` | `GROQ_API_KEY`, `GROQ_MODEL` | Groq vision model with JSON mode and server validation |
-| API `.env` | `SARVAM_API_KEY`, `SARVAM_MODEL=saaras:v3` | Speech-to-text; browser recordings convert to mono 16 kHz WAV, up to ten minutes, split into short provider requests |
-| API `.env` | `AVIATIONSTACK_API_KEY` | Plan with HTTPS flight lookup and the necessary coverage/date access |
-| API `.env` | `FRONTEND_URL`, `APP_ENV` | Exact origin; production requires HTTPS |
+Apply all reviewed migrations, including `202610110006_account_roles.sql`, before running this version. Existing account roles are preserved; new accounts explicitly select a role. Runtime database access uses the dedicated API role, not the migration owner. See [database setup](docs/database.md) and [provider setup](integrations/README.md).
 
-Examples also expose configurable radius (3000m), seats/luggage (4 each), wait5–120 minutes, offer expiry300 seconds, and polling900 seconds. The web passenger form targets the default six-seat/six-luggage pilot policy. Provider usage can cost money; configure quotas/billing limits in the provider accounts. App limits per signed-in user per hour: ticket 20, audio 30, matching 30, destination search 100. Polling bounds each cycle to 30 active flight requests and 5 matching attempts.
+For this team's existing local setup, edit ignored `.environment/.env` and run `backend/.venv/Scripts/python scripts/sync_env.py` from the root; see [.environment/README.md](.environment/README.md). Hosted settings are configured separately. Never put provider/database secrets in `NEXT_PUBLIC_*` values.
 
-`DISPATCH_HORIZON_MINUTES=30` (allowed 5–120) keeps advance requests waiting until close to readiness, instead of reserving today's fleet for a distant booking. Automatic matching skips expired/out-of-horizon requests and rotates by attempt time; flight polling rotates even after failures or empty results. Proposal expiry processes at most 100 groups per cycle. Road alternatives share a per-attempt budget of 12 directed calls under the default four-seat policy. These are bounded heuristics, not guaranteed wait times or global provider spending caps.
-
-Keys never go in Git, screenshots or chat. Public Next.js variables are baked into a build; rebuild after changing them. Raw tickets/audio are transient uploads, closed after processing; provider retention terms still apply. Choosing a ticket or stopping microphone dictation initiates processing; there are no additional consent checkboxes in the booking flow. Notes should contain only useful ride details.
-
-## Checks
+## Check the software
 
 In `frontend`: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, `npm audit --omit=dev`.
 
@@ -119,91 +113,30 @@ In `backend`:
 .\.venv\Scripts\python export_contracts.py --check
 ```
 
-Set `TEST_DATABASE_URL` to a **disposable** PostgreSQL/PostGIS database whose name contains `test`. Tests drop/recreate its public schema and truncate test tables; never use a shared/production database. If omitted, database tests skip locally; CI supplies the database and runs them. The current isolated local container uses port55432 and ignored `.env.test` files; no credentials are committed.
+Database tests require `TEST_DATABASE_URL` pointing to a **disposable** database whose name contains `test`. The suite drops/recreates its public schema and truncates tables. Never use the shared Supabase project. CI supplies PostgreSQL/PostGIS; without a test database, local database tests skip.
 
-After a contract change run `python export_contracts.py`, review both generated files and commit them with the backend change. CI detects contract drift. npm/pip lockfiles pin installed versions. Production npm audit is separate from dev tooling; known ESLint dependency advisories are disclosed in validation, without forced incompatible upgrades.
+The suite covers matching, capacity/policy constraints, retries, competing operations, authorization, provider contracts and a ticket/voice → request → match → acceptance → manifest/location → completed-trip regression. That combined regression uses a real disposable database and stubbed external providers. It is not evidence of a physical microphone, GPS device or live provider journey. See [validation notes](docs/backend-validation.md) and current [CI results](https://github.com/krthik20050/kootu/actions).
 
-## Demo walkthrough
+After API changes, run `python export_contracts.py` and commit both generated outputs. Never hand-edit `frontend/src/lib/api/generated.ts`.
 
-1. Configure the database and providers, apply migrations, enable Clerk, then restart both apps.
-2. Sign in with an operator matching `BOOTSTRAP_ADMIN_SUBJECT`; visit `/admin`.
-3. A different user visits `/driver`, submits a licence reference and vehicle. Operator reviews actual documents and approves both. Driver sets both available.
-4. Two passenger accounts visit `/passenger`, confirm arrival details and choose nearby destination pins, overlapping ready times and compatible needs. Save and match. A group is proposed only when road verification and capacity checks succeed.
-5. Driver accepts under `/driver`, views assigned drop-offs, starts after ready time, then completes. Passenger status refreshes every 15 seconds.
-6. Demonstrate cancellation or a provider-confirmed delay: affected groups return to waiting when required. The maintenance worker runs while the API process is awake; a sleeping host cannot continuously poll flights.
-7. Without keys, demonstrate only the honest setup state, `/health`, `/ready` and the test suite; do not portray those as a live ride demo.
+## Deployment and current limits
 
-## Deployment
+Vercel project root: `frontend`, install `npm ci`, build `npm run build`. Render root: `backend`, install locked runtime requirements and the package, then run `uvicorn app.main:app --host 0.0.0.0 --port $PORT --no-access-log`. Existing GitHub-connected services deploy main. Apply migrations separately before releasing; use a direct/session-pooled database connection for advisory locks, not transaction-mode pooling. The [Render blueprint](render.yaml) contains configuration names, not secrets.
 
-Vercel root `frontend`, Node 22.12+, install `npm ci`, build `npm run build`. Render root `backend`, Python 3.13, build `python -m pip install -r requirements.lock` then `python -m pip install --no-deps .`; start `uvicorn app.main:app --host 0.0.0.0 --port $PORT --no-access-log`. Set production HTTPS origins and server secrets. Apply reviewed migrations separately before releasing; use a direct/session-pooled PostgreSQL connection for advisory locks, not transaction-mode pooling. Set an ingress upload limit around 21MB and provider/request timeouts that permit bounded matching. A host that sleeps requires a continuously running worker or a later approved scheduled-job setup for continuous flight refresh. The Vercel public setup website has been deployed as documented below; the hosted backend and Supabase connection are verified below.
+- `/health` checks process availability; `/ready` checks configuration/database readiness. Neither proves provider credentials or an entire customer journey works.
+- Render's free service sleeps after inactivity; flight maintenance runs only while the process is awake. Clerk development keys and this hosting setup are suitable for a hackathon demo, not a commercial launch.
+- Provider availability, flight coverage, rate limits and account billing affect results. Matching is bounded coordination, not a guaranteed ride or optimal dispatch service.
+- Target-device microphone/GPS, an authenticated hosted journey across multiple real accounts, and real-world pickup accuracy require separate validation. Do not infer those from automated fixtures.
+- No payment processing, fare engine, emergency dispatch, automatic government-document verification or commercial operating procedures are implemented.
 
-### Current Vercel deployment
+## Explore and contribute
 
-[Public website](https://kootu-five.vercel.app) · [Vercel project](https://vercel.com/krthik20050s-projects/kootu)
+[Frontend guide](frontend/README.md) · [Backend guide](backend/README.md) · [Database architecture](docs/database-architecture.md) · [Ticket/voice design](docs/ticket-voice-intake.md) · [Geoapify and location privacy](integrations/geoapify/README.md) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
 
-The existing `krthik20050` account owns the project. GitHub `krthik20050/kootu` is connected, with root `frontend`, Next.js preset, Node project setting `22.x` and install command `npm ci`. The initial production deployment reached READY, and its homepage and passenger setup state were browser-verified on 11 October 2026. Vercel warns that the package's `>=22.12.0` engine range can select a later major runtime.
+Use repository issues for implementation questions and bug reports; do not post credentials or passenger details. Participant attribution and the actual submitted commit belong in [SUBMISSION.md](SUBMISSION.md). The event permits at most four participants; the larger collaboration example in CONTRIBUTING does not change that rule.
 
-Production uses `NEXT_PUBLIC_AUTH_ENABLED=true` and `NEXT_PUBLIC_API_URL=https://kootu-api-k5eh.onrender.com`, with Clerk credentials stored in Vercel. Preview stays auth-disabled because the backend authorizes only the stable public origin. Clerk uses development keys for the hackathon demo on the Vercel-provided domain; no production Clerk instance is configured. Groq, Sarvam and Aviationstack settings have been stored privately. Synthetic Groq/Sarvam requests passed; Aviationstack live access passed. Geoapify replaces Google Maps for address search and road matching; its public-address/route smoke checks passed. The website calls FastAPI; only FastAPI receives the Supabase database connection string.
+## Sources and research
 
-For future CLI deployments, run from the repository root (the project already specifies `frontend`):
+The product story follows the actual arrival-to-trip flow, without invented traction or savings claims. [GitHub's README guidance](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes) informed the why/what/how structure. [OWASP authorization guidance](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Patterns_Cheat_Sheet.html) informed server-side checks; [Render free-service limits](https://render.com/docs/free) and [Clerk environments](https://clerk.com/docs/guides/development/managing-environments) inform the deployment limitations. The [organizer's event page](https://luma.com/z10nz8gp) confirms the event and demo format; it does not publish a scoring rubric or promise a win.
 
-```powershell
-vercel link --yes --project kootu --scope krthik20050s-projects
-vercel deploy --prod --scope krthik20050s-projects
-```
-
-Do not deploy from `frontend` after setting the remote root directory, since that can apply the subdirectory twice. `.vercelignore` excludes local environment files, dependencies and build output. Keep real credentials in the appropriate hosting environment. GitHub deploys are subject to Vercel's account/commit-author permissions; a connected repository does not grant teammates deployment access.
-
-### Current Supabase connection
-
-[Supabase project](https://supabase.com/dashboard/project/hsxahwksjlvtrgpbrwvc): `kootu`, Mumbai (`ap-south-1`), existing approved organization. CLI 2.120.0 is linked via `database/supabase`. All three migrations, nine application tables with RLS and nine policies restricted to `kootu_api` were verified remotely, along with backend-role login and session advisory locks. `backend/.env` now connects the local API to the session pooler with TLS. Owner and API passwords remain in ignored files, outside Git and the frontend.
-
-The hosted FastAPI service now uses the dedicated server-role connection and verified Clerk issuer. Provider keys and an operator identity still need configuring before the full ride workflow can run.
-
-
-
-### Current backend and Clerk setup
-
-[Render API](https://kootu-api-k5eh.onrender.com/health) · [Render service dashboard](https://dashboard.render.com/web/srv-db59t3nlot8c73e7be60)
-
-`kootu-api` runs Python 3.13.9 on a free Render service in Singapore, from `backend`, with GitHub auto-deploy. `render.yaml` records the deployment settings and passed Render blueprint validation; its `sync: false` values are supplied privately, never committed. The current service was created through the CLI. Do not create another service just to apply this file.
-
-Clerk application `app_3KWBNZTTRjtIZHSHZSAgL8Fc6wt` has development instance `ins_3KWBNbW7Wcy2xQRybxK7x40CiQB`, issuer `https://dear-lionfish-4707.clerk.accounts.dev`. Its RSA JWKS endpoint was verified, and its keys were saved to Vercel after explicit user approval. The Render backend requires only the issuer for session verification, not the Clerk secret key. The auth-enabled Vercel deployment reached READY and the live passenger page opened the Clerk modal with Google/email sign-in. CI passed for implementation checkpoint `17e7aef` ([run 38083829579](https://github.com/krthik20050/kootu/actions/runs/38083829579)). A completed end-user session and authenticated ride workflow still await human sign-in; loading the modal does not verify them.
-
-The API's `/health` returns 200. `/ready` returns 503 with database/authentication configured and routing/ticket/transcription/flight integrations unconfigured. Health checks use `/health` so incomplete optional provider setup does not restart the service continually. Real rides require the selected Geoapify routing provider, approved drivers/vehicles and an operator. Set `BOOTSTRAP_ADMIN_SUBJECT` to the intended operator's Clerk user ID after that person signs in; never assign the first arbitrary user administrator privileges.
-
-Free Render services sleep after 15 minutes without inbound traffic and can take about a minute to wake. Flight maintenance runs only while this host is awake; an always-running host is needed for continuous updates. This deployment does not bypass sleep restrictions. See [Render free-service limits](https://render.com/docs/free) and [Clerk environments](https://clerk.com/docs/guides/development/managing-environments).
-
-## Sources
-
-[Clerk](https://clerk.com/docs/nextjs/getting-started/quickstart), [FastAPI](https://fastapi.tiangolo.com/), [SQLAlchemy](https://docs.sqlalchemy.org/en/20/), [PostGIS](https://postgis.net/documentation/), [Google Routes](https://developers.google.com/maps/documentation/routes/compute_route_directions), [Groq vision and JSON mode](https://console.groq.com/docs/vision), [Sarvam transcription](https://docs.sarvam.ai/api-reference/speech-to-text/transcribe), [Aviationstack](https://docs.apilayer.com/apilayer/docs/aviationstack), [Vitest](https://vitest.dev/guide/), [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/). No external dataset or live credentials are bundled.
-
-### Authentication experience
-
-Sign-in links open `/sign-in`; new users can switch to `/sign-up`. Google and email remain available. After authentication, users return to the selected passenger, driver or operator workspace; return URLs are restricted to these internal routes. Forms use opaque surfaces and explicit Clerk colors to prevent the previous transparent-card issue. Passenger names are prefilled from Clerk when there is no saved profile name. Driver approval and operator authorization are still enforced by the backend.
-
-Authentication implementation checkpoint `4796756` passed [GitHub CI](https://github.com/krthik20050/kootu/actions/runs/38085374264), Vercel reached READY and Render reached live. Browser checks verified sign-in/sign-up, passenger entry and preserved driver return links. At 390px width the form had no horizontal overflow and its computed card background was opaque `rgb(255, 254, 249)`. Google/email account completion remains a human test. Live readiness now reports database/auth/ticket/transcription/flight configuration present, with routing missing; this is configuration evidence, not a full booking test.
-
-### Central local environment
-
-All local app/provider/Clerk/Supabase administration settings are now collected in `.environment/.env`. Edit that ignored file, then run `.\backend\.venv\Scripts\python scripts/sync_env.py` from the root to generate the scoped runtime files. See [.environment/README.md](.environment/README.md). The sync command rejects duplicate/missing names and refuses to clear saved values with empty entries. Restart local apps after syncing. Hosted settings still require a separate approved sync.
-
-### Free routing and driver-location sharing
-
-Geoapify is the default provider. Put `GEOAPIFY_API_KEY` in `.environment/.env`, keep `ROUTING_PROVIDER=geoapify`, then run the environment sync. Apply migration `202610110005_driver_location.sql` before starting the updated backend. Search and matching use cached road-provider results; driver coordinate updates consume no Geoapify requests. Assigned drivers can share their device location with trip passengers, who get key-free Google Maps pin/directions buttons. Sharing needs HTTPS and explicit permission; it pauses off-page and stale pins disable navigation. Background tracking and real-device pickup accuracy remain unverified. See [setup, limits and privacy behavior](integrations/geoapify/README.md).
-
-Geoapify rollout `220d842` passed [GitHub CI](https://github.com/krthik20050/kootu/actions/runs/38101166557), Vercel reached READY, and Render is live. The hosted API now returns HTTP 200 from `/ready` with all configuration checks present; earlier routing-missing reports above describe previous checkpoints. Live provider credentials were smoke-tested with public addresses locally; end-to-end phone GPS still needs human testing.
-
-
-### Integrated passenger frontend
-
-The homepage opens `/dashboard`, with real ride/group status and driver-location links. `/request` provides the conversational booking flow, current ticket extraction and voice-to-instructions transcription, Geoapify suggestions, and an IST clock picker. `/passenger` remains the existing ticket-guided flow and is available from the sidebar. Both use the unchanged authenticated API client, app-origin upload transport, backend services and generated contracts. A saved-request preview creates a new request; it never silently updates the original.
-
-For frontend PR integration, merge current main into the PR, retain current backend/contracts unless a separately verified API change is needed, resolve UI call sites against those contracts, and run frontend lint/typecheck/tests/build plus backend pytest/lint/contract checks. Require green GitHub web/API checks before merging; never resolve overlapping feature code by blindly selecting an entire side. Real-device microphone/GPS and signed-in hosted booking need separate end-to-end verification.
-
-
-### Driver dashboard integration
-
-`/driver` uses a monochrome responsive sidebar with shared light/dark preference. `/driver/profile` exposes real onboarding, operator approval status, vehicle registration and availability; `/driver/ride-requests` lists pending offers; `/driver/my-trips` retains manifest, location sharing and start/complete controls; `/driver/ride-history` shows completed/cancelled groups and closed offers. All use the existing authenticated API and role checks. Earnings/payments/receipts and online support tickets are not implemented and are clearly labelled unavailable. No sample identities, rides, notifications or fake profile-save messages are displayed.
-
-The regression suite includes a disposable-database ticket/voice → request → match → driver acceptance → manifest/location → completed-trip test. External providers are stubbed in this combined test; it does not claim live provider or physical microphone/GPS validation.
+Built with [Next.js](https://nextjs.org/docs), [Clerk](https://clerk.com/docs), [FastAPI](https://fastapi.tiangolo.com/), [SQLAlchemy](https://docs.sqlalchemy.org/en/20/), [PostGIS](https://postgis.net/documentation/), [Geoapify](https://apidocs.geoapify.com/), [Groq](https://console.groq.com/docs/vision), [Sarvam](https://docs.sarvam.ai/), [Aviationstack](https://aviationstack.com/documentation), [Vitest](https://vitest.dev/guide/) and [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/). No external dataset or live credentials are bundled.

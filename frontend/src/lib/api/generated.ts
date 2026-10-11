@@ -185,7 +185,7 @@ export type OfferResponse = {
 
 export type ProfileResponse = {
   "id": string;
-  "role": "PASSENGER" | "DRIVER" | "ADMIN";
+  "role": "UNASSIGNED" | "PASSENGER" | "DRIVER" | "ADMIN";
   "display_name": string;
   "women_only_eligible": boolean;
 };
@@ -233,6 +233,10 @@ export type RideRequestInput = {
   "notes"?: string;
   "flight_details_confirmed": true;
   "client_request_id": string;
+};
+
+export type RoleInput = {
+  "role": "PASSENGER" | "DRIVER";
 };
 
 export type TicketResponse = {

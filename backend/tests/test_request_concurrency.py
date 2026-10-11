@@ -13,7 +13,8 @@ from app.models.domain import RideRequest, now
 
 
 def concurrent_submissions(client, bodies):
-    # Also exercise first-login profile creation from simultaneous requests.
+    assert client.post("/me/role", json={"role": "PASSENGER"}).status_code == 200
+    # Exercise concurrent retries after explicit account registration.
     barrier = Barrier(len(bodies))
 
     def send(body):

@@ -55,13 +55,9 @@ def test_same_city_name_does_not_combine_far_away_pins(client, monkeypatch):
     assert not client.post(f"/ride-requests/{first['id']}/match").json()["matched"]
 
 
-def test_driver_cannot_be_counted_as_passenger_in_own_car(client, monkeypatch):
+def test_driver_cannot_be_counted_as_passenger_in_own_car(client):
     fleet(client)
-    first, _ = submit(client, "driver")
-    submit(client, "bob")
-    routes(monkeypatch)
-    response = client.post(f"/ride-requests/{first['id']}/match", headers=headers("driver"))
-    assert response.status_code == 200 and not response.json()["matched"]
+    assert client.post("/ride-requests", headers=headers("driver"), json=party()).status_code == 403
 
 
 def test_200_arrival_submissions_and_competing_cluster_matches(client, monkeypatch):
@@ -74,6 +70,12 @@ def test_200_arrival_submissions_and_competing_cluster_matches(client, monkeypat
         body = party(
             destination_name="Thrissur city" if cluster == 0 else f"Area {cluster}",
             destination={"latitude": 10.5276 + cluster * 0.05, "longitude": 76.2144},
+        )
+        assert (
+            client.post(
+                "/me/role", headers=headers(f"arrival-{index}"), json={"role": "PASSENGER"}
+            ).status_code
+            == 200
         )
         response = client.post("/ride-requests", headers=headers(f"arrival-{index}"), json=body)
         assert response.status_code == 201, response.text

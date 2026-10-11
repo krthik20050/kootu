@@ -34,6 +34,10 @@ def headers(subject):
 
 
 def fleet(client, subject="driver", registration="KL07AB1234", **features):
+    assert (
+        client.post("/me/role", headers=headers(subject), json={"role": "DRIVER"}).status_code
+        == 200
+    )
     driver = client.post(
         "/drivers",
         headers=headers(subject),
@@ -71,6 +75,10 @@ def fleet(client, subject="driver", registration="KL07AB1234", **features):
 
 
 def submit(client, subject="alice", **changes):
+    assert (
+        client.post("/me/role", headers=headers(subject), json={"role": "PASSENGER"}).status_code
+        == 200
+    )
     body = party(**changes)
     response = client.post("/ride-requests", headers=headers(subject), json=body)
     assert response.status_code == 201, response.text
@@ -93,6 +101,7 @@ def make_group(client, monkeypatch):
 
 
 def test_request_idempotency_ownership_and_role_security(client):
+    client.post("/me/role", headers=headers("bob"), json={"role": "PASSENGER"})
     item, body = submit(client, notes="Private luggage note")
     assert client.post("/ride-requests", json=body).json()["id"] == item["id"]
     assert client.post("/ride-requests", json={**body, "passengers": 2}).status_code == 409
@@ -112,7 +121,7 @@ def test_complete_trip_and_privacy(client, monkeypatch):
     assert "notes" not in str(group)
     assert first["destination_name"] not in str(group)
     assert group["destination_area"] == {"latitude": 10.11, "longitude": 76.35}
-    assert client.get(f"/ride-groups/{group['id']}/manifest").status_code == 404
+    assert client.get(f"/ride-groups/{group['id']}/manifest").status_code == 403
     offer = client.get("/driver-offers", headers=headers("driver")).json()[0]
     accepted = client.post(f"/driver-offers/{offer['id']}/accept", headers=headers("driver"))
     assert accepted.status_code == 200, accepted.text
@@ -284,6 +293,8 @@ def test_two_groups_cannot_assign_the_same_vehicle(client, monkeypatch):
 
 
 def test_provider_budget_is_shared_and_user_scoped(client):
+    for subject in ("alice", "bob"):
+        client.post("/me/role", headers=headers(subject), json={"role": "PASSENGER"})
     for _ in range(30):
         assert client.post("/ride-requests/missing/match").status_code == 404
     limited = client.post("/ride-requests/missing/match")

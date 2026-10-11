@@ -1,44 +1,62 @@
-import { AuthControls } from "@/components/auth-controls";
+import { HomeAccount } from "@/components/home-account";
+import { ArrowDown, ArrowUpRight, CarFront, Luggage, PlaneLanding } from "lucide-react";
 import Link from "next/link";
+import styles from "./home.module.css";
 
-const principles = [
-  ["01", "Your arrival, in sync", "Matching prefers passengers on the same flight, with nearby arrivals considered when timing works."],
-  ["02", "One small destination cluster", "Thrissur with Thrissur. Guruvayur with Guruvayur. Shared cabs should mean fewer detours."],
-  ["03", "Comfort comes with you", "Seat and luggage capacity, waiting limits and women-only preferences shape each group."],
-];
+const passengerHref = "/onboarding?role=PASSENGER";
+const driverHref = "/onboarding?role=DRIVER";
 
 export default function Home() {
-  return <>
+  return <div className={styles.home}>
     <a className="skip-link" href="#main">Skip to content</a>
-    <header className="site-header">
-      <Link href="/" className="wordmark" aria-label="kootu home">kootu<span className="brand-dot" /></Link>
-      <span className="header-note">A little company. A better journey.</span>
-      {process.env.NEXT_PUBLIC_AUTH_ENABLED === "true" ? <AuthControls /> : <span className="stage-badge">Airport shared rides</span>}
+    <header className={styles.header}>
+      <Link href="/" className={styles.logo} aria-label="kootu home">kootu<span /></Link>
+      <nav className={styles.nav} aria-label="Main navigation"><a href="#how-it-works">How it works</a><a href="#drive">For drivers</a></nav>
+      <div className={styles.account}>{process.env.NEXT_PUBLIC_AUTH_ENABLED === "true" ? <HomeAccount /> : <Link href="/onboarding">Get started <ArrowUpRight size={16} aria-hidden="true" /></Link>}</div>
     </header>
     <main id="main">
-      <section className="hero" aria-labelledby="hero-title">
-        <div className="hero-copy">
-          <p className="eyebrow"><span /> AIRPORT ARRIVALS, BETTER TOGETHER</p>
-          <h1 id="hero-title">Land together.<br />Leave <em>together.</em></h1>
-          <p className="intro">Same airport. Similar arrival. Somewhere close.<br />A shared cab for the part of the journey that comes next.</p>
-          <Link className="primary-link" href="/dashboard">Plan your arrival <span aria-hidden="true">↗</span></Link>
-          <p className="availability">Shared rides depend on compatible passengers and approved, available drivers.</p>
+      <section className={styles.hero} aria-labelledby="hero-title">
+        <div className={styles.heroCopy}>
+          <p className={styles.eyebrow}><span /> A LITTLE COMPANY. A BETTER JOURNEY.</p>
+          <h1 id="hero-title">Your flight ends.<br />The company<br /><span>doesn’t have to.</span></h1>
+          <p className={styles.intro}>Find people landing around the same time, heading your way. Share the next leg from the airport.</p>
+          <Link className={styles.primary} href={passengerHref}>Register as a passenger <ArrowUpRight size={19} aria-hidden="true" /></Link>
+          <p className={styles.driverEntry}>Behind the wheel? <Link href={driverHref}>Register as a driver <span aria-hidden="true">↗</span></Link></p>
         </div>
-        <div className="journey-card" aria-label="Concept: Kochi Airport to a small Thrissur destination cluster">
-          <div className="journey-top"><span>THE NEXT LEG</span><span className="concept-tag">CONCEPT</span></div>
-          <div className="route-art" aria-hidden="true">
-            <svg viewBox="0 0 420 280" fill="none"><path className="map-road" d="M-20 230L440 40M40-20L310 300M-20 80L440 180M140-20L90 300M300-20L390 300" /><path className="route-line" d="M90 210C90 160 180 185 190 125S300 135 325 65" /><circle cx="90" cy="210" r="14" fill="currentColor" /><circle cx="90" cy="210" r="5" fill="#fff" /><circle cx="325" cy="65" r="15" fill="#254b40" /><circle cx="325" cy="65" r="5" fill="#e7eecc" /></svg>
-            <span className="map-label airport">COK <span>ARRIVALS</span></span><span className="map-label destination">Thrissur <span>DESTINATION CLUSTER</span></span>
+        <figure className={styles.routeFigure}>
+          <div className={styles.routeHeading}><span>ONE AIRPORT. SHARED DIRECTION.</span><PlaneLanding size={24} aria-hidden="true" /></div>
+          <div className={styles.routeArt}>
+            <svg viewBox="0 0 480 360" role="img" aria-labelledby="route-title route-description">
+              <title id="route-title">A shared journey from Kochi airport</title>
+              <desc id="route-description">An illustrative route joins passengers at the airport and branches toward nearby destinations. This is not live availability.</desc>
+              <g className={styles.roads} fill="none" strokeWidth="16"><path d="M-30 95 510 255M-20 280 510 100M80-20 185 390M320-20 380 390" /><path d="M-10 195 490 350M160-20 480 280" /></g>
+              <path className={styles.river} d="M440-20C390 80 460 150 400 205S240 280 280 400" fill="none" strokeWidth="30" />
+              <path className={styles.route} d="M110 288C105 221 207 254 228 192S236 106 324 76" fill="none" strokeWidth="5" strokeLinecap="round" />
+              <path className={styles.branch} d="M228 192C255 173 290 194 337 167" fill="none" strokeWidth="3" strokeDasharray="5 7" />
+              <circle className={styles.originHalo} cx="110" cy="288" r="25" /><circle className={styles.origin} cx="110" cy="288" r="10" />
+              <circle className={styles.destination} cx="324" cy="76" r="10" /><circle className={styles.destination} cx="337" cy="167" r="8" />
+            </svg>
+            <span className={styles.airportLabel}>COK<span>Kochi Airport</span></span>
+            <span className={styles.destinationLabel}>A shared direction<span>Nearby destinations</span></span>
+            <div className={styles.car}><CarFront size={28} aria-hidden="true" /></div>
           </div>
-          <div className="journey-bottom"><div><span className="label">FROM</span><strong>Kochi Airport</strong></div><span aria-hidden="true">↗</span><div><span className="label">TO</span><strong>Closer destinations</strong></div></div>
-          <p className="card-caption">Illustrative route. No live map or ride availability.</p>
-        </div>
+          <div className={styles.routeBottom}><Luggage size={22} aria-hidden="true" /><p>Different journeys.<br /><strong>A little common ground.</strong></p><span className={styles.routeMark} aria-hidden="true">↗</span></div>
+          <figcaption>Illustration only. Matches depend on compatible passengers and approved, available drivers.</figcaption>
+        </figure>
       </section>
-      <section id="how-it-works" className="principles" aria-labelledby="principles-title">
-        <div className="section-heading"><p className="eyebrow">HOW SHARING WORKS</p><h2 id="principles-title">Share the cab.<br />Keep your direction.</h2></div>
-        <div className="principle-grid">{principles.map(([number, title, description]) => <article key={number}><span className="number">{number}</span><h3>{title}</h3><p>{description}</p></article>)}</div>
+      <section className={styles.how} id="how-it-works" aria-labelledby="how-title">
+        <div className={styles.sectionIntro}><p className={styles.eyebrow}>FROM ARRIVALS TO ON YOUR WAY</p><h2 id="how-title">Less figuring it out.<br />More heading home.</h2><ArrowDown size={30} aria-hidden="true" /></div>
+        <ol className={styles.steps}>
+          <li><span>01</span><div><h3>Tell us when you land</h3><p>Enter your flight and destination, or upload a ticket to help fill in the details. You review everything before submitting.</p></div></li>
+          <li><span>02</span><div><h3>Find your common ground</h3><p>Arrival times, nearby destinations, seats, luggage and travel preferences help shape a compatible group.</p></div></li>
+          <li><span>03</span><div><h3>Keep the next step in sight</h3><p>Follow your request and assigned ride in your passenger dashboard. A match is confirmed only when a driver accepts.</p></div></li>
+        </ol>
+      </section>
+      <section className={styles.drive} id="drive" aria-labelledby="drive-title">
+        <div><p className={styles.eyebrow}>FOR THE PEOPLE BEHIND THE WHEEL</p><h2 id="drive-title">Your road.<br />Your driver workspace.</h2></div>
+        <div className={styles.driveCopy}><p>Register your profile and vehicle. Once approved, manage availability, review ride offers and guide each trip from pickup to completion.</p><Link className={styles.driverButton} href={driverHref}>Register as a driver <ArrowUpRight size={19} aria-hidden="true" /></Link><p className={styles.fineprint}>Driver and vehicle approval is required before receiving offers.</p></div>
       </section>
     </main>
-    <footer><Link href="/" className="footer-brand">kootu</Link><p>Airport → destination cluster → shared cab</p><Link href="/driver">Drive with kootu ↗</Link></footer>
-  </>;
+    <footer className={styles.footer}><Link className={styles.logo} href="/" aria-label="kootu home">kootu<span /></Link><p>Land together. Leave together.</p><a href="#main">Back to top ↑</a></footer>
+  </div>;
 }

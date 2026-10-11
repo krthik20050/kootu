@@ -66,14 +66,14 @@ def locked_fleet(session: Session, driver_id: str, vehicle_id: str) -> tuple[Dri
 def can_view_group(session: Session, group: RideGroup, profile: Profile) -> bool:
     if profile.role == "ADMIN":
         return True
-    if session.scalar(
+    if profile.role == "PASSENGER" and session.scalar(
         select(RideRequest.id)
         .join(RideMember)
         .where(RideMember.group_id == group.id, RideRequest.profile_id == profile.id)
     ):
         return True
     driver = session.get(Driver, group.driver_id) if group.driver_id else None
-    return bool(driver and driver.profile_id == profile.id)
+    return bool(profile.role == "DRIVER" and driver and driver.profile_id == profile.id)
 
 
 def vehicle_limits(vehicle: Vehicle, driver: Driver) -> VehicleLimits:

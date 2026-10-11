@@ -89,7 +89,7 @@ def test_valid_signed_jwt_role_claim_cannot_promote(client, signing_key):
         "/me", headers={"Authorization": "Bearer " + signed(signing_key, role="ADMIN")}
     )
     assert response.status_code == 200
-    assert response.json()["role"] == "PASSENGER"
+    assert response.json()["role"] == "UNASSIGNED"
     assert client.get("/me").status_code == 401
 
 

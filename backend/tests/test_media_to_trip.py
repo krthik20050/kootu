@@ -40,6 +40,13 @@ def test_ticket_and_voice_survive_booking_matching_and_trip_completion(client, m
         airport=details["arrival_airport"],
         notes=voice.json()["transcript"],
     )
+    for subject in ("alice", "bob"):
+        assert (
+            client.post(
+                "/me/role", headers=headers(subject), json={"role": "PASSENGER"}
+            ).status_code
+            == 200
+        )
     first = client.post("/ride-requests", json=body)
     assert first.status_code == 201
     assert client.post("/ride-requests", json=body).json()["id"] == first.json()["id"]
@@ -61,7 +68,7 @@ def test_ticket_and_voice_survive_booking_matching_and_trip_completion(client, m
     manifest = client.get(f"/ride-groups/{group_id}/manifest", headers=headers("driver"))
     assert manifest.status_code == 200
     assert any(row["notes"] == voice.json()["transcript"] for row in manifest.json())
-    assert client.get(f"/ride-groups/{group_id}/manifest").status_code == 404
+    assert client.get(f"/ride-groups/{group_id}/manifest").status_code == 403
     assert (
         client.put(
             f"/ride-groups/{group_id}/driver-location",

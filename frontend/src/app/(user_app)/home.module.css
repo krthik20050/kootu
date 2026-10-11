@@ -1,0 +1,59 @@
+.home { --ink: oklch(31% .047 164); --green: oklch(39% .066 161); --paper: oklch(98% .008 110); --soft: oklch(92% .035 116); --muted: oklch(46% .03 158); --line: oklch(83% .026 130); background: var(--paper); color: var(--ink); }
+.header { max-width: 1400px; margin: auto; padding: 26px 5%; display: flex; align-items: center; justify-content: space-between; gap: 28px; }
+.logo { display: inline-flex; align-items: baseline; gap: 5px; font-size: 36px; font-weight: 800; letter-spacing: -2.7px; }
+.logo > span { width: 8px; height: 8px; border-radius: 50%; background: oklch(64% .15 43); }
+.nav { display: flex; gap: 32px; font-size: 14px; }
+.nav a { padding: 12px 0; }
+.account { display: flex; align-items: center; gap: 16px; min-height: 44px; font-size: 14px; font-weight: 600; }
+.account > a { display: inline-flex; align-items: center; gap: 14px; border: 1px solid var(--line); padding: 12px 18px; border-radius: 999px; }
+.hero { max-width: 1400px; margin: auto; padding: clamp(42px,6vw,84px) 5% 96px; display: grid; grid-template-columns: 1.13fr 1fr; gap: 7%; align-items: center; }
+.eyebrow { display: flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: .12em; font-weight: 700; line-height: 1.7; }
+.eyebrow > span { width: 6px; height: 6px; background: oklch(60% .14 43); border-radius: 50%; flex-shrink: 0; }
+.hero h1 { font-size: clamp(48px,5.2vw,74px); line-height: 1.04; letter-spacing: -.06em; font-weight: 600; margin: 26px 0; }
+.hero h1 > span { color: oklch(48% .09 147); }
+.intro { max-width: 380px; font-size: 17px; line-height: 1.7; color: var(--muted); }
+.primary, .driverButton { display: inline-flex; justify-content: space-between; align-items: center; gap: 32px; min-height: 52px; border-radius: 8px; font-size: 14px; font-weight: 600; padding: 17px 22px; transition: background .18s ease-out; }
+.primary { color: var(--paper); background: var(--green); margin-top: 24px; }
+.primary:hover { background: var(--ink); }
+.driverEntry { margin: 20px 0 0; font-size: 12px; line-height: 1.8; color: var(--muted); }
+.driverEntry a { font-weight: 700; color: var(--ink); text-decoration: underline; text-underline-offset: 4px; }
+.routeFigure { min-width: 0; margin: 0; background: var(--soft); border-radius: 24px; overflow: hidden; }
+.routeHeading { padding: 28px 30px 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 9px; font-weight: 700; letter-spacing: .12em; }
+.routeArt { position: relative; margin: 8px 0 0; }
+.routeArt svg { display: block; width: 100%; }
+.roads { stroke: oklch(96% .025 116); }
+.river { stroke: oklch(87% .045 155); }
+.route { stroke: var(--green); }
+.branch { stroke: oklch(53% .075 145); }
+.originHalo { fill: oklch(85% .095 68); }
+.origin { fill: oklch(59% .15 43); }
+.destination { fill: var(--green); stroke: var(--soft); stroke-width: 4; }
+.airportLabel,.destinationLabel { position: absolute; padding: 9px 12px; background: var(--soft); font-size: 14px; font-weight: 700; border-radius: 8px; }
+.airportLabel { left: 6%; bottom: 4%; }
+.destinationLabel { right: 4%; top: 4%; font-size: 12px; }
+.airportLabel span,.destinationLabel span { display: block; margin-top: 4px; font-size: 10px; font-weight: 400; color: var(--muted); }
+.car { position: absolute; top: 46%; left: 43%; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: var(--green); color: var(--paper); border: 5px solid var(--soft); }
+.routeBottom { display: flex; align-items: center; gap: 16px; margin: 8px 30px 0; padding: 23px 0; border-top: 1px solid oklch(79% .04 128); }
+.routeBottom p { margin: 0; font-size: 13px; line-height: 1.6; }
+.routeMark { margin-left: auto; font-size: 28px; }
+.routeFigure figcaption { padding: 0 30px 24px; font-size: 10px; line-height: 1.65; color: var(--muted); }
+.how { max-width: 1260px; margin: 0 auto; padding: 70px 0 100px; border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr; gap: 10%; }
+.sectionIntro h2,.drive h2 { font-size: clamp(30px,3.4vw,46px); font-weight: 500; letter-spacing: -.045em; line-height: 1.14; margin: 18px 0 30px; }
+.steps { list-style: none; padding: 0; margin: 0; }
+.steps li { display: flex; gap: 26px; padding: 26px 0; border-bottom: 1px solid var(--line); }
+.steps li:first-child { padding-top: 0; }
+.steps li > span { font-size: 11px; color: var(--muted); padding-top: 6px; }
+.steps h3 { margin: 0 0 10px; font-size: 20px; letter-spacing: -.025em; }
+.steps p { margin: 0; font-size: 14px; line-height: 1.8; color: var(--muted); max-width: 420px; }
+.drive { background: var(--green); color: var(--paper); padding: 64px max(5%,calc((100vw - 1260px)/2)); display: grid; grid-template-columns: 1fr 1fr; gap: 10%; }
+.drive h2 { margin-bottom: 0; }
+.driveCopy > p { font-size: 15px; line-height: 1.8; max-width: 430px; margin: 0 0 24px; }
+.driverButton { background: var(--soft); color: var(--ink); }
+.driverButton:hover { background: var(--paper); }
+.driveCopy .fineprint { font-size: 11px; margin: 18px 0 0; opacity: .85; }
+.footer { max-width: 1400px; margin: auto; padding: 32px 5%; display: flex; align-items: center; justify-content: space-between; gap: 24px; color: var(--muted); font-size: 12px; }
+.footer .logo { color: var(--ink); font-size: 28px; }
+@media (max-width: 1400px) { .how { margin: 0 5%; } }
+@media (max-width: 900px) { .hero { gap: 4%; }.hero h1 { font-size: 52px; }.nav { gap: 20px; }.how { gap: 6%; }.primary { gap: 18px; padding: 16px 18px; } }
+@media (max-width: 700px) { .header { padding: 20px 6%; gap: 14px; }.nav { display: none; }.logo { font-size: 32px; }.account { font-size: 12px; gap: 10px; }.account > a { padding: 11px 14px; }.hero { grid-template-columns: minmax(0,1fr); padding: 40px 6% 52px; gap: 42px; }.hero h1 { font-size: clamp(45px,9.4vw,62px); }.intro { font-size: 16px; }.routeFigure { max-width: 480px; width: 100%; }.how { margin: 0 6%; padding: 42px 0 56px; grid-template-columns: minmax(0,1fr); gap: 32px; }.sectionIntro > svg { display: none; }.sectionIntro h2 { margin-bottom: 0; }.drive { grid-template-columns: minmax(0,1fr); padding: 44px 6%; gap: 24px; }.footer { padding: 28px 6%; flex-wrap: wrap; }.footer p { order: 3; width: 100%; margin: 0; }.steps li { gap: 20px; } }
+@media (prefers-reduced-motion: reduce) { .primary,.driverButton { transition: none; } }

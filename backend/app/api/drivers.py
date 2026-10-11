@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.auth import current_profile
+from app.core.auth import driver_account
 from app.core.database import get_session
 from app.models.domain import Driver, DriverOffer, Profile, Vehicle
 from app.schemas.requests import AvailabilityInput, DriverInput, VehicleInput
@@ -23,7 +23,7 @@ def owned_driver(session: Session, profile: Profile) -> Driver:
 @router.post("/drivers", status_code=201, response_model=DriverResponse)
 def onboard(
     body: DriverInput,
-    profile: Profile = Depends(current_profile),
+    profile: Profile = Depends(driver_account),
     session: Session = Depends(get_session, scope="function"),
 ) -> dict:
     existing = session.scalar(select(Driver).where(Driver.profile_id == profile.id))
@@ -31,15 +31,13 @@ def onboard(
         return driver_view(existing)
     driver = Driver(profile_id=profile.id, **body.model_dump())
     session.add(driver)
-    if profile.role != "ADMIN":
-        profile.role = "DRIVER"
     session.flush()
     return driver_view(driver)
 
 
 @router.get("/drivers/me", response_model=DriverResponse)
 def my_driver(
-    profile: Profile = Depends(current_profile),
+    profile: Profile = Depends(driver_account),
     session: Session = Depends(get_session, scope="function"),
 ) -> dict:
     return driver_view(owned_driver(session, profile))
@@ -48,7 +46,7 @@ def my_driver(
 @router.patch("/drivers/me/availability", response_model=DriverResponse)
 def availability(
     body: AvailabilityInput,
-    profile: Profile = Depends(current_profile),
+    profile: Profile = Depends(driver_account),
     session: Session = Depends(get_session, scope="function"),
 ) -> dict:
     driver = owned_driver(session, profile)
@@ -75,7 +73,7 @@ def availability(
 @router.post("/vehicles", status_code=201, response_model=VehicleResponse)
 def create_vehicle(
     body: VehicleInput,
-    profile: Profile = Depends(current_profile),
+    profile: Profile = Depends(driver_account),
     session: Session = Depends(get_session, scope="function"),
 ) -> dict:
     driver = owned_driver(session, profile)
@@ -87,7 +85,7 @@ def create_vehicle(
 
 @router.get("/vehicles", response_model=list[VehicleResponse])
 def list_vehicles(
-    profile: Profile = Depends(current_profile),
+    profile: Profile = Depends(driver_account),
     session: Session = Depends(get_session, scope="function"),
 ) -> list[dict]:
     driver = owned_driver(session, profile)
@@ -101,7 +99,7 @@ def list_vehicles(
 def vehicle_availability(
     vehicle_id: str,
     body: AvailabilityInput,
-    profile: Profile = Depends(current_profile),
+    profile: Profile = Depends(driver_account),
     session: Session = Depends(get_session, scope="function"),
 ) -> dict:
     driver = owned_driver(session, profile)
@@ -124,7 +122,7 @@ def vehicle_availability(
 
 @router.get("/driver-offers", response_model=list[OfferResponse])
 def offers(
-    profile: Profile = Depends(current_profile),
+    profile: Profile = Depends(driver_account),
     session: Session = Depends(get_session, scope="function"),
 ) -> list[dict]:
     driver = owned_driver(session, profile)
@@ -140,7 +138,7 @@ def offers(
 @router.post("/driver-offers/{offer_id}/accept", response_model=GroupResponse)
 def accept(
     offer_id: str,
-    profile: Profile = Depends(current_profile),
+    profile: Profile = Depends(driver_account),
     session: Session = Depends(get_session, scope="function"),
 ) -> dict:
     return group_view(accept_offer(session, offer_id, profile), session, profile)
@@ -149,7 +147,7 @@ def accept(
 @router.post("/driver-offers/{offer_id}/reject", response_model=OfferResponse)
 def reject(
     offer_id: str,
-    profile: Profile = Depends(current_profile),
+    profile: Profile = Depends(driver_account),
     session: Session = Depends(get_session, scope="function"),
 ) -> dict:
     driver = owned_driver(session, profile)

@@ -1053,6 +1053,7 @@
           },
           "role": {
             "enum": [
+              "UNASSIGNED",
               "PASSENGER",
               "DRIVER",
               "ADMIN"
@@ -1315,6 +1316,24 @@
           "client_request_id"
         ],
         "title": "RideRequestInput",
+        "type": "object"
+      },
+      "RoleInput": {
+        "additionalProperties": false,
+        "properties": {
+          "role": {
+            "enum": [
+              "PASSENGER",
+              "DRIVER"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role"
+        ],
+        "title": "RoleInput",
         "type": "object"
       },
       "TicketResponse": {
@@ -2270,6 +2289,52 @@
           }
         ],
         "summary": "Update Me",
+        "tags": [
+          "passengers"
+        ]
+      }
+    },
+    "/me/role": {
+      "post": {
+        "operationId": "choose_role_me_role_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Choose Role",
         "tags": [
           "passengers"
         ]

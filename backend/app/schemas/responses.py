@@ -8,7 +8,7 @@ from app.schemas.integrations import Coordinates, ExtractedFlight
 
 class ProfileResponse(BaseModel):
     id: str
-    role: Literal["PASSENGER", "DRIVER", "ADMIN"]
+    role: Literal["UNASSIGNED", "PASSENGER", "DRIVER", "ADMIN"]
     display_name: str
     women_only_eligible: bool
 

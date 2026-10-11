@@ -1,5 +1,12 @@
 # Change log
 
+## 2026-10-11 08:34 IST - Separate accounts and polish the MVP
+
+- Added explicit one-time passenger/driver registration with server-owned roles, role-based portal redirects, fail-closed route guards and API authorization. Existing roles are preserved; new accounts start unassigned. Applied migration 006 to hosted Supabase successfully.
+- Replaced the homepage with responsive passenger/driver entry points and clear account placement. Removed unused mock dashboard modules; retained synthetic regression fixtures. Clarified direct-to-driver payment policy without fabricated fares, balances or payment confirmation.
+- Rewrote README and submission story against implemented features, event rules and primary-source research. Specialist agents reviewed backend authorization, frontend account transitions and product/README claims; fixed delayed account-switch response handling. Human review remains pending.
+- Validation: two full backend runs, 148 passing each; two frontend runs, 50 passing each; lint, TypeScript, Ruff and generated contracts pass. Production build passed. Local browser homepage inspected at desktop and 390px mobile with no horizontal overflow. Hosted rollout and signed-in post-deployment checks follow this checkpoint; live multi-account ride and physical microphone/GPS are not established by these tests.
+
 ## 2026-10-11 07:35 IST - Final hosted verification
 
 - Implementation e3f3c73 is READY on Vercel deployment dpl_CkGa9Q3RFRQzexhdxXBKqpjCRJw8 and https://kootu-five.vercel.app. Both CI jobs passed: https://github.com/krthik20050/kootu/actions/runs/38103826205 (142 backend, 40 frontend tests plus lint/types/build/contracts).

@@ -34,6 +34,7 @@ export function RideGroup({ ride, group, busy, matching, onMatch, onRefresh }: {
         {group.events.length > 0 && <ol aria-label="Recent group updates" className="flex flex-col gap-2 text-xs text-muted-foreground">{group.events.slice(-3).reverse().map((event, index) => <li key={`${event.created_at}-${index}`}>{readable(event.kind)} · <time dateTime={event.created_at}>{localTime(event.created_at)}</time></li>)}</ol>}
       </> : ride.status === "WAITING" && <p className="text-sm text-muted-foreground">{matching ? "Checking compatible passengers and available vehicles…" : "Your request is saved. Look for a group when you’re ready."}</p>}
       <div className="flex flex-wrap gap-2">
+        <p className="w-full text-sm text-muted-foreground">Agree the fare and your share with the driver before travel. Pay the driver directly; kootu does not collect or confirm payments in this MVP.</p>
         {ride.status === "WAITING" && !group && <Button type="button" size="sm" disabled={busy} onClick={onMatch}><Users data-icon="inline-start" aria-hidden="true" />{matching ? "Finding a group…" : "Find a group"}</Button>}
         <Button type="button" size="sm" variant="outline" disabled={busy} onClick={onRefresh}><RefreshCw data-icon="inline-start" aria-hidden="true" />Refresh</Button>
       </div>

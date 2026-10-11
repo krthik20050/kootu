@@ -26,7 +26,8 @@ def position(**changes):
 def test_location_is_only_shared_with_assigned_members(client, monkeypatch):
     first, second, group_id = assigned(client, monkeypatch)
     path = f"/ride-groups/{group_id}/driver-location"
-    assert client.put(path, json=position()).status_code == 404
+    assert client.put(path, json=position()).status_code == 403
+    client.post("/me/role", headers=headers("other-driver"), json={"role": "DRIVER"})
     assert client.put(path, headers=headers("other-driver"), json=position()).status_code == 404
     result = client.put(path, headers=headers("driver"), json=position())
     assert result.status_code == 200, result.text
@@ -35,7 +36,7 @@ def test_location_is_only_shared_with_assigned_members(client, monkeypatch):
     assert client.get(f"/ride-groups/{group_id}", headers=headers("bob")).json()["driver_location"]
     assert client.get(f"/ride-groups/{group_id}", headers=headers("stranger")).status_code == 404
     assert client.put(path, headers=headers("driver"), json=position()).status_code == 429
-    assert client.delete(path, headers=headers("bob")).status_code == 404
+    assert client.delete(path, headers=headers("bob")).status_code == 403
     assert client.delete(path, headers=headers("driver")).status_code == 204
     assert client.get(f"/ride-groups/{group_id}").json()["driver_location"] is None
 
