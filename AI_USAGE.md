@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 07:12 IST - Clock pickup control
+
+Codex composed a clock-style pickup picker using existing shadcn primitives, with responsive/light/dark styling, manual clock/number selection, AM/PM, five-minute adjustment, flight suggestion and IST rollover. Registry CLI unavailable offline; reused installed primitives. Frontend lint/typecheck and whitespace passed. No tests or browser checks run. Human review pending.
+
 ## 2026-10-11 07:04 IST - Group matching UI
 
 Codex integrated the existing group APIs into a shared post-submit/saved-journey group card, with immediate match results, refresh, loading/waiting/error feedback and action/stale-refresh guards. Frontend lint/typecheck passed; request route HTTP 200. No tests or authenticated matching checks run. Human review pending.

@@ -1,5 +1,11 @@
 # Change log
 
+## 2026-10-11 07:12 IST - Clock-style pickup picker
+
+- Replaced the native pickup time field/arrow pair with a clock trigger and responsive clock picker composed from the existing shadcn Sheet, Button, Input and Label components. Includes tappable hour/minute dial, AM/PM, precise numeric entry, five-minute fine tuning, flight-suggestion reset, explicit Apply/Cancel and visible IST pickup date.
+- Retained flight/ticket autofill, confirmed-time submission and midnight rollover. The portal uses the shared white/gray dark-mode palette, a centered desktop panel and mobile bottom sheet. No additional dependency or external registry component was installed (offline shadcn registry lookup unavailable).
+- Validation: Frontend lint/typecheck and diff whitespace passed. No tests or signed-in browser checks run. Missing flight timing still requires manual selection.
+
 ## 2026-10-11 07:04 IST - Group matching in request UI
 
 - Added a shared group card after chat submission and in saved journeys, with Find a group/Refresh actions, real departure/status/counts/vehicle/events and visible waiting/loading/error states. POST `/ride-requests/{id}/match` displays the returned group immediately; refresh/polling reads GET `/ride-groups/{id}` through the existing journey loader.

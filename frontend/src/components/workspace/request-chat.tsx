@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Check, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
+import { Check, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import type { FlightArrivalResponse, LocationResponse, ProfileResponse, RequestResponse, RideRequestInput } from "@/lib/api/generated";
-import { Button } from "@/components/ui/button";
+import { ClockTimePicker } from "./clock-time-picker";
 import { message, type Api } from "./shared";
 import { TicketCamera } from "./ticket-camera";
 import { VoiceRecorder } from "./voice-recorder";
@@ -120,18 +120,6 @@ export function RequestChat({
     }, 400);
     return () => { live = false; clearTimeout(timer); };
   }, [api, airport, formDisabled, draft.flightDate, draft.flightNumber, flightKey, stepIndex]);
-
-  function changePickupTime(time: string) {
-    setPickupSelection({ key: flightKey, time, date: pickupDate });
-    setConfirmed(false);
-  }
-
-  function adjustPickupTime(minutes: number) {
-    if (!pickupTime) return;
-    const adjusted = istParts(`${pickupDate}T${pickupTime}:00+05:30`, minutes);
-    if (adjusted) setPickupSelection({ key: flightKey, ...adjusted });
-    setConfirmed(false);
-  }
 
   useEffect(() => {
     const container = feed.current;
@@ -373,13 +361,7 @@ export function RequestChat({
               <label className="chat-input-label">Airport code<input required pattern="[A-Z]{3}" maxLength={3} value={airport} onChange={event => { setAirport(event.target.value.toUpperCase()); setConfirmed(false); }} /></label>
               <div className="chat-input-label">
                 <label htmlFor="pickup-ready-time">Pickup-ready time (IST)</label>
-                <div className="chat-pickup-time">
-                  <input id="pickup-ready-time" required type="time" step={60} value={pickupTime} aria-describedby="pickup-time-help" onChange={event => changePickupTime(event.target.value)} />
-                  <div className="chat-time-arrows">
-                    <Button type="button" variant="outline" size="icon" disabled={!pickupTime} aria-label="Increase pickup time by 5 minutes" title="5 minutes later" onClick={() => adjustPickupTime(5)}><ChevronUp aria-hidden="true" /></Button>
-                    <Button type="button" variant="outline" size="icon" disabled={!pickupTime} aria-label="Decrease pickup time by 5 minutes" title="5 minutes earlier" onClick={() => adjustPickupTime(-5)}><ChevronDown aria-hidden="true" /></Button>
-                  </div>
-                </div>
+                <ClockTimePicker key={flightKey} value={pickupTime} date={pickupDate} suggestion={suggestion} disabled={formDisabled} onChange={value => { setPickupSelection({ key: flightKey, ...value }); setConfirmed(false); }} />
                 <small id="pickup-time-help">On {pickupDate}, India time (UTC+05:30). {matchingArrival ? `Landing: ${istParts(matchingArrival.arrival_at)?.time} (${matchingArrival.source}). Suggested pickup includes 30 minutes for baggage; adjust as needed.` : "Include time for baggage collection."}</small>
                 {lookup?.loading && <small role="status">Looking up flight landing time…</small>}
                 {!matchingArrival && lookup?.message && <small role="status">{lookup.message}</small>}
