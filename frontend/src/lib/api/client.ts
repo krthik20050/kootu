@@ -50,19 +50,27 @@ export async function apiRequest<T = unknown>(
     ? { Authorization: `Bearer ${token}` }
     : {};
   if (options.body && !multipart) headers["Content-Type"] = "application/json";
+  const method = options.method || "GET";
   let response: Response;
+  const request = () => fetch(`${base.replace(/\/$/, "")}${path}`, {
+    method,
+    headers,
+    body: options.body
+      ? multipart
+        ? (options.body as FormData)
+        : JSON.stringify(options.body)
+      : undefined,
+    cache: "no-store",
+    signal: AbortSignal.timeout(options.timeout || (method === "GET" ? 30000 : REQUEST_TIMEOUT_MS)),
+  });
   try {
-    response = await fetch(`${base.replace(/\/$/, "")}${path}`, {
-      method: options.method || "GET",
-      headers,
-      body: options.body
-        ? multipart
-          ? (options.body as FormData)
-          : JSON.stringify(options.body)
-        : undefined,
-      cache: "no-store",
-      signal: AbortSignal.timeout(options.timeout || REQUEST_TIMEOUT_MS),
-    });
+    try {
+      response = await request();
+    } catch (error) {
+      // A free hosted API may be waking up. Retry only reads, never a write/upload.
+      if (method !== "GET") throw error;
+      response = await request();
+    }
   } catch (error) {
     if (typeof error === "object" && error !== null && "name" in error &&
       ["TimeoutError", "AbortError"].includes(String(error.name)))

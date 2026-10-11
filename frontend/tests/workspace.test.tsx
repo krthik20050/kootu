@@ -21,6 +21,26 @@ const driver = {
 };
 
 describe("guided ride screens", () => {
+  it("clears an account-load error after retry and enables upload", async () => {
+    const user = userEvent.setup();
+    let fail = true;
+    const api = vi.fn(async (path) => {
+      if (path === "/me") {
+        if (fail) throw new Error("Could not reach kootu");
+        return profile;
+      }
+      if (path === "/ride-requests") return [];
+      throw new Error(`Unexpected ${path}`);
+    }) as Api;
+    render(<Passenger api={api} />);
+    await screen.findByRole("alert");
+    expect((screen.getByLabelText("Upload Your Ticket") as HTMLInputElement).disabled).toBe(true);
+    fail = false;
+    await user.click(screen.getByRole("button", { name: "Retry connection" }));
+    await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+    expect((screen.getByLabelText("Upload Your Ticket") as HTMLInputElement).disabled).toBe(false);
+  });
+
   it("reviews flight details before saving and preserves the retry ID after failure", async () => {
     const user = userEvent.setup();
     const bodies: Record<string, unknown>[] = [];

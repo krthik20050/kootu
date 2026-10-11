@@ -26,6 +26,7 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
   const [groups, setGroups] = useState<Record<string, GroupResponse>>({});
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [error, setError] = useState("");
+  const [connectionError, setConnectionError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [extracting, setExtracting] = useState(false);
@@ -92,6 +93,7 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
     setProfile(data.me);
     setRequests(data.items);
     setGroups(data.groups);
+    setConnectionError("");
   }, []);
 
   useEffect(() => {
@@ -101,7 +103,7 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
         if (live) apply(data);
       })
       .catch((error) => {
-        if (live) setError(message(error));
+        if (live) setConnectionError(message(error));
       })
       .finally(() => {
         if (live) setLoading(false);
@@ -113,7 +115,7 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
             if (live) apply(data);
           })
           .catch((error) => {
-            if (live) setError(message(error));
+            if (live) setConnectionError(message(error));
           });
     }, 15000);
     return () => {
@@ -133,6 +135,17 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
       setError(message(error));
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function retryConnection() {
+    setLoading(true);
+    try {
+      apply(await load());
+    } catch (error) {
+      setConnectionError(message(error));
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -500,6 +513,10 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
         </aside>
       </div>
       <div className="workspace-feedback">
+        {connectionError && <div>
+          <p className="error" role="alert">{connectionError}</p>
+          <button type="button" className="secondary" disabled={loading || busy} onClick={() => void retryConnection()}>{loading ? "Connecting…" : "Retry connection"}</button>
+        </div>}
         {error && (
           <p className="error" role="alert">
             {error}

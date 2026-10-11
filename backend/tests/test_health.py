@@ -35,6 +35,21 @@ def test_cors_allows_only_configured_origin() -> None:
         assert "access-control-allow-origin" not in denied.headers
 
 
+@pytest.mark.parametrize("method", ["PUT", "DELETE"])
+def test_driver_location_cors_preflight_supports_updates_and_stop(method):
+    with TestClient(create_app(Settings(_env_file=None))) as client:
+        response = client.options(
+            "/drivers/me/location",
+            headers={
+                "Origin": "http://localhost:3000",
+                "Access-Control-Request-Method": method,
+                "Access-Control-Request-Headers": "authorization,content-type",
+            },
+        )
+        assert response.status_code == 200
+        assert response.headers["access-control-allow-origin"] == "http://localhost:3000"
+
+
 @pytest.mark.parametrize(
     "origin", ["*", "https://user:password@example.com", "https://example.com/path"]
 )

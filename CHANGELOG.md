@@ -1,5 +1,12 @@
 # Change log
 
+## 2026-10-11 07:10 IST - Fix issues exposed by signed-in browser verification
+
+- Real Clerk sign-in completed. A production synthetic PDF upload returned flight, landing time, seat/gate and counts; Next reached the destination step and live address search returned Aluva results. No synthetic ride was saved in the production account. The original private ticket remains unavailable.
+- Reproduced account-load recovery leaving an old connection error visible. Separated connection errors from form errors, clear them after successful loading/polling and added Retry connection. GET transport failures retry once with a fresh 30-second default timeout; writes/uploads and HTTP failures are never automatically replayed. This improves transient/cold-start recovery without claiming the underlying network never fails.
+- Reproduced HTTP 400 browser preflight for driver-location PUT/DELETE. Added these existing API methods to CORS while preserving exact-origin and header restrictions. Affects backend/app/main.py, health regressions, passenger UI, API client and frontend regressions.
+- Validation: all three new regressions failed before their fixes; 142 backend tests in a fresh disposable local PostgreSQL/PostGIS database and 36 frontend tests passed, along with lint, Ruff/format, contracts and production webpack build/typecheck. Actual phone GPS permission/movement remains untested. Deployment verification will follow once complete.
+
 ## 2026-10-11 07:03 IST - Verify booking lifecycle with live providers
 
 - Ran a synthetic PDF through the actual local upload endpoint with live Groq, then searched a public Aluva destination with live Geoapify. Verified extracted flight/airport/arrival/party counts, landing plus 30-minute pickup, idempotent booking for two synthetic parties, matching with real road-distance verification, outsider privacy, driver acceptance/manifest, trip start/completion and fleet release.
