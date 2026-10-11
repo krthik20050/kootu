@@ -28,6 +28,23 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
+  --color-sidebar: #111111;
+  --color-sidebarBorder: #222222;
+  --color-canvas: #F4F5F7;
+  --color-canvas-dark: #0D0D0D;
+  --color-cardBg: #FFFFFF;
+  --color-cardBg-dark: #161616;
+  --color-borderLight: #ECEEF2;
+  --color-borderLight-dark: #262626;
+  --color-mutedText: #6B7280;
+  --color-subtleText: #9CA3AF;
+}
+
+.hero-diagonal {
+  background: linear-gradient(118deg, #ffffff 58%, #eaebee 58.1%, #f3f4f6 72%, #ffffff 72.1%);
+}
+.dark .hero-diagonal {
+  background: linear-gradient(118deg, #161616 58%, #202020 58.1%, #141414 72%, #161616 72.1%);
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
