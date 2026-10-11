@@ -1,5 +1,11 @@
 # Change log
 
+## 2026-10-11 06:24 IST - Beige workspace palette
+
+- Replaced blue/navy dashboard and request theme tokens with cream/beige surfaces, taupe controls and warm brown dark-mode surfaces with beige accents. Cards, navigation, chat, camera overlays and charts share the palette.
+- Validation: Inspected scoped CSS tokens and diff whitespace; no tests or browser checks run. Theme preference behavior unchanged.
+
+
 ## 2026-10-11 05:51 IST - Merge GitHub updates safely
 
 - Merged origin/main through `81b7dc6` with local dashboard/chat commits. Preserved both style sets and changelog entries. Kept `/request` on the local chat UI; retained the incoming ticket-first screen as `TicketPassenger` and directed its existing interaction checks to that component. Backend extraction, voice/PDF utilities and expanded contracts are included.

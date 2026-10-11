@@ -1,5 +1,10 @@
 # AI usage record
 
+## 2026-10-11 06:24 IST - Beige workspace palette
+
+Codex replaced the shared blue/navy workspace palette with beige/taupe colors and a matching warm dark mode. Source tokens and diff whitespace inspected; no tests or browser checks run. Human review pending.
+
+
 ## 2026-10-11 05:51 IST - Safe GitHub update merge
 
 Codex fetched and merged the two incoming commits, preserving the local chat/dashboard design and unsaved changes via backup branch/stash. Resolved CSS/changelog conflicts by retaining both additions; retained incoming ticket-first UI separately instead of replacing the requested chat. Frontend lint/types passed before and after restoration, and backend provider imports passed after installing the new PDF dependency. Original unsaved source/example files matched their stash copies. Backup branch/stash retained. No tests run; human review pending.

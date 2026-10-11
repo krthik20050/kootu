@@ -203,3 +203,5 @@ Mobile `/request` chat now includes step navigation, tap-to-edit answers, arriva
 The `/request` drop-off input now shows Google Maps address suggestions as you type, using the existing backend geocoding search; selecting a suggestion stores its map coordinates.
 
 Chat submission: `/request` now sends confirmed flight/drop-off inputs and final-review pickup details to POST `/ride-requests`, with retry-safe request identifiers. Existing rides can seed a new draft but are not updated.
+
+The dashboard and request page now share a beige/taupe light theme and warm brown dark theme with beige accents.

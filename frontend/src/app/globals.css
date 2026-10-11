@@ -153,51 +153,51 @@ button:disabled { opacity: .5; cursor: wait; }
 @media (max-width: 900px) { .workspace-grid { gap: 32px; grid-template-columns: minmax(0, 1fr); }.ride-list { padding: 24px; }.workspace { padding: 32px 24px 64px; } }
 @media (max-width: 460px) { .workspace-nav { gap: 14px; font-size: 12px; }.site-header { gap: 16px; flex-wrap: wrap; }.form-row { grid-template-columns: minmax(0, 1fr); gap: 0; }.workspace h1 { font-size: 46px; }.workspace-grid { gap: 24px; } }
 
-/* Keep the supplied sample dashboard's neutral palette scoped to its route. */
+/* Shared beige palette for dashboard, request chat and their overlays. */
 .app1-dashboard {
-  --dashboard-chart-opened: #94a3b8;
-  --dashboard-chart-completed: #2563eb;
-  --background: #f8fafc;
-  --foreground: #172033;
-  --card: #ffffff;
-  --card-foreground: #172033;
-  --popover: #ffffff;
-  --popover-foreground: #172033;
-  --primary: #2563eb;
-  --primary-foreground: #ffffff;
-  --secondary: #eef2ff;
-  --secondary-foreground: #4338ca;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #f1f5f9;
-  --accent-foreground: #172033;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #2563eb;
+  --dashboard-chart-opened: #b9ab96;
+  --dashboard-chart-completed: #75624a;
+  --background: #f5f0e8;
+  --foreground: #332d25;
+  --card: #fffaf2;
+  --card-foreground: #332d25;
+  --popover: #fffaf2;
+  --popover-foreground: #332d25;
+  --primary: #75624a;
+  --primary-foreground: #fffaf2;
+  --secondary: #ede1cf;
+  --secondary-foreground: #5a4834;
+  --muted: #ece5da;
+  --muted-foreground: #766b5c;
+  --accent: #ece5da;
+  --accent-foreground: #332d25;
+  --border: #ded3c2;
+  --input: #ded3c2;
+  --ring: #75624a;
   --destructive: #dc2626;
   color-scheme: light;
   font-size: 14px;
 }
 .app1-dashboard[data-theme="dark"] {
-  --background: #0b1120;
-  --foreground: #e2e8f0;
-  --card: #111b2d;
-  --card-foreground: #e2e8f0;
-  --popover: #111b2d;
-  --popover-foreground: #e2e8f0;
-  --primary: #60a5fa;
-  --primary-foreground: #0b1120;
-  --secondary: #24294a;
-  --secondary-foreground: #c7d2fe;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
-  --accent: #1e293b;
-  --accent-foreground: #f1f5f9;
-  --border: #2a364b;
-  --input: #2a364b;
-  --ring: #60a5fa;
-  --dashboard-chart-opened: #94a3b8;
-  --dashboard-chart-completed: #60a5fa;
+  --background: #201c17;
+  --foreground: #efe6d8;
+  --card: #2b251e;
+  --card-foreground: #efe6d8;
+  --popover: #2b251e;
+  --popover-foreground: #efe6d8;
+  --primary: #d9c6a5;
+  --primary-foreground: #201c17;
+  --secondary: #3b3227;
+  --secondary-foreground: #eadbc2;
+  --muted: #352e25;
+  --muted-foreground: #b9ab96;
+  --accent: #352e25;
+  --accent-foreground: #ece5da;
+  --border: #4c4133;
+  --input: #4c4133;
+  --ring: #d9c6a5;
+  --dashboard-chart-opened: #b9ab96;
+  --dashboard-chart-completed: #d9c6a5;
   color-scheme: dark;
 }
 .app1-dashboard .recharts-cartesian-axis-tick text { fill: var(--muted-foreground); }
