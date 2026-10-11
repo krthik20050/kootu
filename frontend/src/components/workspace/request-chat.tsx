@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import styles from "./request-chat.module.css";
 import { Check, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import type { FlightArrivalResponse, LocationResponse, ProfileResponse, RequestResponse, RideRequestInput } from "@/lib/api/generated";
@@ -67,6 +68,7 @@ export function RequestChat({
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const feed = useRef<HTMLDivElement | null>(null);
+  const previousStep = useRef(0);
   const [airport, setAirport] = useState(initialRide?.airport || "COK");
   const flightKey = `${draft.flightNumber}|${draft.flightDate}|${airport}`;
   const [pickupSelection, setPickupSelection] = useState(() => initialRide ? {
@@ -126,8 +128,11 @@ export function RequestChat({
   }, [api, airport, formDisabled, draft.flightDate, draft.flightNumber, flightKey, stepIndex, matchingArrival]);
 
   useEffect(() => {
+    if (previousStep.current === stepIndex) return;
+    previousStep.current = stepIndex;
     const container = feed.current;
-    container?.scrollTo({ top: container.scrollHeight, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+    const target = stepIndex < questions.length ? container?.querySelector(".chat-current-question") : container?.nextElementSibling;
+    target?.scrollIntoView({ block: "start", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
   }, [stepIndex]);
 
   function chooseArrivalDay(offset: number) {
@@ -228,7 +233,7 @@ export function RequestChat({
   }
 
   return (
-    <section className="request-chat" aria-label="Ride request chat">
+    <section className={`request-chat ${styles.chat}`} aria-label="Ride request chat">
       <header className="request-chat-header">
         <div className="request-chat-assistant" aria-hidden="true">k<span /></div>
         <div className="request-chat-heading">

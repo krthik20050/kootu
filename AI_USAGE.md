@@ -1,5 +1,12 @@
 # AI usage record
 
+## 2026-10-11 09:50 IST - Repair Plan a ride alignment across booking steps
+
+- Fixed missing flex/grid structure in the request assistant header, messages and navigation controls. Replaced fixed-height nested chat/form scrolling with natural document scrolling. Scoped booking CSS now aligns labels, inputs, compact ticket upload, review rows, paired fields and Back/Continue controls; mobile uses a single field column. No request, ticket, voice or backend API logic changed.
+- Step changes now bring the active question or review into view beneath the sticky header, respecting reduced motion. The shared booking grid explicitly excludes ticket-guided intake to preserve its full-width form.
+- Verified actual RequestChat component locally through flight, arrival, destination and final review on desktop and 390px phone, plus tablet start at 820px. Checked mobile time picker and expanded preferences. Desktop paired inputs measured equal widths, heights and baselines; mobile inputs aligned with no horizontal overflow and no nested scroll areas. Temporary preview used isolated lookup fixtures, did not save production data, and was removed before build.
+- Validation: 57 frontend tests, lint and production build including TypeScript passed. Existing integrated booking test now checks step scrolling. Independent specialist agent caught the shared-grid and step-scrolling regressions; both corrected. Human review pending; live verification follows deployment.
+
 ## 2026-10-11 09:41 IST - Verify rebuilt passenger portal live
 
 Implementation 5116b7914427588dfdb7caecd27c119006bd8abf deployed successfully on Vercel. CI run 38110645691 passed: 148 backend tests, 57 frontend tests, lint, types, contracts and build. Verified the real signed-in passenger account at desktop 1280px, tablet 820px and phone 390px: no horizontal overflow; main card/summary/history edges align. Tested Plan a ride to /request, Ticket booking to /passenger and the mobile menu back to /dashboard. Local visual fixtures also covered a long assigned destination and dark mode; no synthetic rides were created in production. All PRs are closed, working implementation pushed, and the passenger dashboard is left open for the demo. Human review remains pending; this does not claim a new real-world driver trip, device voice capture or payment collection was tested.

@@ -34,7 +34,7 @@ function RequestLayout({ children, area }: { children: ReactNode; area: "request
         <div className={styles.headerStart}><SidebarTrigger aria-label="Toggle passenger navigation" /><span aria-hidden="true" /><h1>{area === "dashboard" ? "Passenger overview" : "Plan your ride"}</h1></div>
         <div className={styles.headerActions}><span><UserRound size={12} aria-hidden="true" />Passenger</span><Button variant="ghost" size="icon" aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={toggleTheme}>{theme === "dark" ? <Sun /> : <Moon />}</Button><div className={styles.account}>{process.env.NEXT_PUBLIC_AUTH_ENABLED === "true" && <AuthControls />}</div></div>
       </header>
-      <main id="workspace" className={area === "dashboard" ? styles.content : "workspace request-workspace-content"}>{children}</main>
+      <main id="workspace" className={area === "dashboard" ? styles.content : `workspace ${styles.bookingContent}`}>{children}</main>
     </SidebarInset>
   </>;
 }

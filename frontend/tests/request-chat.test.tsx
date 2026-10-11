@@ -6,7 +6,7 @@ import type { Api } from "@/components/workspace/shared";
 
 const profile = { id: "person", role: "PASSENGER" as const, display_name: "Alice", women_only_eligible: false };
 beforeEach(() => {
-  window.HTMLElement.prototype.scrollTo = vi.fn();
+  window.HTMLElement.prototype.scrollIntoView = vi.fn();
   window.matchMedia = vi.fn().mockReturnValue({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() });
 });
 
@@ -39,6 +39,7 @@ describe("integrated request chat", () => {
     const { api, tomorrow, bodies } = setup();
     await user.type(screen.getByLabelText("Flight number"), "AI123");
     await user.click(screen.getByRole("button", { name: /Continue/ }));
+    expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({ block: "start", behavior: "smooth" });
     fireEvent.change(screen.getByLabelText("Arrival date"), { target: { value: tomorrow } });
     await user.click(screen.getByRole("button", { name: /Continue/ }));
     await user.type(screen.getByRole("combobox"), "Kochi");

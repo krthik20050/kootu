@@ -20,3 +20,11 @@
 .content { padding:36px; }
 @media(max-width:1100px) { .header { padding:0 28px; }.content { padding:28px; } }
 @media(max-width:680px) { .header { padding:0 20px; height:68px; min-height:68px; gap:12px; }.headerStart { gap:10px; }.headerStart > span { display:none; }.header h1 { font-size:13px; }.headerActions { gap:6px; }.headerActions > span { display:none; }.account { padding-left:10px; margin-left:2px; }.content { padding:28px 20px; }.navigation { padding:28px 20px; } }
+
+.bookingContent:global(.workspace) { width:100%; max-width:1252px; margin:0 auto; padding:36px; }
+.bookingContent.bookingContent :global(.workspace-grid:not(.guided-intake)) { grid-template-columns:minmax(0,1fr) 280px; gap:24px; }
+.bookingContent.bookingContent :global(.ride-list) { padding:24px; border-radius:14px; max-height:none; overflow:visible; box-shadow:none; }
+.bookingContent.bookingContent :global(.ride-list h2) { font-size:20px; margin:12px 0 20px; letter-spacing:-.03em; }
+.bookingContent.bookingContent :global(.ride-list .empty) { padding:0; font-size:13px; line-height:1.75; margin:0; }
+@media(max-width:1200px) { .bookingContent:global(.workspace) { padding:28px; }.bookingContent.bookingContent :global(.workspace-grid:not(.guided-intake)) { grid-template-columns:minmax(0,1fr); } }
+@media(max-width:680px) { .bookingContent:global(.workspace) { padding:24px 20px; }.bookingContent.bookingContent :global(.workspace-grid:not(.guided-intake)) { gap:20px; } }
