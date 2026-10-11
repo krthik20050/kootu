@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import type { FlightArrivalResponse, LocationResponse, ProfileResponse, RequestResponse, RideRequestInput } from "@/lib/api/generated";
@@ -40,6 +40,7 @@ export function RequestChat({
   disabled,
   initialRide,
   onSaved,
+  renderSavedRide,
 }: {
   api: Api;
   profile: ProfileResponse | null;
@@ -47,6 +48,7 @@ export function RequestChat({
   disabled: boolean;
   initialRide?: RequestResponse;
   onSaved?: () => void;
+  renderSavedRide?: (ride: RequestResponse) => ReactNode;
 }) {
   const [draft, setDraft] = useState<Draft>({
     displayName: profile?.display_name || accountName,
@@ -352,6 +354,12 @@ export function RequestChat({
           {error && <p className="chat-error" role="alert">{error}</p>}
           {notice && <p className="chat-notice" role="status">{notice}</p>}
         </form>
+      ) : created ? (
+        <section className="request-chat-review" aria-label="Saved ride and group">
+          <p role="status" className="chat-notice">Ride request saved · {created.flight_number} to {created.destination_name}.</p>
+          {renderSavedRide?.(created)}
+          <p className="chat-notice"><Link href="/dashboard">View your dashboard →</Link></p>
+        </section>
       ) : (
         <form className="request-chat-review" onSubmit={event => void saveRequest(event)}>
           <p className="chat-notice">Check your arrival and drop-off, then confirm the pickup details below.</p>
@@ -390,10 +398,9 @@ export function RequestChat({
             </details>
             <label className="chat-booking-check"><input type="checkbox" required checked={confirmed} onChange={event => setConfirmed(event.target.checked)} />I confirm the flight number, arrival date, airport and pickup details are correct.</label>
           </fieldset>
-          {created && <div role="status" className="chat-notice">Request saved · {created.flight_number} to {created.destination_name}. <Link href="/dashboard">View your dashboard →</Link></div>}
           <div className="request-chat-controls">
             <button type="button" className="chat-back" disabled={formDisabled} onClick={() => setStepIndex((current) => Math.max(0, current - 1))}>← Back</button>
-            <button type="submit" className="chat-send" disabled={formDisabled || !confirmed}>{saving ? "Saving…" : created ? "Request saved" : "Send ride request"}</button>
+            <button type="submit" className="chat-send" disabled={formDisabled || !confirmed}>{saving ? "Saving…" : "Send ride request"}</button>
           </div>
           {error && <p className="chat-error" role="alert">{error}</p>}
           {notice && <p className="chat-notice" role="status">{notice}</p>}

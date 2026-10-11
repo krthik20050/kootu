@@ -1,5 +1,11 @@
 # Change log
 
+## 2026-10-11 07:04 IST - Group matching in request UI
+
+- Added a shared group card after chat submission and in saved journeys, with Find a group/Refresh actions, real departure/status/counts/vehicle/events and visible waiting/loading/error states. POST `/ride-requests/{id}/match` displays the returned group immediately; refresh/polling reads GET `/ride-groups/{id}` through the existing journey loader.
+- Saved requests show the group flow instead of the disabled booking form. Prevented duplicate actions and stale polling updates; partial group failures preserve the saved journeys list. Existing dashboard group integration remains available.
+- Validation: Frontend lint/typecheck passed and `/request` served HTTP 200; diff whitespace checked. No tests or signed-in matching/booking checks run. Compatible passengers/vehicles and configured backend road routing are required for a successful match; no groups are fabricated.
+
 ## 2026-10-11 06:58 IST - Flight-based pickup time and adjustment arrows
 
 - Added authenticated/rate-limited GET `/flights/arrival` using the existing Aviationstack adapter, matching scheduled arrival dates in IST and preferring actual, estimated, then scheduled timing. Exported the OpenAPI/frontend response contract.

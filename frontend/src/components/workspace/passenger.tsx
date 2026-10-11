@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   GroupResponse,
   MatchResponse,
@@ -9,6 +9,7 @@ import type {
 } from "@/lib/api/generated";
 import { localTime, message, readable, type Api } from "./shared";
 import { RequestChat } from "./request-chat";
+import { RideGroup } from "./ride-group";
 
 const active = new Set(["WAITING", "MATCHED", "ASSIGNED"]);
 
@@ -19,6 +20,9 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [matchingId, setMatchingId] = useState<string | null>(null);
+  const lock = useRef(false);
+  const revision = useRef(0);
   const [loading, setLoading] = useState(true);
   const [editRide, setEditRide] = useState<RequestResponse | undefined>();
 
@@ -34,13 +38,14 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
           .filter((id): id is string => id !== null),
       ),
     ];
-    const loaded = await Promise.all(
+    const loaded = await Promise.allSettled(
       ids.map((id) => api<GroupResponse>(`/ride-groups/${id}`)),
     );
     return {
       me,
       items,
-      groups: Object.fromEntries(loaded.map((group) => [group.id, group])),
+      groups: Object.fromEntries(loaded.flatMap(result => result.status === "fulfilled" ? [[result.value.id, result.value]] : [])),
+      groupError: loaded.some(result => result.status === "rejected"),
     };
   }, [api]);
 
@@ -48,50 +53,84 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
     setProfile(data.me);
     setRequests(data.items);
     setGroups(data.groups);
+    setError(data.groupError ? "Some group details could not be loaded. Refresh to try again." : "");
     const editId = new URLSearchParams(window.location.search).get("edit");
     setEditRide(data.items.find(ride => ride.id === editId));
   }, []);
 
+  const refresh = useCallback(async () => {
+    const current = ++revision.current;
+    try {
+      const data = await load();
+      if (current === revision.current) apply(data);
+    } catch (caught) {
+      if (current === revision.current) throw caught;
+    }
+  }, [load, apply]);
+
   useEffect(() => {
     let live = true;
-    void load()
-      .then((data) => {
-        if (live) apply(data);
-      })
+    const generation = revision;
+    const initial = setTimeout(() => void refresh()
       .catch((error) => {
         if (live) setError(message(error));
       })
       .finally(() => {
         if (live) setLoading(false);
-      });
+      }), 0);
     const timer = setInterval(() => {
-      if (!document.hidden)
-        void load()
-          .then((data) => {
-            if (live) apply(data);
-          })
+      if (!document.hidden && !lock.current)
+        void refresh()
           .catch((error) => {
             if (live) setError(message(error));
           });
     }, 15000);
     return () => {
       live = false;
+      generation.current++;
+      clearTimeout(initial);
       clearInterval(timer);
     };
-  }, [load, apply]);
+  }, [refresh]);
 
   async function run(action: () => Promise<void>) {
+    if (lock.current) return;
+    lock.current = true;
+    revision.current++;
     setBusy(true);
     setError("");
     setNotice("");
     try {
       await action();
-      await load().then(apply);
+      await refresh();
     } catch (error) {
       setError(message(error));
     } finally {
       setBusy(false);
+      lock.current = false;
     }
+  }
+
+  async function findGroup(ride: RequestResponse) {
+    await run(async () => {
+      setMatchingId(ride.id);
+      try {
+        const result = await api<MatchResponse>(`/ride-requests/${ride.id}/match`, { method: "POST", timeout: 150000 });
+        if (result.matched && result.group) {
+          const matched = result.group;
+          setGroups(current => ({ ...current, [matched.id]: matched }));
+          const updated: RequestResponse = { ...ride, group_id: matched.id, status: matched.status === "PROPOSED" ? "MATCHED" : matched.status };
+          setRequests(current => current.some(item => item.id === ride.id) ? current.map(item => item.id === ride.id ? updated : item) : [...current, updated]);
+        }
+        setNotice(result.message || (result.matched ? "Group found. Check your group details below." : "No compatible group yet. Your request remains waiting; you can try again later."));
+      } finally {
+        setMatchingId(null);
+      }
+    });
+  }
+
+  function groupCard(ride: RequestResponse) {
+    return <RideGroup ride={ride} group={ride.group_id ? groups[ride.group_id] : undefined} busy={busy} matching={matchingId === ride.id} onMatch={() => void findGroup(ride)} onRefresh={() => void run(async () => {})} />;
   }
 
   return (
@@ -104,7 +143,8 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
           accountName={accountName}
           disabled={busy}
           initialRide={editRide}
-          onSaved={() => { void load().then(apply).catch(caught => setError(message(caught))); }}
+          onSaved={() => { void refresh().catch(caught => setError(message(caught))); }}
+          renderSavedRide={ride => <>{groupCard(requests.find(item => item.id === ride.id) || ride)}{error && <p className="chat-error" role="alert">{error}</p>}{notice && <p className="chat-notice" role="status">{notice}</p>}</>}
         />
         <aside className="ride-list" aria-labelledby="rides-title">
           <div className="aside-title">
@@ -140,46 +180,8 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
                 <p className="quiet">
                   Flight {ride.flight_number} · {readable(ride.flight_status)}
                 </p>
-                {group && (
-                  <div className="group-details">
-                    <strong>
-                      {group.vehicle
-                        ? `Vehicle ${group.vehicle.registration}`
-                        : "Waiting for driver acceptance"}
-                    </strong>
-                    <p>
-                      {group.passengers} passengers · leave{" "}
-                      {localTime(group.departure_at)}
-                    </p>
-                    <ol>
-                      {group.events.slice(-3).map((event, index) => (
-                        <li key={`${event.created_at}-${index}`}>
-                          {readable(event.kind)}
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                )}
+                {(active.has(ride.status) || group) && groupCard(ride)}
                 <div className="entry-actions">
-                  {ride.status === "WAITING" && (
-                    <button
-                      className="secondary"
-                      disabled={busy}
-                      onClick={() =>
-                        void run(async () => {
-                          const result = await api<MatchResponse>(
-                            `/ride-requests/${ride.id}/match`,
-                            { method: "POST", timeout: 150000 },
-                          );
-                          setNotice(
-                            result.message || "Group sent for driver review.",
-                          );
-                        })
-                      }
-                    >
-                      Look for a group
-                    </button>
-                  )}
                   {active.has(ride.status) && (
                     <button
                       className="text-button"

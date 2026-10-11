@@ -37,3 +37,9 @@ The dashboard and request page share a white light theme and neutral-gray dark t
 The `/request` review looks up landing time using authenticated `GET /flights/arrival?flight_number=AI123&flight_date=YYYY-MM-DD&airport=COK`. Configure private `AVIATIONSTACK_API_KEY` in `backend/.env` and restart the API. Scheduled arrival date is matched in IST; actual, estimated, then scheduled landing times are preferred. Live schedule coverage depends on the provider/plan. Missing timings leave the field editable with a clear message.
 
 Pickup-ready time defaults to landing plus 30 minutes for baggage collection; scanned ticket arrival timestamps can also supply this suggestion. Up/down arrows adjust by five minutes, preserving the IST pickup date through midnight rollover. Manual typing remains available and manual edits are not overwritten by a pending lookup. Confirm the displayed pickup date/time before submitting. Flight lookups have a separate 30-request hourly budget per user.
+
+## Find a shared ride group
+
+After sending a request in `/request`, the confirmation shows a **Find a group** action. It calls authenticated `POST /ride-requests/{id}/match` without a body and displays the returned group, or the server's waiting/error message. A shared card also appears in Your journeys. It includes group status, departure, passenger/bag counts, drop-off area, vehicle assignment and recent events. **Refresh** reloads saved requests and their authorized `GET /ride-groups/{id}` details; visible-page polling continues every 15 seconds and pauses during actions. `/dashboard` also retains its matching/group controls.
+
+Matching requires compatible passenger requests, eligible vehicles and backend road routing configuration (`GOOGLE_MAPS_API_KEY` with Routes API). Geoapify supplies address suggestions. A missing match keeps the request waiting; the UI does not list unrelated passengers or invent sample groups.

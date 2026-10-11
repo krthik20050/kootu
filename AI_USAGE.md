@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 07:04 IST - Group matching UI
+
+Codex integrated the existing group APIs into a shared post-submit/saved-journey group card, with immediate match results, refresh, loading/waiting/error feedback and action/stale-refresh guards. Frontend lint/typecheck passed; request route HTTP 200. No tests or authenticated matching checks run. Human review pending.
+
 ## 2026-10-11 06:58 IST - Pickup-ready autofill
 
 Codex added flight arrival lookup/contracts, landing-plus-30-minute pickup suggestions, ticket timestamp reuse, editable five-minute arrows and IST date rollover. Existing private flight key configured on backend; server restarted. Frontend lint/typecheck, contracts and startup passed; live sample returned no matching flight. Manual fallback retained. No tests or signed-in browser checks run. Human review pending.
