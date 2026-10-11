@@ -72,6 +72,11 @@ export type ExtractedFlight = {
   "destination_name"?: string | null;
 };
 
+export type FlightArrivalResponse = {
+  "arrival_at"?: string | null;
+  "source"?: "actual" | "estimated" | "scheduled" | null;
+};
+
 export type GroupResponse = {
   "id": string;
   "airport": string;

@@ -466,3 +466,13 @@ button:disabled { opacity: .5; cursor: wait; }
 @keyframes arrival-confetti { 0% { transform: translateY(0) rotate(0); opacity: 0; } 12% { opacity: 1; } 100% { transform: translateY(280px) rotate(280deg); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .arrival-confetti { display: none; } }
 @media (max-width: 680px) { .intake-title { margin-bottom: 24px; } .intake-progress { gap: 10px; } .intake-progress li { font-size: 12px; gap: 6px; } .workspace-grid.guided-intake.with-journeys { grid-template-columns: 1fr; } .upload-dropzone { min-height: 210px; } .step-actions .action { min-width: 120px; } }
+
+/* Pickup time stepper: compact controls with the shared workspace palette. */
+.request-workspace .chat-pickup-time { display: flex; align-items: stretch; gap: 8px; }
+.request-workspace .chat-pickup-time input { flex: 1; min-width: 0; width: 100%; }
+.request-workspace .chat-time-arrows { display: flex; flex-direction: column; gap: 2px; }
+.request-workspace .chat-time-arrows button { width: 32px; height: 24px; padding: 0; }
+.request-workspace .chat-time-arrows svg { width: 14px; height: 14px; }
+@media (pointer: coarse) {
+  .request-workspace .chat-time-arrows button { width: 44px; height: 32px; }
+}

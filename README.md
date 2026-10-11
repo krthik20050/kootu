@@ -206,3 +206,9 @@ The `/request` drop-off input shows Geoapify address suggestions after 3 charact
 Chat submission: `/request` now sends confirmed flight/drop-off inputs and final-review pickup details to POST `/ride-requests`, with retry-safe request identifiers. Existing rides can seed a new draft but are not updated.
 
 The dashboard and request page share a white light theme and neutral-gray dark theme with charcoal/white accents.
+
+## Pickup-ready time autofill
+
+The `/request` review looks up landing time using authenticated `GET /flights/arrival?flight_number=AI123&flight_date=YYYY-MM-DD&airport=COK`. Configure private `AVIATIONSTACK_API_KEY` in `backend/.env` and restart the API. Scheduled arrival date is matched in IST; actual, estimated, then scheduled landing times are preferred. Live schedule coverage depends on the provider/plan. Missing timings leave the field editable with a clear message.
+
+Pickup-ready time defaults to landing plus 30 minutes for baggage collection; scanned ticket arrival timestamps can also supply this suggestion. Up/down arrows adjust by five minutes, preserving the IST pickup date through midnight rollover. Manual typing remains available and manual edits are not overwritten by a pending lookup. Confirm the displayed pickup date/time before submitting. Flight lookups have a separate 30-request hourly budget per user.

@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, ChevronRight } from "lucide-react";
+import { Check, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
 import Link from "next/link";
-import type { LocationResponse, ProfileResponse, RequestResponse, RideRequestInput } from "@/lib/api/generated";
+import type { FlightArrivalResponse, LocationResponse, ProfileResponse, RequestResponse, RideRequestInput } from "@/lib/api/generated";
+import { Button } from "@/components/ui/button";
 import { message, type Api } from "./shared";
 import { TicketCamera } from "./ticket-camera";
 import { VoiceRecorder } from "./voice-recorder";
@@ -24,6 +25,13 @@ const questions: Question[] = [
   { key: "flightDate", prompt: "What date does your flight arrive?" },
   { key: "destinationName", prompt: "Where should the cab drop you off?", helper: "Enter an address and choose a place, or enter a map pin." },
 ];
+
+function istParts(timestamp: string, offsetMinutes = 0) {
+  const time = new Date(timestamp).getTime();
+  if (!Number.isFinite(time)) return null;
+  const local = new Date(time + (330 + offsetMinutes) * 60_000).toISOString();
+  return { date: local.slice(0, 10), time: local.slice(11, 16) };
+}
 
 export function RequestChat({
   api,
@@ -57,7 +65,18 @@ export function RequestChat({
   const [notice, setNotice] = useState("");
   const feed = useRef<HTMLDivElement | null>(null);
   const [airport, setAirport] = useState(initialRide?.airport || "COK");
-  const [pickupTime, setPickupTime] = useState(initialRide ? new Date(initialRide.ready_at).toLocaleTimeString("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit" }) : "");
+  const flightKey = `${draft.flightNumber}|${draft.flightDate}|${airport}`;
+  const [pickupSelection, setPickupSelection] = useState(() => initialRide ? {
+    key: flightKey, ...istParts(initialRide.ready_at)!,
+  } : null);
+  const [arrival, setArrival] = useState<({ key: string; source: string; arrival_at: string }) | null>(null);
+  const [flightLookup, setFlightLookup] = useState({ key: "", loading: false, message: "" });
+  const matchingArrival = arrival?.key === flightKey ? arrival : null;
+  const suggestion = matchingArrival ? istParts(matchingArrival.arrival_at, 30) : null;
+  const selection = pickupSelection?.key === flightKey ? pickupSelection : suggestion;
+  const pickupTime = selection?.time || "";
+  const pickupDate = selection?.date || draft.flightDate;
+  const lookup = flightLookup.key === flightKey ? flightLookup : null;
   const [passengers, setPassengers] = useState(initialRide?.passengers ?? 1);
   const [luggage, setLuggage] = useState(initialRide?.luggage ?? 1);
   const [maxWait, setMaxWait] = useState(initialRide?.max_wait_minutes ?? 30);
@@ -79,6 +98,40 @@ export function RequestChat({
   const progress = questions.length ? Math.round((doneCount / questions.length) * 100) : 0;
 
   useEffect(() => {
+    if (stepIndex < questions.length || formDisabled || !/^[A-Z0-9]{2,3}[0-9]{1,4}$/.test(draft.flightNumber) || !draft.flightDate || !/^[A-Z]{3}$/.test(airport)) return;
+    let live = true;
+    const timer = setTimeout(async () => {
+      setFlightLookup({ key: flightKey, loading: true, message: "" });
+      try {
+        const result = await api<FlightArrivalResponse>(`/flights/arrival?flight_number=${encodeURIComponent(draft.flightNumber)}&flight_date=${encodeURIComponent(draft.flightDate)}&airport=${airport}`, { timeout: 15000 });
+        if (!live) return;
+        if (result.arrival_at && istParts(result.arrival_at)) {
+          setArrival({ key: flightKey, arrival_at: result.arrival_at, source: result.source || "scheduled" });
+          setConfirmed(false);
+          setFlightLookup({ key: flightKey, loading: false, message: "" });
+        } else {
+          setFlightLookup({ key: flightKey, loading: false, message: "No landing time found for this arrival. Enter your pickup-ready time." });
+        }
+      } catch {
+        if (live) setFlightLookup({ key: flightKey, loading: false, message: "Flight timing is unavailable. Enter your pickup-ready time." });
+      }
+    }, 400);
+    return () => { live = false; clearTimeout(timer); };
+  }, [api, airport, formDisabled, draft.flightDate, draft.flightNumber, flightKey, stepIndex]);
+
+  function changePickupTime(time: string) {
+    setPickupSelection({ key: flightKey, time, date: pickupDate });
+    setConfirmed(false);
+  }
+
+  function adjustPickupTime(minutes: number) {
+    if (!pickupTime) return;
+    const adjusted = istParts(`${pickupDate}T${pickupTime}:00+05:30`, minutes);
+    if (adjusted) setPickupSelection({ key: flightKey, ...adjusted });
+    setConfirmed(false);
+  }
+
+  useEffect(() => {
     const container = feed.current;
     container?.scrollTo({ top: container.scrollHeight, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
   }, [stepIndex]);
@@ -91,6 +144,7 @@ export function RequestChat({
 
   function setValue<K extends keyof Draft>(key: K, value: Draft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
+    if (key === "flightNumber" || key === "flightDate") setConfirmed(false);
   }
 
   function answerFor(key: QuestionKey): string {
@@ -141,7 +195,7 @@ export function RequestChat({
     }
     if (!pickupTime || !draft.flightDate) { setError("Enter the arrival date and pickup-ready time."); return; }
     if (wheelchairs > passengers || childSeats > passengers) { setError("Required spaces cannot exceed your passenger count."); return; }
-    const ready = new Date(`${draft.flightDate}T${pickupTime}:00+05:30`);
+    const ready = new Date(`${pickupDate}T${pickupTime}:00+05:30`);
     if (!Number.isFinite(ready.getTime())) { setError("Enter a valid pickup-ready time."); return; }
     if (ready.getTime() < Date.now() - 5 * 60_000 || ready.getTime() > Date.now() + 30 * 86_400_000) {
       setError("Pickup-ready time must be within the next 30 days, and cannot be in the past."); return;
@@ -269,6 +323,15 @@ export function RequestChat({
           </fieldset>
 
           <VoiceRecorder disabled={formDisabled} actions={<TicketCamera api={api} disabled={formDisabled} onTicket={(details) => {
+            const number = details.flight_number || draft.flightNumber;
+            const date = details.flight_date || draft.flightDate;
+            const arrivalAirport = details.arrival_airport || airport;
+            setAirport(arrivalAirport);
+            setPickupSelection(null);
+            setConfirmed(false);
+            if (details.arrival_at && istParts(details.arrival_at)) {
+              setArrival({ key: `${number}|${date}|${arrivalAirport}`, arrival_at: details.arrival_at, source: "ticket" });
+            }
             setDraft((current) => ({
               ...current,
               flightNumber: details.flight_number || current.flightNumber,
@@ -299,8 +362,20 @@ export function RequestChat({
           <fieldset className="chat-booking-fields" disabled={formDisabled}>
             <legend>Pickup details</legend>
             <div className="form-row">
-              <label className="chat-input-label">Airport code<input required pattern="[A-Z]{3}" maxLength={3} value={airport} onChange={event => setAirport(event.target.value.toUpperCase())} /></label>
-              <label className="chat-input-label">Pickup-ready time (IST)<input required type="time" value={pickupTime} onChange={event => setPickupTime(event.target.value)} /><small>On {draft.flightDate}, India time (UTC+05:30). Include time for baggage collection.</small></label>
+              <label className="chat-input-label">Airport code<input required pattern="[A-Z]{3}" maxLength={3} value={airport} onChange={event => { setAirport(event.target.value.toUpperCase()); setConfirmed(false); }} /></label>
+              <div className="chat-input-label">
+                <label htmlFor="pickup-ready-time">Pickup-ready time (IST)</label>
+                <div className="chat-pickup-time">
+                  <input id="pickup-ready-time" required type="time" step={60} value={pickupTime} aria-describedby="pickup-time-help" onChange={event => changePickupTime(event.target.value)} />
+                  <div className="chat-time-arrows">
+                    <Button type="button" variant="outline" size="icon" disabled={!pickupTime} aria-label="Increase pickup time by 5 minutes" title="5 minutes later" onClick={() => adjustPickupTime(5)}><ChevronUp aria-hidden="true" /></Button>
+                    <Button type="button" variant="outline" size="icon" disabled={!pickupTime} aria-label="Decrease pickup time by 5 minutes" title="5 minutes earlier" onClick={() => adjustPickupTime(-5)}><ChevronDown aria-hidden="true" /></Button>
+                  </div>
+                </div>
+                <small id="pickup-time-help">On {pickupDate}, India time (UTC+05:30). {matchingArrival ? `Landing: ${istParts(matchingArrival.arrival_at)?.time} (${matchingArrival.source}). Suggested pickup includes 30 minutes for baggage; adjust as needed.` : "Include time for baggage collection."}</small>
+                {lookup?.loading && <small role="status">Looking up flight landing time…</small>}
+                {!matchingArrival && lookup?.message && <small role="status">{lookup.message}</small>}
+              </div>
             </div>
             <div className="form-row">
               <label className="chat-input-label">Passengers<input required type="number" min={1} max={8} value={passengers} onChange={event => setPassengers(Number(event.target.value))} /></label>

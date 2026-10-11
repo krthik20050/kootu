@@ -1,5 +1,12 @@
 # Change log
 
+## 2026-10-11 06:58 IST - Flight-based pickup time and adjustment arrows
+
+- Added authenticated/rate-limited GET `/flights/arrival` using the existing Aviationstack adapter, matching scheduled arrival dates in IST and preferring actual, estimated, then scheduled timing. Exported the OpenAPI/frontend response contract.
+- Pickup-ready time suggests landing plus 30 minutes for baggage, including scanned ticket arrival timestamps. Added accessible five-minute up/down controls with midnight/date rollover; manual changes override asynchronous suggestions. Flight/airport changes invalidate mismatched suggestions and require reconfirmation.
+- Configured the existing private flight key in backend and restarted it. Updated setup/behavior docs.
+- Validation: Frontend lint/typecheck and contract drift check passed; backend imports/startup passed. Live flight API responded without a matching sample arrival, exercising the unavailable-data fallback. No tests or signed-in browser checks run. Coverage depends on provider live schedule availability; unavailable timing remains a manual input.
+
 ## 2026-10-11 06:49 IST - Geoapify live drop-off suggestions
 
 - Switched authenticated `/locations/search` from Google Geocoding to Geoapify Address Autocomplete, with India filtering, five validated results, bounded network errors and private `GEOAPIFY_API_KEY` configuration/readiness.

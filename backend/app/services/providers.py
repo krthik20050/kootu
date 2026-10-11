@@ -3,7 +3,7 @@ import io
 import json
 import wave
 from contextlib import closing
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from threading import Lock
 
 import httpx2 as httpx
@@ -285,7 +285,14 @@ def transcribe_audio(settings: Settings, document: bytes, language: str) -> dict
     return {"transcript": " ".join(transcripts), "language_code": detected_language}
 
 
-def flight_status(settings: Settings, number: str, flight_date: date, airport: str) -> dict | None:
+def flight_status(
+    settings: Settings,
+    number: str,
+    flight_date: date,
+    airport: str,
+    *,
+    match_arrival_date: bool = False,
+) -> dict | None:
     key = require_key(settings.aviationstack_api_key, "Flight updates")
     # Query live flights on the free plan; flight_date requests paid historical access.
     # Still filter the returned date exactly below to avoid updating the wrong arrival.
@@ -311,8 +318,19 @@ def flight_status(settings: Settings, number: str, flight_date: date, airport: s
     ):
         raise HTTPException(502, "Flight provider returned invalid data")
     for row in rows:
+        matches_date = row.get("flight_date") == flight_date.isoformat()
+        if match_arrival_date:
+            try:
+                scheduled = datetime.fromisoformat(
+                    row["arrival"]["scheduled"].replace("Z", "+00:00")
+                )
+                matches_date = scheduled.tzinfo is not None and scheduled.astimezone(
+                    timezone(timedelta(hours=5, minutes=30))
+                ).date() == flight_date
+            except (KeyError, TypeError, ValueError, AttributeError):
+                matches_date = False
         if (
-            row.get("flight_date") == flight_date.isoformat()
+            matches_date
             and row.get("flight", {}).get("iata") == number
             and row.get("arrival", {}).get("iata") == airport
         ):

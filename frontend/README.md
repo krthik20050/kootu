@@ -31,3 +31,9 @@ Drop-off suggestions appear automatically after 3 typed characters and a 300ms p
 The three chat answers now feed POST `/ride-requests`. Final review collects the airport (default COK), pickup-ready time in IST on the selected arrival date, passengers (default 1), bags (default 1), maximum wait (default 30 minutes), optional accessibility/preferences and confirmation. Values remain editable before submission. The frontend maps the address to Geoapify/manual coordinates, converts the confirmed time to ISO UTC, and reuses a UUID for unchanged retries. Success refreshes saved journeys and links to the dashboard. Opening an existing ride creates a new submission draft; it does not update the original, and duplicate active arrivals are rejected. Local voice recordings are not sent as notes.
 
 The dashboard and request page share a white light theme and neutral-gray dark theme with charcoal/white accents.
+
+## Pickup-ready time autofill
+
+The `/request` review looks up landing time using authenticated `GET /flights/arrival?flight_number=AI123&flight_date=YYYY-MM-DD&airport=COK`. Configure private `AVIATIONSTACK_API_KEY` in `backend/.env` and restart the API. Scheduled arrival date is matched in IST; actual, estimated, then scheduled landing times are preferred. Live schedule coverage depends on the provider/plan. Missing timings leave the field editable with a clear message.
+
+Pickup-ready time defaults to landing plus 30 minutes for baggage collection; scanned ticket arrival timestamps can also supply this suggestion. Up/down arrows adjust by five minutes, preserving the IST pickup date through midnight rollover. Manual typing remains available and manual edits are not overwritten by a pending lookup. Confirm the displayed pickup date/time before submitting. Flight lookups have a separate 30-request hourly budget per user.

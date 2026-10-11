@@ -1,9 +1,14 @@
 from datetime import date, datetime
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import AwareDatetime, BaseModel
 
 from app.schemas.integrations import Coordinates, ExtractedFlight
+
+
+class FlightArrivalResponse(BaseModel):
+    arrival_at: AwareDatetime | None = None
+    source: Literal["actual", "estimated", "scheduled"] | None = None
 
 
 class ProfileResponse(BaseModel):

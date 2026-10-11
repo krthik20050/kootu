@@ -20,6 +20,8 @@ def provider_budget(request: Request, identity: Identity = Depends(verify_token)
         if path == "/audio/transcribe"
         else ("match", 30)
         if path.endswith("/match")
+        else ("flight", 30)
+        if path == "/flights/arrival"
         else ("location", 100)
     )
     subject = hashlib.sha256(identity.subject.encode()).hexdigest()

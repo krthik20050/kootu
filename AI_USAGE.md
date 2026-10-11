@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 06:58 IST - Pickup-ready autofill
+
+Codex added flight arrival lookup/contracts, landing-plus-30-minute pickup suggestions, ticket timestamp reuse, editable five-minute arrows and IST date rollover. Existing private flight key configured on backend; server restarted. Frontend lint/typecheck, contracts and startup passed; live sample returned no matching flight. Manual fallback retained. No tests or signed-in browser checks run. Human review pending.
+
 ## 2026-10-11 06:49 IST - Geoapify autocomplete
 
 Codex replaced Google drop-off search with Geoapify using official autocomplete documentation, configured the existing private key in backend, updated chat attribution/debounce and setup docs, and restarted the API. Frontend lint/typecheck and Python parsing/startup passed; live provider query returned 5 validated results and location readiness true. Ruff unavailable; no tests or authenticated browser checks run. Human review pending.

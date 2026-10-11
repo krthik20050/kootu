@@ -1,13 +1,56 @@
+from datetime import date, datetime
 from typing import Literal
 
+import httpx2 as httpx
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
 
 from app.core.auth import Identity, verify_token
 from app.core.rate_limit import provider_budget
-from app.schemas.responses import LocationResponse, TicketResponse, TranscriptResponse
-from app.services.providers import GeoapifyLocations, extract_ticket, transcribe_audio
+from app.schemas.responses import (
+    FlightArrivalResponse,
+    LocationResponse,
+    TicketResponse,
+    TranscriptResponse,
+)
+from app.services.providers import GeoapifyLocations, extract_ticket, flight_status, transcribe_audio
 
 router = APIRouter(tags=["integrations"])
+
+
+@router.get(
+    "/flights/arrival", response_model=FlightArrivalResponse,
+    dependencies=[Depends(provider_budget)],
+)
+def flight_arrival(
+    request: Request,
+    flight_number: str = Query(pattern=r"^[A-Z0-9]{2,3}[0-9]{1,4}$"),
+    flight_date: date = Query(),
+    airport: str = Query(pattern=r"^[A-Z]{3}$"),
+    identity: Identity = Depends(verify_token),
+) -> FlightArrivalResponse:
+    try:
+        row = flight_status(
+            request.app.state.settings, flight_number, flight_date, airport,
+            match_arrival_date=True,
+        )
+    except (HTTPException, httpx.RequestError) as error:
+        # Provider errors may include request URLs containing private credentials.
+        raise HTTPException(
+            503, "Flight timing is unavailable. Enter pickup time manually."
+        ) from error
+    if not row or row.get("flight_status") in {"cancelled", "incident", "diverted"}:
+        return FlightArrivalResponse()
+    for source in ("actual", "estimated", "scheduled"):
+        value = row["arrival"].get(source)
+        if not value:
+            continue
+        try:
+            arrival = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            if arrival.tzinfo is not None:
+                return FlightArrivalResponse(arrival_at=arrival, source=source)
+        except (TypeError, ValueError, AttributeError):
+            continue
+    return FlightArrivalResponse()
 
 
 def read_bounded(upload: UploadFile, maximum: int) -> bytes:
