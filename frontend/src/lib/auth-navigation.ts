@@ -1,6 +1,8 @@
 // Only internal workspaces may be OAuth return destinations.
 export function workspaceReturn(value: unknown): string {
-  return value === "/driver" || value === "/admin" ? value : "/passenger";
+  return value === "/passenger" || value === "/dashboard" || value === "/driver" || value === "/admin" || value === "/request"
+    ? value
+    : "/request";
 }
 
 export function signInHref(workspace: unknown): string {

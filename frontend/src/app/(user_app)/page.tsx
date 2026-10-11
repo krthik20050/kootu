@@ -21,7 +21,7 @@ export default function Home() {
           <p className="eyebrow"><span /> AIRPORT ARRIVALS, BETTER TOGETHER</p>
           <h1 id="hero-title">Land together.<br />Leave <em>together.</em></h1>
           <p className="intro">Same airport. Similar arrival. Somewhere close.<br />A shared cab for the part of the journey that comes next.</p>
-          <Link className="primary-link" href="/passenger">Plan your arrival <span aria-hidden="true">↗</span></Link>
+          <Link className="primary-link" href="/dashboard">Plan your arrival <span aria-hidden="true">↗</span></Link>
           <p className="availability">Shared rides depend on compatible passengers and approved, available drivers.</p>
         </div>
         <div className="journey-card" aria-label="Concept: Kochi Airport to a small Thrissur destination cluster">
