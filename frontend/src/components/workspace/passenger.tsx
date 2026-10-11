@@ -328,6 +328,7 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
             <UploadAssist key={draftVersion} api={api} disabled={busy || checkingFlight || loading || !profile} onBusy={setExtracting}
               onTicket={(details) => {
                 setDraft(draftFromTicket(details, profile?.display_name || accountName));
+                setError("");
                 setArrivalRecovery(false);
                 setPrintedArrival("");
                 setArrivalOffset("");
@@ -361,7 +362,9 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
               {arrivalRecovery && <div className="arrival-recovery">
                 <p><strong>Let’s confirm your landing.</strong></p>
                 <p className="quiet">Upload your full itinerary using Change ticket above. Or confirm the landing time printed on it below, and we’ll add 30 minutes for pickup.</p>
-                <label>Landing date and time on your itinerary<input type="datetime-local" value={printedArrival} onChange={(event) => { setPrintedArrival(event.target.value); patchDraft({ readyAt: "" }); }} /></label>
+                <label>Landing date and time on your itinerary<input type="datetime-local" value={printedArrival}
+                  onInput={(event) => { setPrintedArrival(event.currentTarget.value); patchDraft({ readyAt: "" }); }}
+                  onChange={(event) => { setPrintedArrival(event.target.value); patchDraft({ readyAt: "" }); }} /></label>
                 {knownArrivalOffset(flight.airport) ? <p className="quiet">Time at {flight.airport}, India (IST).</p> : <label>Arrival airport UTC offset<input placeholder="For example +04:00" value={arrivalOffset} pattern="[+-][0-9]{2}:[0-9]{2}" maxLength={6} onChange={(event) => { setArrivalOffset(event.target.value); patchDraft({ readyAt: "" }); }} /></label>}
                 <p className="quiet">Use the arrival airport’s time. Boarding and departure times cannot be used as landing times.</p>
               </div>}

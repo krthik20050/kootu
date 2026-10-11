@@ -210,7 +210,7 @@ describe("guided ride screens", () => {
     await user.click(screen.getByRole("button", { name: "Next →" }));
     await screen.findByText("Let’s confirm your landing.");
     expect(api).not.toHaveBeenCalledWith("/ride-requests", expect.objectContaining({ method: "POST" }));
-    fireEvent.change(screen.getByLabelText("Landing date and time on your itinerary"), { target: { value: "2026-10-12T00:15" } });
+    fireEvent.input(screen.getByLabelText("Landing date and time on your itinerary"), { target: { value: "2026-10-12T00:15" } });
     expect(screen.getByText("Time at COK, India (IST).")).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "Next →" }));
     await screen.findByRole("heading", { name: "Where should we drop you?" });
@@ -221,6 +221,30 @@ describe("guided ride screens", () => {
     await user.click(screen.getByRole("button", { name: "Find my ride →" }));
     await screen.findByText("One step closer.");
     expect(api).toHaveBeenCalledWith("/ride-requests", expect.objectContaining({ body: expect.objectContaining({ ready_at: "2026-10-11T19:15:00.000Z" }) }));
+  });
+
+  it("clears a missing-flight warning when a replacement itinerary supplies its arrival", async () => {
+    const user = userEvent.setup();
+    let uploads = 0;
+    const api = vi.fn(async (path) => {
+      if (path === "/me") return profile;
+      if (path === "/ride-requests") return [];
+      if (path === "/tickets/extract") return { details: { flight_number: "AI123", flight_date: "2026-10-11", arrival_airport: "COK", passengers: 1, luggage: 0, arrival_at: ++uploads === 2 ? "2026-10-11T08:06:00+05:30" : null } };
+      if (path.startsWith("/flights/arrival?")) throw new Error("No arrival found");
+      throw new Error(`Unexpected ${path}`);
+    }) as Api;
+    render(<Passenger api={api} />);
+    await waitFor(() => expect((screen.getByLabelText("Upload Your Ticket") as HTMLInputElement).disabled).toBe(false));
+    await user.upload(screen.getByLabelText("Upload Your Ticket"), new File(["PDF"], "boarding.pdf", { type: "application/pdf" }));
+    await screen.findByText("boarding.pdf");
+    await user.click(screen.getByRole("button", { name: "Next →" }));
+    await screen.findByText("No arrival found");
+    await user.upload(screen.getByLabelText("Upload Your Ticket"), new File(["PDF"], "itinerary.pdf", { type: "application/pdf" }));
+    await screen.findByText("itinerary.pdf");
+    expect(screen.queryByText("No arrival found")).toBeNull();
+    expect(screen.queryByText("Let’s confirm your landing.")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Next →" }));
+    await screen.findByRole("heading", { name: "Where should we drop you?" });
   });
 
   it("shows indeterminate extraction progress until the server actually succeeds", async () => {

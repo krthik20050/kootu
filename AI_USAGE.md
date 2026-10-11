@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 07:31 IST - Hosted large-file and real voice verification
+
+Codex verified authenticated hosted 6/19 MB fictional PDF uploads, extracted review, Next and destination search; anonymous backend proxy remains 401. Found stale flight error after replacing an itinerary and native date-input automation not committing state; cleared errors on successful extraction and added native input support. Verified real Sarvam on 63 seconds of generated fictional speech without database access. 40 frontend tests, lint/build/types and implementation CI passed; runtime dependency audit is clean, development glob-chain warnings remain documented. Original private ticket/phone recording and final repair hosted verification remain pending. No production synthetic ride save. Human review pending.
+
 ## 2026-10-11 07:25 IST - Ticket transport follow-up
 
 Codex repeated signed-in hosted testing and observed a direct upload transport failure after GET proxy recovery. Routed ticket/short writes through the external rewrite while preserving backend token checks, multipart boundaries and long audio/matching direct timeouts. Excluded only backend-proxy streams from frontend Clerk middleware. All 39 frontend tests, lint and production build/types passed; hosted large synthetic PDF verification follows. Fixed a regression assertion type error caught by build. No production synthetic booking/profile save submitted. Human review pending.

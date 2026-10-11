@@ -1,5 +1,12 @@
 # Change log
 
+## 2026-10-11 07:31 IST - Verify large uploads and repair recovery feedback
+
+- Implementation 06579c7 is live on the stable Vercel alias (deployment dpl_9VqeT3ND2UuYmoaovx86nAEvzJqu), with both CI jobs successful (run 38103509849). Real Clerk session accepted 6 MB and 19 MB fictional PDFs through the same-origin route, showed progress/extracted fields and advanced to destination. Real address search returned selectable Aluva results; no synthetic booking/profile save occurred. Anonymous proxied /me remains HTTP 401.
+- Deliberately missing flight ZZ9999 returned useful recovery. Replacing that ticket exposed stale flight-error text; successful extraction now clears it. Explicit native input handling supplements change events for printed landing time after browser automation could display an edit without committing it to React state. Live verification of this last repair follows deployment.
+- Live Sarvam successfully transcribed a 63-second fictional speech WAV across provider segments. This checks the longer server provider path, not target-phone microphone permission/recording or every language.
+- Validation: 40 frontend tests, lint, production build/types passed; 142 backend tests remain passing in CI. Production dependency audit found zero vulnerabilities; full audit reports five high entries in the development-only eslint-config-next glob chain, not resolved with a breaking auto-downgrade. Original private PDF, target phone and global matching optimality are not claimed verified.
+
 ## 2026-10-11 07:25 IST - Stabilize ticket upload transport
 
 - The signed-in hosted account loaded through the GET proxy, but a repeated direct PDF POST still failed at browser transport. Short writes and ticket uploads now use the fixed upstream external rewrite, retaining Bearer verification, no cookies and no automatic write replay. Long audio/matching requests retain direct routing to preserve timeout contracts beyond Vercel's 120-second external proxy timeout.
