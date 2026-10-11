@@ -104,3 +104,7 @@ Codex implemented honest progress feedback, automatic ticket-shaped review, expa
 ## 2026-10-11 06:38 IST - Automatic 30-minute pickup calculation
 
 Codex removed arrival/local-time inputs, changed the landing buffer to 30 minutes, added authenticated flight-arrival fallback and stale-timing invalidation, and updated contracts/tests/guides. Validated this milestone separately from concurrent routing/driver-location edits: 130 isolated backend and 28 frontend tests, style, contracts, lint/types/build. Real flight-provider lookup remains human verification; human review pending.
+
+## 2026-10-11 06:41 IST - Correct concurrent staging contamination
+
+Codex corrected two driver-location references accidentally included while staging the concurrently edited passenger component. Initial frontend CI/deploy failed while backend CI passed. Validated the corrected committed snapshot with 28 tests, lint/types and isolated build; driver work remains locally preserved. No history rewrite; corrective commit and fresh deployment checks. Human review pending.

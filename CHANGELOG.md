@@ -1,5 +1,10 @@
 # Change log
 
+## 2026-10-11 06:41 IST - Isolate passenger timing deployment
+
+- Removed two unfinished driver-location references from the committed passenger component after they slipped into the previous staged file during concurrent edits. The missing component/type caused frontend CI and Vercel to fail; backend CI passed. The in-progress driver-tracking implementation is preserved in the working tree for its own milestone.
+- Validation: exact committed frontend source minus those references passed 28 tests, lint/types; isolated production build verified with a temporary dependency-root override for the shared node_modules. No build configuration change is included in this commit. New production CI/deployment checks follow; human review pending.
+
 ## 2026-10-11 06:38 IST - Automatic pickup timing without time inputs
 
 - Removed the arrival/local-time field from ticket review and changed the automatic pickup buffer from 45 to 30 minutes after landing. UTC instants preserve timezone offsets and overnight transitions. Ticket arrival supplies timing directly; changing flight number/date/airport clears stale timing.

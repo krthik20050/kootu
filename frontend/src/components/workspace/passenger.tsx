@@ -16,7 +16,6 @@ import { VoicePreferences } from "./voice-preferences";
 import { ArrivalCelebration } from "./arrival-celebration";
 import { draftFromTicket, emptyPassengerDraft, readyFromArrival, type PassengerDraft } from "@/lib/ticket-draft";
 import { TicketReview } from "./ticket-review";
-import { DriverLocationPin } from "./driver-location";
 
 const active = new Set(["WAITING", "MATCHED", "ASSIGNED"]);
 
@@ -416,7 +415,6 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
                         </li>
                       ))}
                     </ol>
-                    {["ASSIGNED", "IN_PROGRESS"].includes(group.status) && <DriverLocationPin location={group.driver_location} />}
                   </div>
                 )}
                 <div className="entry-actions">
