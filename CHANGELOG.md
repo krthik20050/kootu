@@ -238,3 +238,8 @@ Recorded the completed implementation checkpoint `3a03e7ce8cf957b783bd9a954f951a
 - Repaired npm lockfile that caused CI clean-install failures. Files: frontend routes/components/package-lock/tests/README and root documentation; no backend implementation delta.
 - Validation: backend 142 tests passed with disposable database; Ruff and contract export check passed. Frontend 42 tests passed, lint/typecheck and production build passed; production dependency audit found zero vulnerabilities. Browser confirmed signed-out dashboard renders and asks for sign-in. GitHub CI and deployment validation pending at this checkpoint.
 - Limitations: authenticated hosted booking, physical camera/microphone/GPS were not exercised in this integration session. Local npm ci encountered a native module held by the existing server; npm install completed, and clean Linux install will be verified in CI.
+
+
+## 2026-10-11 07:56 IST — browser contrast correction
+
+Browser inspection found white-on-white link buttons in dark mode: the global anchor color overrode Tailwind utility colors. Moved the anchor reset into the base layer in frontend/src/app/globals.css. Production rebuild passed. Integration checkpoint 7e12571 passed both GitHub web/API runs and Vercel preview deployment; final CSS commit will receive its own checks. Authenticated device flows remain unverified.

@@ -162,3 +162,8 @@ Codex pushed `220d842`, verified successful CI and Vercel/Render rollout, checke
 - Codex inspected PR conflicts and CI failures, retained main's backend/contracts, connected chat to existing ticket/voice integrations, corrected API parameters and eligibility/profile behavior, preserved driver location, repaired lockfile, and added two behavioral chat tests.
 - Checks: 142 backend + 42 frontend tests passed; frontend lint/typecheck/build and backend Ruff/contracts passed. Production npm audit: zero vulnerabilities. Signed-out dashboard browser check passed.
 - Human review: requested integration authorized; implementation review and real-device signed-in end-to-end validation remain pending. No claim of live media-device testing.
+
+
+## 2026-10-11 07:56 IST — browser contrast correction
+
+Codex browser inspection caught unreadable dark-mode link buttons and fixed the CSS cascade. Production rebuild passed. GitHub web/API checks and Vercel preview passed for 7e12571. Human review and physical microphone/GPS testing remain pending.
