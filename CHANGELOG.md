@@ -1,5 +1,11 @@
 # Change log
 
+## 2026-10-11 06:49 IST - Geoapify live drop-off suggestions
+
+- Switched authenticated `/locations/search` from Google Geocoding to Geoapify Address Autocomplete, with India filtering, five validated results, bounded network errors and private `GEOAPIFY_API_KEY` configuration/readiness.
+- Chat searches after 3 characters and a 300ms pause, retaining stale-response protection, keyboard selection and stored coordinates. Added provider/OpenStreetMap attribution and setup guides/examples. Existing local key copied privately to backend; backend restarted.
+- Validation: Frontend lint/typecheck passed; Python parsing/import/startup passed; live Geoapify query returned 5 validated locations; health OK and location readiness true. Ruff unavailable in backend venv. No tests or signed-in browser checks run. Google Routes is still used for road-distance checks.
+
 ## 2026-10-11 06:27 IST - White workspace palette
 
 - Replaced beige/taupe theme colors with white surfaces, charcoal controls and neutral-gray dark mode across dashboard/request and overlays.

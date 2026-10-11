@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 06:49 IST - Geoapify autocomplete
+
+Codex replaced Google drop-off search with Geoapify using official autocomplete documentation, configured the existing private key in backend, updated chat attribution/debounce and setup docs, and restarted the API. Frontend lint/typecheck and Python parsing/startup passed; live provider query returned 5 validated results and location readiness true. Ruff unavailable; no tests or authenticated browser checks run. Human review pending.
+
 ## 2026-10-11 06:27 IST - White workspace palette
 
 Codex changed shared workspace theme tokens from beige to white/neutral gray. Source and whitespace inspected; no tests or browser checks run. Human review pending.

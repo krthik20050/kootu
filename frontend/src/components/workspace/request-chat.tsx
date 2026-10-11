@@ -121,7 +121,7 @@ export function RequestChat({
       } finally {
         if (live) setSearching(false);
       }
-    }, 400);
+    }, 300);
     return () => { live = false; clearTimeout(timer); };
   }, [api, draft.destinationName, draft.latitude, manualPin, stepIndex]);
 
@@ -246,11 +246,11 @@ export function RequestChat({
                 if (event.key === "Enter" && activeLocation >= 0) { event.preventDefault(); selectDestination(locations[activeLocation]); }
               }} /></label>
               {searching && <p role="status" className="chat-address-hint">Finding addresses…</p>}
-              {!searching && !draft.latitude && draft.destinationName.trim().length < 3 && <p className="chat-address-hint">Type at least 3 characters for Google Maps suggestions.</p>}
-              <ul id="dropoff-suggestions" role="listbox" className="chat-location-options" aria-label="Google Maps address suggestions" hidden={!locations.length}>{locations.map((place, index) => (
+              {!searching && !draft.latitude && draft.destinationName.trim().length < 3 && <p className="chat-address-hint">Type at least 3 characters for Geoapify suggestions.</p>}
+              <ul id="dropoff-suggestions" role="listbox" className="chat-location-options" aria-label="Geoapify address suggestions" hidden={!locations.length}>{locations.map((place, index) => (
                 <li key={place.place_id} role="presentation"><button id={`dropoff-option-${index}`} role="option" aria-selected={activeLocation === index} type="button" onClick={() => selectDestination(place)}><span>{place.name}</span><span aria-hidden="true">↗</span></button></li>
               ))}</ul>
-              {locations.length > 0 && <p className="chat-address-hint">Addresses from Google Maps · Choose your exact drop-off</p>}
+              {locations.length > 0 && <p className="chat-address-hint">Addresses from <a href="https://www.geoapify.com/" target="_blank" rel="noreferrer">Geoapify</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a> · Choose your exact drop-off</p>}
               <div className="chat-destination-actions">
                 <button className="chat-text-action" type="button" disabled={draft.destinationName.trim().length < 2} onClick={() => {
                   setManualPin(true); setSearching(false); setActiveLocation(-1); setError(""); setNotice("");

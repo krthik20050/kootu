@@ -33,6 +33,9 @@ def ready(request: Request) -> JSONResponse:
     checks = {
         "database": False,
         "authentication": bool(settings.clerk_issuer),
+        "location_search": bool(
+            settings.geoapify_api_key and settings.geoapify_api_key.get_secret_value()
+        ),
         "routing": bool(
             settings.google_maps_api_key and settings.google_maps_api_key.get_secret_value()
         ),

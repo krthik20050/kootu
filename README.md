@@ -94,7 +94,8 @@ Open `http://localhost:3000`. Use that same origin in `FRONTEND_URL`; `localhost
 | API `.env` | `DATABASE_URL` | PostgreSQL connection, migrations applied; [role setup](docs/database.md) |
 | API `.env` | `CLERK_ISSUER`, optional `CLERK_AUDIENCE` | Exact trusted instance origin; JWKS derived from it |
 | API `.env` | `BOOTSTRAP_ADMIN_SUBJECT` | Trusted operator's Clerk user ID; creates ADMIN after that user signs in |
-| API `.env` | `GOOGLE_MAPS_API_KEY` | Enable Routes API and Geocoding API for this server key |
+| API `.env` | `GOOGLE_MAPS_API_KEY` | Enable Routes API for road-distance checks |
+| API `.env` | `GEOAPIFY_API_KEY` | Geoapify Address Autocomplete API for live drop-off suggestions; server-only |
 | API `.env` | `GROQ_API_KEY`, `GROQ_MODEL` | Groq vision model with JSON mode and server validation |
 | API `.env` | `SARVAM_API_KEY`, `SARVAM_MODEL=saaras:v3` | Speech-to-text; browser recordings convert to mono 16 kHz WAV, up to two minutes, split into short provider requests |
 | API `.env` | `AVIATIONSTACK_API_KEY` | Plan with HTTPS flight lookup and the necessary coverage/date access |
@@ -200,7 +201,7 @@ On `/request`, “Scan ticket” opens a camera capture dialog beside “Record 
 
 Mobile `/request` chat now includes step navigation, tap-to-edit answers, arrival-date shortcuts and larger composer controls.
 
-The `/request` drop-off input now shows Google Maps address suggestions as you type, using the existing backend geocoding search; selecting a suggestion stores its map coordinates.
+The `/request` drop-off input shows Geoapify address suggestions after 3 characters and a 300ms pause; selecting a suggestion stores its coordinates. Set `GEOAPIFY_API_KEY` in `backend/.env` (or central `.environment/.env` before syncing). Google Routes remains responsible for road-distance checks.
 
 Chat submission: `/request` now sends confirmed flight/drop-off inputs and final-review pickup details to POST `/ride-requests`, with retry-safe request identifiers. Existing rides can seed a new draft but are not updated.
 

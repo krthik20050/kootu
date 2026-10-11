@@ -16,6 +16,7 @@ from pypdf.errors import PdfReadError
 
 from app.core.config import Settings
 from app.schemas.integrations import Coordinates, ExtractedFlight, RouteEstimate
+from app.schemas.responses import LocationResponse
 
 # PDFium is not thread-safe; FastAPI runs synchronous routes in a thread pool.
 pdf_lock = Lock()
@@ -69,32 +70,44 @@ class GoogleRouting:
         except (KeyError, IndexError, TypeError, ValueError, ValidationError) as error:
             raise HTTPException(502, "No usable road route was returned") from error
 
+
+class GeoapifyLocations:
+    def __init__(self, settings: Settings) -> None:
+        self.settings = settings
+
     def search(self, query: str) -> list[dict]:
-        key = require_key(self.settings.google_maps_api_key, "Google Maps")
-        with httpx.Client(timeout=10) as client:
-            response = client.get(
-                "https://maps.googleapis.com/maps/api/geocode/json",
-                params={"address": query, "components": "country:IN", "key": key},
-            )
-        data = provider_json(response, "Google Maps")
-        if data.get("status") == "ZERO_RESULTS":
-            return []
-        if data.get("status") != "OK":
-            raise HTTPException(502, "Location search is unavailable")
+        key = require_key(self.settings.geoapify_api_key, "Geoapify")
         try:
+            with httpx.Client(timeout=6) as client:
+                response = client.get(
+                    "https://api.geoapify.com/v1/geocode/autocomplete",
+                    params={
+                        "text": query.strip(),
+                        "filter": "countrycode:in",
+                        "lang": "en",
+                        "limit": 5,
+                        "format": "json",
+                        "apiKey": key,
+                    },
+                )
+        except httpx.RequestError as error:
+            # Never include the provider URL: it contains the private API key.
+            raise HTTPException(502, "Address search is unavailable; try again") from error
+        data = provider_json(response, "Geoapify")
+        try:
+            rows = data["results"]
+            if not isinstance(rows, list):
+                raise ValueError("Expected address list")
             return [
-                {
-                    "name": row["formatted_address"],
-                    "place_id": row["place_id"],
-                    "coordinates": Coordinates(
-                        latitude=row["geometry"]["location"]["lat"],
-                        longitude=row["geometry"]["location"]["lng"],
-                    ).model_dump(),
-                }
-                for row in data["results"][:5]
+                LocationResponse(
+                    name=row["formatted"],
+                    place_id=row["place_id"],
+                    coordinates=Coordinates(latitude=row["lat"], longitude=row["lon"]),
+                ).model_dump()
+                for row in rows[:5]
             ]
-        except (KeyError, TypeError, ValidationError) as error:
-            raise HTTPException(502, "Location search returned invalid data") from error
+        except (KeyError, TypeError, ValueError, ValidationError) as error:
+            raise HTTPException(502, "Address search returned invalid data") from error
 
 
 def pdf_ticket_content(document: bytes) -> list[dict]:
