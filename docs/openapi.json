@@ -132,10 +132,6 @@
       },
       "Body_audio_audio_transcribe_post": {
         "properties": {
-          "consent": {
-            "title": "Consent",
-            "type": "boolean"
-          },
           "file": {
             "contentMediaType": "application/octet-stream",
             "title": "File",
@@ -156,18 +152,13 @@
           }
         },
         "required": [
-          "file",
-          "consent"
+          "file"
         ],
         "title": "Body_audio_audio_transcribe_post",
         "type": "object"
       },
       "Body_ticket_tickets_extract_post": {
         "properties": {
-          "consent": {
-            "title": "Consent",
-            "type": "boolean"
-          },
           "file": {
             "contentMediaType": "application/octet-stream",
             "title": "File",
@@ -175,8 +166,7 @@
           }
         },
         "required": [
-          "file",
-          "consent"
+          "file"
         ],
         "title": "Body_ticket_tickets_extract_post",
         "type": "object"
@@ -277,7 +267,8 @@
         "type": "object"
       },
       "ExtractedFlight": {
-        "description": "Unconfirmed suggestions only. Excludes ticket numbers, names and document contents.",
+        "additionalProperties": false,
+        "description": "Unconfirmed booking suggestions. Never includes PNR or ticket numbers.",
         "properties": {
           "arrival_airport": {
             "anyOf": [
@@ -290,6 +281,44 @@
               }
             ],
             "title": "Arrival Airport"
+          },
+          "arrival_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arrival At"
+          },
+          "destination_name": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "minLength": 3,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destination Name"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
           },
           "flight_date": {
             "anyOf": [
@@ -314,6 +343,32 @@
               }
             ],
             "title": "Flight Number"
+          },
+          "luggage": {
+            "anyOf": [
+              {
+                "maximum": 12.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Luggage"
+          },
+          "passengers": {
+            "anyOf": [
+              {
+                "maximum": 8.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Passengers"
           }
         },
         "title": "ExtractedFlight",
@@ -976,7 +1031,7 @@
           },
           "notes": {
             "default": "",
-            "maxLength": 500,
+            "maxLength": 2000,
             "title": "Notes",
             "type": "string"
           },

@@ -9,7 +9,7 @@ Latest backend: [destination clusters and database architecture](docs/database-a
 - Passenger, driver and operator web workspaces connected to FastAPI, with Clerk bearer sessions and server-owned roles.
 - PostgreSQL/PostGIS persistence; deterministic grouping by airport, ready/wait window, whole-cluster destination proximity, seats, luggage, women-only policy, wheelchair spaces, child seats and pets. Google road-distance verification is required before a group is created.
 - Driver/vehicle operator approval, availability, expiring offers, atomic acceptance, passenger cancellation and trip start/completion. Exact drop-offs and private notes are available only to the assigned driver; other passengers receive aggregate group information.
-- Optional Groq ticket extraction (JPG/PNG or text PDF), user-confirmed autofill, and Sarvam WAV transcription with reviewed notes. Explicit structured needs affect matching; free text does not automatically reserve equipment.
+- Groq ticket-first autofill for JPG/PNG and PDFs (including scans, up to three pages): review editable flight details, passenger name and count before saving. Unknown flight fields stay empty. Continue through arrival review and destination steps. Dictate directly into the optional special-instructions box; Sarvam transcription appends automatically. Brief confetti follows a successful save. Explicit structured needs affect matching; free text does not automatically reserve equipment. [Flow, research and limits](docs/ticket-voice-intake.md).
 - Automatic Aviationstack flight polling adjusts ready times from the original baseline, preserves feasible groups, and releases incompatible/cancelled groups for rematching. A PostgreSQL advisory lock coordinates maintenance across processes; no queue service is required.
 - Generated OpenAPI/TypeScript contracts, SQL migration runner, PR template, GitHub CI and [collaboration guide](CONTRIBUTING.md).
 
@@ -96,15 +96,15 @@ Open `http://localhost:3000`. Use that same origin in `FRONTEND_URL`; `localhost
 | API `.env` | `BOOTSTRAP_ADMIN_SUBJECT` | Trusted operator's Clerk user ID; creates ADMIN after that user signs in |
 | API `.env` | `GOOGLE_MAPS_API_KEY` | Enable Routes API and Geocoding API for this server key |
 | API `.env` | `GROQ_API_KEY`, `GROQ_MODEL` | Groq vision model with JSON mode and server validation |
-| API `.env` | `SARVAM_API_KEY`, `SARVAM_MODEL=saaras:v3` | Speech-to-text; WAV under 30 seconds in this MVP |
+| API `.env` | `SARVAM_API_KEY`, `SARVAM_MODEL=saaras:v3` | Speech-to-text; browser recordings convert to mono 16 kHz WAV, up to two minutes, split into short provider requests |
 | API `.env` | `AVIATIONSTACK_API_KEY` | Plan with HTTPS flight lookup and the necessary coverage/date access |
 | API `.env` | `FRONTEND_URL`, `APP_ENV` | Exact origin; production requires HTTPS |
 
-Examples also expose configurable radius (3000m), seats/luggage (4 each), wait5–120 minutes, offer expiry300 seconds, and polling900 seconds. The web passenger form currently targets the default four-seat/four-luggage pilot policy. Provider usage can cost money; configure quotas/billing limits in the provider accounts. App limits per signed-in user per hour: ticket 20, audio 30, matching 30, destination search 100. Polling bounds each cycle to 30 active flight requests and 5 matching attempts.
+Examples also expose configurable radius (3000m), seats/luggage (4 each), wait5–120 minutes, offer expiry300 seconds, and polling900 seconds. The web passenger form targets the default six-seat/six-luggage pilot policy. Provider usage can cost money; configure quotas/billing limits in the provider accounts. App limits per signed-in user per hour: ticket 20, audio 30, matching 30, destination search 100. Polling bounds each cycle to 30 active flight requests and 5 matching attempts.
 
 `DISPATCH_HORIZON_MINUTES=30` (allowed 5–120) keeps advance requests waiting until close to readiness, instead of reserving today's fleet for a distant booking. Automatic matching skips expired/out-of-horizon requests and rotates by attempt time; flight polling rotates even after failures or empty results. Proposal expiry processes at most 100 groups per cycle. Road alternatives share a per-attempt budget of 12 directed calls under the default four-seat policy. These are bounded heuristics, not guaranteed wait times or global provider spending caps.
 
-Keys never go in Git, screenshots or chat. Public Next.js variables are baked into a build; rebuild after changing them. Raw tickets/audio are transient uploads, closed after processing; provider retention terms still apply. Consent is required before either upload is forwarded. Notes should contain only useful ride details.
+Keys never go in Git, screenshots or chat. Public Next.js variables are baked into a build; rebuild after changing them. Raw tickets/audio are transient uploads, closed after processing; provider retention terms still apply. Choosing a ticket or stopping microphone dictation initiates processing; there are no additional consent checkboxes in the booking flow. Notes should contain only useful ride details.
 
 ## Checks
 

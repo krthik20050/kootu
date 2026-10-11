@@ -1,149 +1,62 @@
 "use client";
 
-import { useState } from "react";
-import type {
-  ExtractedFlight,
-  TicketResponse,
-  TranscriptResponse,
-} from "@/lib/api/generated";
+import { useRef, useState } from "react";
+import type { ExtractedFlight, TicketResponse } from "@/lib/api/generated";
 import { message, type Api } from "./shared";
 
-export function UploadAssist({
-  api,
-  onTicket,
-  onNote,
-}: {
+export function UploadAssist({ api, onTicket, onBusy, disabled = false }: {
   api: Api;
   onTicket: (details: ExtractedFlight) => void;
-  onNote: (note: string) => void;
+  onBusy?: (busy: boolean) => void;
+  disabled?: boolean;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [transcript, setTranscript] = useState("");
-  async function upload(
-    event: React.FormEvent<HTMLFormElement>,
-    kind: "tickets" | "audio",
-  ) {
-    event.preventDefault();
-    setBusy(true);
+  const [filename, setFilename] = useState("");
+  const operation = useRef(false);
+
+  async function upload(file?: File) {
+    if (operation.current || !file) return;
     setError("");
-    const form = new FormData(event.currentTarget);
-    const input = event.currentTarget.elements.namedItem(
-      "file",
-    ) as HTMLInputElement;
-    const file = input.files?.[0];
-    if (
-      !(file instanceof File) ||
-      file.size === 0 ||
-      file.size > 5 * 1024 * 1024
-    ) {
-      setError("Choose a file of up to 5 MB.");
-      setBusy(false);
+    if (!file.size || file.size > 5 * 1024 * 1024) {
+      setError("Choose a PDF, JPG or PNG ticket under 5 MB.");
       return;
     }
-    form.set("file", file);
+    operation.current = true;
+    setBusy(true);
+    onBusy?.(true);
     try {
-      if (kind === "tickets") {
-        const result = await api<TicketResponse>("/tickets/extract", {
-          method: "POST",
-          body: form,
-          timeout: 45000,
-        });
-        onTicket(result.details);
-      } else {
-        const result = await api<TranscriptResponse>("/audio/transcribe", {
-          method: "POST",
-          body: form,
-          timeout: 45000,
-        });
-        setTranscript(result.transcript);
-      }
+      const body = new FormData();
+      body.set("file", file);
+      const result = await api<TicketResponse>("/tickets/extract", {
+        method: "POST", body, timeout: 45000,
+      });
+      onTicket(result.details);
+      setFilename(file.name);
     } catch (error) {
       setError(message(error));
     } finally {
+      operation.current = false;
       setBusy(false);
+      onBusy?.(false);
     }
   }
+
   return (
-    <details className="assist">
-      <summary>Have a ticket or a voice note?</summary>
-      <div className="assist-grid">
-        <form onSubmit={(event) => void upload(event, "tickets")}>
-          <h3>Read your ticket</h3>
-          <p>
-            Autofill the arrival details, then check them below. JPG, PNG or a
-            text PDF, up to 5 MB.
-          </p>
-          <label>
-            Ticket
-            <input
-              name="file"
-              type="file"
-              accept="image/jpeg,image/png,application/pdf"
-              required
-            />
-          </label>
-          <label className="check">
-            <input type="checkbox" name="consent" value="true" required />I
-            agree to send this ticket to Groq for extraction.
-          </label>
-          <button className="secondary" disabled={busy}>
-            Read ticket
-          </button>
-        </form>
-        <form onSubmit={(event) => void upload(event, "audio")}>
-          <h3>Tell us what you need</h3>
-          <p>
-            Upload a WAV voice note under 30 seconds. Review the transcript
-            before using it.
-          </p>
-          <label>
-            Voice note
-            <input name="file" type="file" accept="audio/wav,.wav" required />
-          </label>
-          <label className="check">
-            <input type="checkbox" name="consent" value="true" required />I
-            agree to send this recording to Sarvam for transcription.
-          </label>
-          <button className="secondary" disabled={busy}>
-            Transcribe note
-          </button>
-        </form>
-        {transcript && (
-          <div className="transcript">
-            <label>
-              Review your words
-              <textarea
-                value={transcript}
-                onChange={(event) => setTranscript(event.target.value)}
-                rows={4}
-              />
-            </label>
-            <p>
-              Keep notes within 500 characters. Select any seat or accessibility
-              requirements in the form too.
-            </p>
-            <button
-              className="secondary"
-              type="button"
-              disabled={transcript.length > 500}
-              onClick={() => onNote(transcript)}
-            >
-              Use these notes
-            </button>
-          </div>
-        )}
-      </div>
-      {busy && <p role="status">Reading your file…</p>}
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
-      <p className="quiet">
-        Uploads are processed for this request and are not saved by kootu. Your
-        provider’s own retention terms apply.
-      </p>
-    </details>
+    <div className="ticket-upload">
+      <label className={`upload-dropzone ${busy ? "is-reading" : ""}`}>
+        <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <path d="M14 7h14l7 7v27H14V7Z" stroke="currentColor" strokeWidth="2" />
+          <path d="M28 7v8h7M20 25h9M20 31h9" stroke="currentColor" strokeWidth="2" />
+        </svg>
+        <span>{busy ? "Reading your ticket…" : filename ? "Change ticket" : "Upload Your Ticket"}</span>
+        <small>PDF or photo</small>
+        <input className="upload-input" aria-label="Upload Your Ticket" type="file"
+          accept="image/jpeg,image/png,application/pdf" disabled={busy || disabled}
+          onChange={(event) => { void upload(event.target.files?.[0]); event.target.value = ""; }} />
+      </label>
+      {filename && !busy && <p className="ticket-file" role="status">✓ {filename}</p>}
+      {error && <p className="error" role="alert">{error} You can enter the details instead.</p>}
+    </div>
   );
 }

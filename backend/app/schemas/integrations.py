@@ -1,6 +1,6 @@
 from datetime import date
 
-from pydantic import BaseModel, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 
 class Coordinates(BaseModel):
@@ -14,8 +14,15 @@ class RouteEstimate(BaseModel):
 
 
 class ExtractedFlight(BaseModel):
-    """Unconfirmed suggestions only. Excludes ticket numbers, names and document contents."""
+    """Unconfirmed booking suggestions. Never includes PNR or ticket numbers."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     flight_number: str | None = Field(default=None, pattern=r"^[A-Z0-9]{2,3}[0-9]{1,4}$")
     flight_date: date | None = None
     arrival_airport: str | None = Field(default=None, pattern=r"^[A-Z]{3}$")
+    display_name: str | None = Field(default=None, min_length=1, max_length=80)
+    passengers: int | None = Field(default=None, ge=1, le=8, strict=True)
+    arrival_at: AwareDatetime | None = None
+    luggage: int | None = Field(default=None, ge=0, le=12, strict=True)
+    destination_name: str | None = Field(default=None, min_length=3, max_length=160)

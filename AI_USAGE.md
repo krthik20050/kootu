@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 05:51 IST - Safe GitHub update merge
+
+Codex fetched and merged the two incoming commits, preserving the local chat/dashboard design and unsaved changes via backup branch/stash. Resolved CSS/changelog conflicts by retaining both additions; retained incoming ticket-first UI separately instead of replacing the requested chat. Frontend lint/types passed; no tests run. Human review pending.
+
 ## 2026-10-11 05:39 IST - Submit chat ride requests
 
 Codex implemented typed chat-to-ride-request submission, final-review inputs for required missing details, validation, confirmation, retry idempotency, saved state and journey refresh. Kept the three chat questions and collected extra required fields only on review; did not fabricate pickup time or submit a real booking during development. Frontend lint/typecheck passed; no tests or live API booking checks run. Human review pending.
@@ -53,6 +57,10 @@ Codex integrated the React/shadcn dashboard supplied in the user's attachment on
 ## 2026-10-11 02:51 IST - Destination grouping and multi-user correctness
 
 Codex applied the user's city-cluster clarification, researched PostgreSQL concurrency/partial uniqueness and PostGIS clustering, and used two scoped agents for request-idempotency and lifecycle fixes. Added database architecture, synthetic 200-arrival and six-passenger tests, locking/expiry/readiness safeguards and migration 004. The isolated release snapshot passed all 100 tests on a dedicated local release-test database; lint/format/contracts passed. Applied migrations 003/004 to authorized Supabase after a schema-only backup and verified runtime access/index/RLS without exporting passenger data. Teammate voice/PDF/frontend working edits were preserved and excluded. Human review pending; no perfect-database or production-capacity claim.
+
+## 2026-10-11 02:51 IST - Ticket autofill and recorded preferences
+
+Codex inspected the existing Groq/Sarvam adapters, researched official provider/PDFium/browser documentation and MDN's public dictaphone pattern, then implemented ticket-first draft filling, scanned-PDF rendering, explicit review reset, microphone recording/WAV conversion and transcript review. No prebuilt application was imported. Added frontend/provider regressions and updated setup/API/research documentation. Applied Agent Reach, code-review, frontend/DevOps and product UI guidance; Exa was unconfigured and Context7 unavailable, so built-in web access supplied primary sources. Frontend lint/typecheck, 20 tests and production build passed; final backend suite passed 116 tests in a separate disposable database and updated provider suite passed 30 tests. A final shared-database run collided with another chat resetting its schema; an isolated rerun passed and the temporary database was removed. Corrected PDF resource management and test harness failures. Local key presence was checked without printing credentials; a synthetic ticket smoke attempt returned the expected missing-configuration error. No private ticket/audio was sent and no successful live call or new deployment is claimed. Human review pending; concurrent teammate changes were preserved.
 
 ## 2026-10-11 02:40 IST - Central environment setup
 
@@ -130,3 +138,7 @@ Codex connected the passenger, driver and operator screens, implemented reviewed
 ## 2026-10-11 01:05 IST - CI evidence
 
 Codex verified the public GitHub Actions result for the final implementation and recorded its exact SHA/run link. No implementation changed after that validated checkpoint. Human review and live account testing remain pending.
+
+## 2026-10-11 04:01 IST - Simpler booking flow
+
+At the user's direction Codex removed provider/consent and recording-panel clutter, implemented three guided booking steps, inline automatic Sarvam dictation, arrival-time/luggage/drop-off suggestions and a reduced-motion-aware save celebration. Researched official Sarvam API options and GOV.UK question-page patterns, retained bounded REST requests through lossless segmentation, updated contracts/docs and regression coverage. Human review pending. 119 backend and 23 frontend tests passed; lint/types/format/contracts/build passed. Synthetic mobile/desktop browser review found and corrected a Next-click validation race and native date event synchronization. Target-phone multilingual dictation and real signed-in rides remain unverified; temporary synthetic QA code removed.

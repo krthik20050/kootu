@@ -6,7 +6,7 @@ This folder is the starting point for teammates configuring external providers. 
 | --- | --- | --- |
 | Clerk | [clerk](clerk/README.md) | User sessions and verified identity |
 | Google Maps | [google-maps](google-maps/README.md) | Destination search and road-distance checks |
-| Groq | [grok](groq/README.md) | Confirmed flight ticket extraction |
+| Groq | [Groq](groq/README.md) | Ticket suggestions for passenger review |
 | Sarvam | [sarvam](sarvam/README.md) | Audio transcription for reviewed ride notes |
 | Aviationstack | [aviationstack](aviationstack/README.md) | Automatic flight status and delay updates |
 

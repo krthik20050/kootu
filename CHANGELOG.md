@@ -1,5 +1,11 @@
 # Change log
 
+## 2026-10-11 05:51 IST - Merge GitHub updates safely
+
+- Merged origin/main through `81b7dc6` with local dashboard/chat commits. Preserved both style sets and changelog entries. Kept `/request` on the local chat UI; retained the incoming ticket-first screen as `TicketPassenger` and directed its existing interaction checks to that component. Backend extraction, voice/PDF utilities and expanded contracts are included.
+- Validation: Frontend lint/typecheck passed before restoring unsaved work. No tests run. Local branch and stash backups created before merging.
+- Limitations: New ticket-first layout is available as source, not mounted at `/request`. Live camera/provider/booking checks remain unperformed.
+
 ## 2026-10-11 05:39 IST - Submit chat ride requests
 
 - Changed: Mapped chat flight/date/drop-off and coordinates into typed POST `/ride-requests`. Final review collects airport, pickup-ready time in IST on the arrival date, party/bag counts, maximum wait, optional requirements and explicit confirmation. Added stable retry UUIDs, submission locking, validation/error feedback, success/dashboard link and saved-journey refresh.
@@ -78,6 +84,14 @@
 - Limitations: All dashboard metrics, projects and activity are explicitly sample data; no backend integration. Recharts 2.15.4 matches the supplied chart API but is a deprecated major version. npm reports five high-severity advisories in the dependency tree.
 
 
+## 2026-10-11 04:01 IST - Guided ticket booking and inline dictation
+
+- Replaced the long passenger form with ticket upload, arrival review and destination/instructions steps. Removed provider explanations, consent checkboxes, WAV upload and separate transcript acceptance controls. The comment box has an inline microphone; stopping dictation appends editable text. Saved arrivals remain accessible, and adding another arrival clears the previous draft. Brief confetti follows successful persistence and respects reduced motion.
+- Added nullable timezone-aware arrival, booked luggage and explicit drop-off extraction fields. Suggest pickup readiness 45 minutes after arrival without guessing missing details. Review Next validates and confirms flight data. Updated schemas/contracts, passenger components/styles, intake research, README and provider/API guides.
+- Extended server dictation to 120 seconds using lossless 29-second WAV segmentation (at most five Sarvam calls); browser automatic stop is 118 seconds. Notes accept 2,000 characters; overlong transcripts remain visible until shortened. Failed segments fail the whole transcription, with retained browser audio for retry.
+- Validation: 119 backend tests passed in an isolated disposable PostgreSQL/PostGIS database; 23 frontend tests, Ruff/format, lint/types and contract checks passed. Production build passed. Synthetic local browser review at 325px and 1280px confirmed step navigation, inline mic, save completion and no horizontal overflow. Corrected a browser-only Next/button reuse validation race and native date input synchronization. Temporary QA route removed before the final production build; stale generated dev-route types initially blocked the build, and clearing that generated cache resolved it.
+- Limits: multilingual long dictation on target phones, real ticket accuracy and signed-in real rides remain unverified. Segmentation preserves all audio frames but recognition across word boundaries is not guaranteed. No new live paid provider request was made. Human review pending. Push/deployment verification follows.
+
 ## 2026-10-11 02:51 IST - Destination clusters and concurrent ride integrity
 
 - Updated matching to favor nearby destination pins and fuller feasible groups; six seats/six bags by default, always bounded by approved vehicle capacity. Filter fleet equipment before limiting, fetch driver/vehicle together and exclude a driver from their own passenger group. Added `docs/database-architecture.md` with ER diagram, invariants, what-if cases and explicit scaling limits.
@@ -85,6 +99,14 @@
 - Validation: deployable snapshot passed all 100 backend tests, lint/format and contract checks on a dedicated local release-test database. Synthetic scenario submitted 200 bookings using eight concurrent submitters, then five concurrent matching calls, producing one five-person group with no duplicate memberships. Six-seat fleet test grouped six nearby passengers. This is correctness evidence, not a production throughput benchmark.
 - Hosted DB: private schema-only backup completed; migrations 003 and 004 applied transactionally, new columns readable by runtime role, arrival unique index valid, RLS verified on nine application tables. No passenger table data exported. Initial full backup and credential-file copying were rejected by automatic approval review; safe schema/source-only alternatives were used.
 - Preserved teammate voice/PDF/frontend edits. A full mixed-workspace run saw two failures in their unfinished scanned-PDF code; the clean deployable snapshot uses committed provider code and passed. No AI-provider/frontend implementation included in this milestone. GitHub push/CI verification follows; live routing and completed human ride flow remain outstanding.
+
+## 2026-10-11 02:51 IST - Ticket-first autofill and voice preferences
+
+- Added prominent ticket intake, editable Groq suggestions for name/passenger count and existing flight fields, unknown-field clearing and flight confirmation reset on replacement or edit. Destination, pickup readiness and equipment remain explicit.
+- Added Sarvam microphone recording alongside preferences: language choice, 29-second automatic stop, WAV conversion, playback, consent, reviewed transcript and typed/upload fallback. Resource cleanup covers permission races and unmount.
+- Render one-to-three-page PDFs (including scans) through pinned pypdfium2, bound output image sizes, serialize PDFium calls, reject invalid/empty/truncated audio and validate provider output without returning PNRs or ticket numbers. Updated generated contracts, README, integration/API guides and docs/ticket-voice-intake.md with primary research sources.
+- Validation: frontend lint/typecheck and 20 tests passed; production build passed. Final backend run passed 116 tests in a separately created disposable database; focused provider suite passed 30 tests. A shared-database rerun failed because concurrent test runs reset the same schema; isolation resolved those failures. Ruff and generated-contract checks passed. Corrected PDFium page/bitmap cleanup and jsdom file upload tests during validation. Final frontend lint/typecheck, 20 tests and production build passed; final backend Ruff/format and generated-contract checks passed.
+- Limitations: local Groq/Sarvam settings have no usable keys; synthetic extraction returned 503 before a provider request. New live extraction, multilingual target-phone recording and signed-in end-to-end use are unverified. This change is local and has not been deployed. Human review pending. Preserved unrelated concurrent backend changes.
 
 ## 2026-10-11 02:40 IST - Central environment configuration
 
