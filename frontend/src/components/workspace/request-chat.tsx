@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Check, ChevronRight } from "lucide-react";
-import type { LocationResponse, ProfileResponse } from "@/lib/api/generated";
+import type { LocationResponse, ProfileResponse, RequestResponse } from "@/lib/api/generated";
 import { message, type Api } from "./shared";
 import { TicketCamera } from "./ticket-camera";
 import { VoiceRecorder } from "./voice-recorder";
@@ -29,19 +29,21 @@ export function RequestChat({
   profile,
   accountName,
   disabled,
+  initialRide,
 }: {
   api: Api;
   profile: ProfileResponse | null;
   accountName: string;
   disabled: boolean;
+  initialRide?: RequestResponse;
 }) {
   const [draft, setDraft] = useState<Draft>({
     displayName: profile?.display_name || accountName,
-    flightNumber: "",
-    flightDate: "",
-    destinationName: "",
-    latitude: "",
-    longitude: "",
+    flightNumber: initialRide?.flight_number || "",
+    flightDate: initialRide?.flight_date || "",
+    destinationName: initialRide?.destination_name || "",
+    latitude: initialRide ? String(initialRide.destination.latitude) : "",
+    longitude: initialRide ? String(initialRide.destination.longitude) : "",
   });
   const [stepIndex, setStepIndex] = useState(0);
   const [manualPin, setManualPin] = useState(false);
@@ -168,6 +170,7 @@ export function RequestChat({
       {question ? (
         <form className="request-chat-answer" onSubmit={handleContinue}>
           <fieldset className="chat-answer-fields" disabled={disabled}>
+          {initialRide && <p className="chat-notice">Editing a preview of your saved request. Changes here are not saved to your booking.</p>}
           {question.key === "flightNumber" && (
             <label className="chat-input-label">Flight number<input autoComplete="off" required pattern="[A-Za-z0-9]{2,3}[0-9]{1,4}" placeholder="AI123" value={draft.flightNumber} onChange={(event) => setValue("flightNumber", event.target.value.toUpperCase().replaceAll(" ", ""))} /></label>
           )}

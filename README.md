@@ -188,7 +188,7 @@ Authentication implementation checkpoint `4796756` passed [GitHub CI](https://gi
 
 All local app/provider/Clerk/Supabase administration settings are now collected in `.environment/.env`. Edit that ignored file, then run `.\backend\.venv\Scripts\python scripts/sync_env.py` from the root to generate the scoped runtime files. See [.environment/README.md](.environment/README.md). The sync command rejects duplicate/missing names and refuses to clear saved values with empty entries. Restart local apps after syncing. Hosted settings still require a separate approved sync.
 
-Dashboard preview: `/dashboard` now displays the supplied workspace UI with sample metrics, charts, projects and activity. It is a static preview, separate from backend ride data; see [frontend notes](frontend/README.md).
+Passenger dashboard: `/dashboard` uses authenticated ride/group APIs for upcoming rides, progress, vehicle assignment and history, with refresh, matching, cancellation and an edit-preview link. Driver name/pickup instructions are unavailable in the API; preview edits do not save bookings. See [frontend notes](frontend/README.md).
 
 The `/dashboard` preview supports light and dark themes using the header toggle, with a saved browser preference and system-theme default.
 

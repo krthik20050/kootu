@@ -20,6 +20,7 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [editRide, setEditRide] = useState<RequestResponse | undefined>();
 
   const load = useCallback(async () => {
     const [me, items] = await Promise.all([
@@ -47,6 +48,8 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
     setProfile(data.me);
     setRequests(data.items);
     setGroups(data.groups);
+    const editId = new URLSearchParams(window.location.search).get("edit");
+    setEditRide(data.items.find(ride => ride.id === editId));
   }, []);
 
   useEffect(() => {
@@ -95,11 +98,12 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
     <>
       <div className="workspace-grid">
         <RequestChat
-          key={profile?.id || "loading"}
+          key={`${profile?.id || "loading"}:${editRide?.id || "new"}`}
           api={api}
           profile={profile}
           accountName={accountName}
           disabled={busy}
+          initialRide={editRide}
         />
         <aside className="ride-list" aria-labelledby="rides-title">
           <div className="aside-title">

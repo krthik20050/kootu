@@ -1,5 +1,13 @@
 # Change log
 
+## 2026-10-11 05:32 IST - Passenger dashboard features
+
+- Changed: Replaced the sample dashboard route with authenticated upcoming rides, status timeline, group counts/departure, assigned vehicle, history and recent updates. Added request/refresh/match actions, inline cancellation confirmation and edit-preview links that prefill the existing three-field chat from an owned request. Shared responsive navigation/theme with `/request`; allowlisted dashboard sign-in returns.
+- Why: User asked to add all suggested passenger dashboard sections/actions.
+- Validation: Frontend typecheck passed; lint issue corrected and rerun. No tests or live authenticated browser/API checks run.
+- Limitations: API does not expose driver names/contact or pickup instructions; UI states this. Edit remains preview-only under the accepted chat scope, and no booking update endpoint was added. Ride creation remains disabled in chat. Sample component remains unused source.
+
+
 ## 2026-10-11 05:25 IST - Google drop-off suggestions
 
 - Changed: Drop-off input now automatically searches after 3 characters with a 400ms debounce, ignores stale responses, and displays Google Maps address results with loading/empty/error states. Selecting a result saves its coordinates; keyboard arrows/Enter and manual pin fallback are supported.

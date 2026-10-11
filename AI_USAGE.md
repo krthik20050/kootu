@@ -1,5 +1,10 @@
 # AI usage record
 
+## 2026-10-11 05:32 IST - Passenger dashboard features
+
+Codex implemented the passenger dashboard using existing authenticated ride/group endpoints, with real metrics/history, status progress, vehicle details, matching/cancellation/refresh and chat preview editing. Reused the theme/frame and added dashboard auth return support. Missing driver/pickup fields are labelled unavailable; preview edits do not change saved requests. Frontend typecheck passed and lint rerun after correction. No tests or live browser/API checks run. Human review pending.
+
+
 ## 2026-10-11 05:25 IST - Google drop-off suggestions
 
 Codex connected typing in the drop-off input to the existing Google Maps geocoding search endpoint, added debounce/stale-response handling, keyboard selection and loading feedback, and retained manual coordinates. No public Google key or new provider integration added. Frontend lint/typecheck run; no tests or live provider/browser checks run. Human review pending.

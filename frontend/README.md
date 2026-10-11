@@ -8,11 +8,11 @@ Do not edit `src/lib/api/generated.ts` manually; regenerate it using `backend/ex
 
 Authentication uses dedicated `/sign-in` and `/sign-up` pages with opaque Clerk forms, Google/email options, and allowlisted return destinations for passenger, driver and operator workspaces. The provider sets explicit colors and the global CSS supplies shadcn card/popover/input tokens. Existing Clerk names prefill the passenger name when no saved profile name exists. Run `npx next typegen` before typecheck after moving routes to refresh `.next` generated types.
 
-### Dashboard preview
+### Passenger dashboard
 
-Visit `/dashboard` for the supplied App1 workspace dashboard: sample statistics, a task chart, project progress and activity. Sidebar navigation works on mobile and desktop, and the search button filters projects. All dashboard data is static sample content, separate from ride records. UI components live in `src/components/ui`, with sample data and navigation in `app-1-utils`. Radix UI, Lucide, CVA and Recharts support the supplied component; Recharts 2.15.4 is pinned for its v2 chart API compatibility.
+Visit `/dashboard` for your authenticated passenger dashboard: upcoming rides, ride progress, group passenger counts/departure, assigned vehicle, completed/cancelled history and recent group events. Refresh runs manually and every 15 seconds while visible. Waiting requests can be matched; eligible requests can be cancelled after confirmation. “Edit preview” opens the existing request chat prefilled from an owned request; it does not save booking changes. Driver names/contact and pickup instructions are not exposed by the current API and are labelled unavailable. No sample metrics are shown. The original supplied App1 component remains available as source but is no longer mounted at this route.
 
-The dashboard header has a light/dark mode toggle. It follows your system preference until you choose a mode, then remembers that choice in browser storage. The theme covers the chart and mobile sidebar and is scoped to `/dashboard`.
+The dashboard header has a light/dark mode toggle. It follows your system preference until you choose a mode, then remembers that choice in browser storage. The preference is shared with `/request` and applies to cards and mobile navigation.
 
 The request workspace uses the dashboard's blue/neutral theme, responsive sidebar and header, and shared light/dark preference. Its chat, ticket upload controls and saved journey list follow the active theme.
 

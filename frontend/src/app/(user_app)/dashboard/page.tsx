@@ -1,5 +1,5 @@
-import App1 from "@/components/ui/app-1";
+import { PassengerDashboard } from "@/components/workspace/passenger-dashboard";
 
 export default function DashboardPage() {
-  return <App1 />;
+  return <PassengerDashboard />;
 }
