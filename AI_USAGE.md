@@ -154,3 +154,11 @@ Codex corrected two driver-location references accidentally included while stagi
 ### 2026-10-11 06:48 IST - Maps rollout follow-up
 
 Codex pushed `220d842`, verified successful CI and Vercel/Render rollout, checked hosted readiness and location endpoints, and added explicit upload exclusions. The signed-out passenger page loads; authenticated phone GPS was not exercised. Environment sync tests passed and production dependency audit returned zero advisories. Human review pending.
+
+
+## 2026-10-11 07:54 IST — PR #1 integration review
+
+- Task: adopt passenger frontend while protecting image/voice and core backend services.
+- Codex inspected PR conflicts and CI failures, retained main's backend/contracts, connected chat to existing ticket/voice integrations, corrected API parameters and eligibility/profile behavior, preserved driver location, repaired lockfile, and added two behavioral chat tests.
+- Checks: 142 backend + 42 frontend tests passed; frontend lint/typecheck/build and backend Ruff/contracts passed. Production npm audit: zero vulnerabilities. Signed-out dashboard browser check passed.
+- Human review: requested integration authorized; implementation review and real-device signed-in end-to-end validation remain pending. No claim of live media-device testing.

@@ -229,3 +229,12 @@ Record each meaningful project change during the event, newest first. Update thi
 ## 2026-10-11 01:05 IST - Remote validation handoff
 
 Recorded the completed implementation checkpoint `3a03e7ce8cf957b783bd9a954f951a59060e21f8` and its passing GitHub Actions run in submission/validation docs. Both web and API jobs passed, including 53 backend and 8 frontend checks. Documentation-only change; local links and whitespace verified. Participant/organizer submission details remain for the team.
+
+
+## 2026-10-11 07:54 IST — integrate passenger PR without backend regression
+
+- Integrated PR #1 dashboard/chat/clock UI with current main; resolved conflicts by preserving all current backend, migrations, environment examples, API client/proxy and generated contracts. Kept `/passenger` ticket-guided flow and linked new dashboard from home.
+- Replaced chat's local-only voice preview with existing transcription, reused robust 20 MB ticket extraction, cleared replaced ticket fields, corrected flight query to `number`, preserved profile/eligibility updates, added driver-location pins and guarded overlapping background loads.
+- Repaired npm lockfile that caused CI clean-install failures. Files: frontend routes/components/package-lock/tests/README and root documentation; no backend implementation delta.
+- Validation: backend 142 tests passed with disposable database; Ruff and contract export check passed. Frontend 42 tests passed, lint/typecheck and production build passed; production dependency audit found zero vulnerabilities. Browser confirmed signed-out dashboard renders and asks for sign-in. GitHub CI and deployment validation pending at this checkpoint.
+- Limitations: authenticated hosted booking, physical camera/microphone/GPS were not exercised in this integration session. Local npm ci encountered a native module held by the existing server; npm install completed, and clean Linux install will be verified in CI.
