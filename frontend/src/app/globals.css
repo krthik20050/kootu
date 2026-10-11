@@ -501,6 +501,43 @@ button:disabled { opacity: .5; cursor: wait; }
 
 .location-sharing { margin-block: 1rem; padding-block: 1rem; border-top: 1px solid var(--border); }
 .location-sharing p { margin-block: .5rem; }
+
+/* Driver shell keeps the PR's monochrome layout scoped away from passenger pages. */
+.driver-dashboard { display: flex; min-height: 100svh; background: var(--background); color: var(--foreground); }
+.driver-desktop-sidebar { width: 240px; flex-shrink: 0; background: #111; color: #fafafa; }
+.driver-sidebar { position: sticky; top: 0; display: flex; min-height: 100svh; flex-direction: column; gap: 28px; padding: 28px 20px; background: #111; color: #fafafa; }
+.driver-brand { font-size: 32px; font-weight: 750; letter-spacing: -.06em; }
+.driver-sidebar .eyebrow { color: #a3a3a3; }
+.driver-sidebar nav { display: flex; flex-direction: column; gap: 8px; }
+.driver-sidebar nav a { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; color: #bdbdbd; font-size: 14px; }
+.driver-sidebar nav a[aria-current=page], .driver-sidebar nav a:hover { background: #fafafa; color: #171717; }
+.driver-passenger-link { margin-top: auto; font-size: 13px; padding: 12px; }
+.driver-content { flex: 1; min-width: 0; }
+.driver-header { display: flex; align-items: center; gap: 16px; border-bottom: 1px solid var(--border); padding: 20px 32px; background: var(--card); }
+.driver-header .eyebrow { margin: 0 0 4px; }
+.driver-header-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.driver-header button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--foreground); }
+.driver-header .driver-menu { display: none; }
+.driver-main { max-width: 1440px; margin: auto; padding: 32px; }
+.driver-greeting { margin: 0 0 20px; color: var(--muted-foreground); }
+.driver-panel, .driver-dashboard .onboarding, .driver-dashboard .ride-list, .driver-dashboard .workspace-grid > section { border: 1px solid var(--border); border-radius: 18px; padding: 24px; background: var(--card); }
+.driver-panel p { line-height: 1.7; }
+.driver-panel .action { margin-top: 16px; }
+.driver-hero { border: 1px solid var(--border); border-radius: 24px; background: var(--card); padding: 32px; margin-bottom: 24px; }
+.driver-dashboard .driver-hero h1 { font-size: clamp(28px, 3vw, 44px); }
+.driver-hero em { color: var(--foreground); font-style: normal; }
+.driver-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.driver-metrics h3 { font-size: 13px; color: var(--muted-foreground); }
+.driver-metric-value { font-size: 30px; font-weight: 650; margin: 10px 0 0; }
+.driver-dashboard .action { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+.driver-dashboard .secondary, .driver-dashboard input { background: var(--background); color: var(--foreground); border-color: var(--border); }
+.driver-dashboard .workspace-grid:not(.driver-view-overview) { grid-template-columns: minmax(0, 1fr); }
+.driver-dashboard [hidden] { display: none; }
+.driver-mobile-sidebar { padding: 0; background: #111; }
+.driver-dashboard .quiet { color: var(--muted-foreground); }
+.driver-dashboard .auth-button { background: var(--card); color: var(--foreground); }
+@media(max-width: 1023px) { .driver-desktop-sidebar { display: none; } .driver-header .driver-menu { display: inline-flex; } .driver-main { padding: 20px; } .driver-header { padding: 16px 20px; } }
+@media(max-width: 680px) { .driver-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .driver-panel { padding: 16px; } .driver-dashboard .workspace-grid { grid-template-columns: minmax(0, 1fr); } .driver-hero { padding: 24px; } }
 /* Clock picker composed from the existing shadcn Sheet, Button, Input and Label. */
 .request-workspace .clock-time-trigger { width: 100%; min-height: 48px; justify-content: flex-start; gap: 10px; }
 .clock-time-trigger > span:last-child { margin-left: auto; }

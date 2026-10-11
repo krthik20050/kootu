@@ -243,3 +243,14 @@ Recorded the completed implementation checkpoint `3a03e7ce8cf957b783bd9a954f951a
 ## 2026-10-11 07:56 IST — browser contrast correction
 
 Browser inspection found white-on-white link buttons in dark mode: the global anchor color overrode Tailwind utility colors. Moved the anchor reset into the base layer in frontend/src/app/globals.css. Production rebuild passed. Integration checkpoint 7e12571 passed both GitHub web/API runs and Vercel preview deployment; final CSS commit will receive its own checks. Authenticated device flows remain unverified.
+
+
+## 2026-10-11 08:12 IST — integrate driver dashboard PR #2
+
+- Resolved shared CSS conflict while preserving passenger styles and all current backend implementation/contracts. Adopted the monochrome driver sidebar/header and responsive navigation; connected pages to existing Clerk-authenticated DriverDesk operations.
+- Removed prototype sample profiles/trips/receipts/notifications, localhost gateway probes, local-only availability changes and unsupported sync promises. Earnings/payment/support submission remain explicitly unimplemented.
+- Added real overview counts and filtered offers/trips/history; retained operator approval, vehicle registration, manifest, device location and trip lifecycle controls. Prevented overlapping background reads and stale responses; account failures no longer masquerade as onboarding.
+- Added four driver UI regression tests and a complete media-to-trip API integration test using disposable PostGIS and stubbed external providers. Files: driver routes/components, scoped globals.css, driver.tsx, frontend/tests/driver-dashboard.test.tsx, backend/tests/test_media_to_trip.py and documentation.
+- Pass 1: 142 backend and 42 existing frontend tests passed, lint/typecheck/build/contracts passed. Pass 2: 143 backend and 46 frontend tests passed after new integration cases; final build/browser and clean remote CI follow. Browser found and fixed dark-mode sign-in contrast. Physical microphone/GPS and real-provider full booking remain unverified.
+
+- Mobile browser verification: 390px viewport has no horizontal overflow; drawer opens, focuses and navigates to profile. Fixed header sign-in return destinations for explicitly allowlisted driver subpages; added redirect-security regression cases. Production npm audit: zero vulnerabilities.

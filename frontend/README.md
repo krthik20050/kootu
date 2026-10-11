@@ -45,3 +45,8 @@ Matching requires compatible passenger requests, eligible vehicles and backend G
 ## Clock-style pickup picker
 
 Pickup-ready time opens a clock picker built from the installed shadcn Sheet, Button, Input and Label primitives. Select hours/minutes on the dial or type exact values, choose AM/PM, fine-tune by five minutes, then apply. Cancel dismisses changes. A flight-suggestion shortcut restores landing plus 30 minutes when available. The panel shows the pickup date in IST and preserves midnight rollover; it uses a mobile bottom sheet, centered desktop panel and the shared light/dark theme. No new library or API configuration is needed.
+
+
+## Driver dashboard
+
+The driver route group uses `components/driver-dashboard/AppShell.tsx` and the existing authenticated `DriverDesk`. Overview, profile/vehicles, pending offers, active trips and history share the same service operations. Backend failures show actionable retry states instead of driver onboarding or fabricated data. Background polling does not overlap, and old polling responses cannot overwrite a mutation. The sidebar uses a focus-managed mobile drawer; theme choice stays scoped to the dashboard. Earnings/support capabilities that the API does not expose are explicitly unavailable.

@@ -1,0 +1,3 @@
+import AppShell from "@/components/driver-dashboard/AppShell";
+import Link from "next/link";
+export default function Page() { return <AppShell title="Driver help"><section className="driver-panel"><h2>Driver help</h2><p>Register your licence and vehicle under Profile & vehicles. An operator must approve both before you can go available. Accept a compatible group under Ride requests, then use My trips to view drop-offs, share your location, start and complete the trip. For account or document review, contact your event operator directly. Online support-ticket submission is not available.</p><Link className="action" href="/driver">Return to driver overview</Link></section></AppShell>; }

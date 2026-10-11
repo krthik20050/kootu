@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError } from "@/lib/api/client";
 import type {
   DriverResponse,
@@ -12,7 +12,11 @@ import type {
 import { localTime, message, readable, type Api } from "./shared";
 import { DriverLocationShare } from "./driver-location";
 
-export function DriverDesk({ api }: { api: Api }) {
+export type DriverView = "overview" | "profile" | "offers" | "trips" | "history";
+
+export function DriverDesk({ api, view = "overview" }: { api: Api; view?: DriverView }) {
+  const operation = useRef(false);
+  const revision = useRef(0);
   const [driver, setDriver] = useState<DriverResponse | null>(null);
   const [vehicles, setVehicles] = useState<VehicleResponse[]>([]);
   const [offers, setOffers] = useState<OfferResponse[]>([]);
@@ -61,28 +65,30 @@ export function DriverDesk({ api }: { api: Api }) {
       ),
     );
     setClock(Date.now());
+    setError("");
   }, []);
   useEffect(() => {
     let live = true;
-    void load()
+    let fetching = false;
+    const refresh = () => {
+      if (fetching || operation.current) return;
+      fetching = true;
+      const current = revision.current;
+      void load()
       .then((data) => {
-        if (live) apply(data);
+        if (live && current === revision.current) apply(data);
       })
       .catch((error) => {
-        if (live) setError(message(error));
+        if (live && current === revision.current) setError(message(error));
       })
       .finally(() => {
+        fetching = false;
         if (live) setLoading(false);
       });
+    };
+    refresh();
     const timer = setInterval(() => {
-      if (!document.hidden)
-        void load()
-          .then((data) => {
-            if (live) apply(data);
-          })
-          .catch((error) => {
-            if (live) setError(message(error));
-          });
+      if (!document.hidden) refresh();
     }, 15000);
     return () => {
       live = false;
@@ -90,6 +96,9 @@ export function DriverDesk({ api }: { api: Api }) {
     };
   }, [load, apply]);
   async function run(action: () => Promise<void>) {
+    if (operation.current) return;
+    operation.current = true;
+    revision.current++;
     setBusy(true);
     setError("");
     try {
@@ -98,6 +107,7 @@ export function DriverDesk({ api }: { api: Api }) {
     } catch (error) {
       setError(message(error));
     } finally {
+      operation.current = false;
       setBusy(false);
     }
   }
@@ -133,9 +143,16 @@ export function DriverDesk({ api }: { api: Api }) {
       formElement.reset();
     });
   }
+  const visibleOffers = offers.filter(offer => {
+    const group = groups[offer.group_id];
+    if (view === "offers") return offer.status === "PENDING" && Date.parse(offer.expires_at) > clock;
+    if (view === "trips") return group && ["ASSIGNED", "IN_PROGRESS"].includes(group.status);
+    if (view === "history") return group ? ["COMPLETED", "CANCELLED"].includes(group.status) : offer.status !== "PENDING" || Date.parse(offer.expires_at) <= clock;
+    return true;
+  });
   return (
     <>
-      <div className="workspace-title">
+      {view === "overview" && <div className="workspace-title driver-hero">
         <p className="eyebrow">THE DRIVER DESK</p>
         <h1>
           A full cab.
@@ -147,8 +164,10 @@ export function DriverDesk({ api }: { api: Api }) {
           the seats, luggage and needs you can support.
         </p>
       </div>
+      }
+      {view === "overview" && driver && <div className="driver-metrics">{[["Pending offers", offers.filter(item => item.status === "PENDING" && Date.parse(item.expires_at) > clock).length], ["Active trips", Object.values(groups).filter(item => ["ASSIGNED", "IN_PROGRESS"].includes(item.status)).length], ["Completed rides", Object.values(groups).filter(item => item.status === "COMPLETED").length], ["Approved vehicles", vehicles.filter(item => item.approved).length]].map(([label, value]) => <section key={label} className="driver-panel"><h3>{label}</h3><p className="driver-metric-value">{value}</p></section>)}</div>}
       {loading && <p role="status">Loading your driver account…</p>}
-      {!loading && !driver && (
+      {!loading && !driver && !error && (
         <form className="onboarding" onSubmit={onboarding}>
           <h2>Join as a driver</h2>
           <p>
@@ -174,8 +193,8 @@ export function DriverDesk({ api }: { api: Api }) {
         </form>
       )}
       {driver && (
-        <div className="workspace-grid">
-          <section>
+        <div className={`workspace-grid driver-view-${view}`}>
+          <section hidden={!["overview", "profile"].includes(view)}>
             <div className="driver-availability">
               <h2>Your availability</h2>
               <p className="status">{readable(driver.verification_status)}</p>
@@ -307,7 +326,7 @@ export function DriverDesk({ api }: { api: Api }) {
               </fieldset>
             </form>
           </section>
-          <aside className="ride-list">
+          <aside className="ride-list" hidden={view === "profile"}>
             <div className="aside-title">
               <p className="eyebrow">OFFERS & TRIPS</p>
               <button
@@ -318,14 +337,13 @@ export function DriverDesk({ api }: { api: Api }) {
                 Refresh
               </button>
             </div>
-            <h2>Your groups</h2>
-            {!offers.length && (
+            <h2>{view === "history" ? "Past offers & trips" : view === "trips" ? "Active trips" : view === "offers" ? "Pending ride offers" : "Your groups"}</h2>
+            {!visibleOffers.length && (
               <p className="empty">
-                New groups appear here when you and an approved vehicle are
-                available.
+                {view === "history" ? "Completed trips and closed offers will appear here." : view === "trips" ? "No assigned or in-progress trips. Accepted offers will appear here." : "New groups appear here when you and an approved vehicle are available."}
               </p>
             )}
-            {offers.map((offer) => {
+            {visibleOffers.map((offer) => {
               const group = groups[offer.group_id];
               const expired = Date.parse(offer.expires_at) <= clock;
               return (
@@ -491,6 +509,7 @@ export function DriverDesk({ api }: { api: Api }) {
           <p className="error" role="alert">
             {error}
           </p>
+          <button className="secondary" disabled={busy} onClick={() => void run(async () => {})}>Retry connection</button>
         </div>
       )}
     </>
