@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { CarFront, Radio, ArrowUpRight } from "lucide-react";
 import { ApiError } from "@/lib/api/client";
 import type {
   DriverResponse,
@@ -153,16 +155,10 @@ export function DriverDesk({ api, view = "overview" }: { api: Api; view?: Driver
   return (
     <>
       {view === "overview" && <div className="workspace-title driver-hero">
-        <p className="eyebrow">THE DRIVER DESK</p>
-        <h1>
-          A full cab.
-          <br />
-          <em>A clear route.</em>
-        </h1>
-        <p>
-          Keep your vehicle’s capacity accurate. You’ll receive groups that fit
-          the seats, luggage and needs you can support.
-        </p>
+        <div><p className="eyebrow">YOUR DAY ON THE ROAD</p>
+        <h2>Ready for your next ride.</h2>
+        <p>Manage your availability, keep your fleet ready and review incoming groups.</p></div>
+        <Link href="/driver/profile" className="secondary">Manage fleet <ArrowUpRight size={16} aria-hidden="true" /></Link>
       </div>
       }
       {view === "overview" && driver && <div className="driver-metrics">{[["Pending offers", offers.filter(item => item.status === "PENDING" && Date.parse(item.expires_at) > clock).length], ["Active trips", Object.values(groups).filter(item => ["ASSIGNED", "IN_PROGRESS"].includes(item.status)).length], ["Completed rides", Object.values(groups).filter(item => item.status === "COMPLETED").length], ["Approved vehicles", vehicles.filter(item => item.approved).length]].map(([label, value]) => <section key={label} className="driver-panel"><h3>{label}</h3><p className="driver-metric-value">{value}</p></section>)}</div>}
@@ -196,8 +192,8 @@ export function DriverDesk({ api, view = "overview" }: { api: Api; view?: Driver
         <div className={`workspace-grid driver-view-${view}`}>
           <section hidden={!["overview", "profile"].includes(view)}>
             <div className="driver-availability">
-              <h2>Your availability</h2>
-              <p className="status">{readable(driver.verification_status)}</p>
+              <div className="driver-section-heading"><span className="driver-section-icon"><Radio size={20} aria-hidden="true" /></span><h2>Your availability</h2><span className="status">{readable(driver.verification_status)}</span></div>
+              <div className="driver-availability-state" data-available={driver.available}><span aria-hidden="true" />{driver.available ? "Available for rides" : "Currently offline"}</div>
               <p>
                 {driver.available
                   ? "You are available for new offers."
@@ -217,8 +213,9 @@ export function DriverDesk({ api, view = "overview" }: { api: Api; view?: Driver
               >
                 {driver.available ? "Go unavailable" : "Go available"}
               </button>
+              {driver.verification_status !== "APPROVED" && <p className="quiet">Operator approval is required before you can go available.</p>}
             </div>
-            <h2>Your vehicles</h2>
+            <div className="driver-section-heading"><span className="driver-section-icon"><CarFront size={20} aria-hidden="true" /></span><h2>Your vehicles</h2></div>
             {vehicles.length === 0 && (
               <p className="empty">
                 Add a vehicle to submit it for operator review.
@@ -257,7 +254,7 @@ export function DriverDesk({ api, view = "overview" }: { api: Api; view?: Driver
                 </button>
               </article>
             ))}
-            <form onSubmit={addVehicle}>
+            {view === "overview" ? <Link className="secondary driver-fleet-link" href="/driver/profile">Add or manage vehicles <ArrowUpRight size={16} aria-hidden="true" /></Link> : <form onSubmit={addVehicle}>
               <fieldset disabled={busy}>
                 <legend>Add a vehicle</legend>
                 <label>
@@ -324,7 +321,7 @@ export function DriverDesk({ api, view = "overview" }: { api: Api; view?: Driver
                 </label>
                 <button className="secondary">Submit vehicle for review</button>
               </fieldset>
-            </form>
+            </form>}
           </section>
           <aside className="ride-list" hidden={view === "profile"}>
             <div className="aside-title">

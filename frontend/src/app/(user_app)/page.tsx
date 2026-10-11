@@ -11,7 +11,7 @@ export default function Home() {
     <a className="skip-link" href="#main">Skip to content</a>
     <header className={styles.header}>
       <Link href="/" className={styles.logo} aria-label="kootu home">kootu<span /></Link>
-      <nav className={styles.nav} aria-label="Main navigation"><a href="#how-it-works">How it works</a><a href="#drive">For drivers</a></nav>
+      <nav className={styles.nav} aria-label="Main navigation"><Link href="/dashboard">Passenger portal</Link><Link href="/driver">Driver portal</Link><a href="#how-it-works">How it works</a></nav>
       <div className={styles.account}>{process.env.NEXT_PUBLIC_AUTH_ENABLED === "true" ? <HomeAccount /> : <Link href="/onboarding">Get started <ArrowUpRight size={16} aria-hidden="true" /></Link>}</div>
     </header>
     <main id="main">
@@ -21,6 +21,7 @@ export default function Home() {
           <h1 id="hero-title">Your flight ends.<br />The company<br /><span>doesn’t have to.</span></h1>
           <p className={styles.intro}>Find people landing around the same time, heading your way. Share the next leg from the airport.</p>
           <Link className={styles.primary} href={passengerHref}>Register as a passenger <ArrowUpRight size={19} aria-hidden="true" /></Link>
+          <p className={styles.driverEntry}>Already a passenger? <Link href="/dashboard">Open passenger dashboard <span aria-hidden="true">↗</span></Link></p>
           <p className={styles.driverEntry}>Behind the wheel? <Link href={driverHref}>Register as a driver <span aria-hidden="true">↗</span></Link></p>
         </div>
         <figure className={styles.routeFigure}>

@@ -57,3 +57,6 @@
 @media (max-width: 900px) { .hero { gap: 4%; }.hero h1 { font-size: 52px; }.nav { gap: 20px; }.how { gap: 6%; }.primary { gap: 18px; padding: 16px 18px; } }
 @media (max-width: 700px) { .header { padding: 20px 6%; gap: 14px; }.nav { display: none; }.logo { font-size: 32px; }.account { font-size: 12px; gap: 10px; }.account > a { padding: 11px 14px; }.hero { grid-template-columns: minmax(0,1fr); padding: 40px 6% 52px; gap: 42px; }.hero h1 { font-size: clamp(45px,9.4vw,62px); }.intro { font-size: 16px; }.routeFigure { max-width: 480px; width: 100%; }.how { margin: 0 6%; padding: 42px 0 56px; grid-template-columns: minmax(0,1fr); gap: 32px; }.sectionIntro > svg { display: none; }.sectionIntro h2 { margin-bottom: 0; }.drive { grid-template-columns: minmax(0,1fr); padding: 44px 6%; gap: 24px; }.footer { padding: 28px 6%; flex-wrap: wrap; }.footer p { order: 3; width: 100%; margin: 0; }.steps li { gap: 20px; } }
 @media (prefers-reduced-motion: reduce) { .primary,.driverButton { transition: none; } }
+
+@media (min-width:701px) and (max-width:1100px) { .nav { gap:16px; font-size:12px; }.header { gap:18px; }.account { font-size:12px; gap:8px; }.account > a { padding:10px 12px; } }
+@media (max-width:420px) { .account > a { max-width:180px; font-size:11px; gap:8px; }.header { gap:10px; } }

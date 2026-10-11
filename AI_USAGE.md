@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 09:05 IST - Passenger access and driver presentation repair
+
+Codex traced unstyled driver controls to a missing workspace class, repaired shared form scope and refined responsive light/dark presentation. Added explicit passenger portal links and role-specific account labels, simplified driver overview and compacted onboarding. Used a temporary local visual fixture to inspect DriverDesk and its availability interaction without changing hosted data; removed it before build. Frontend tests (50), types and production build passed. Independent specialist review found no blocking regression; its touch-target recommendation was applied. Live follow-up and human review remain pending.
+
 ## 2026-10-11 08:50 IST - Hosted and provider follow-up
 
 Codex verified deployment 256a978, both successful CI jobs, hosted health/readiness and anonymous denial, and real passenger role redirects plus ticket extraction. Repeated isolated full ride lifecycle with real Groq/Geoapify and a separate real Sarvam synthetic-speech check; the disposable local database was removed. Updated SUBMISSION with the actual verified checkpoint. Three full automated passes succeeded in total; no production synthetic bookings or real payments were created. Full hosted multi-account/device journey and human review remain pending.

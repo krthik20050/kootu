@@ -1,5 +1,12 @@
 # Change log
 
+## 2026-10-11 09:05 IST - Fix portal discovery and driver workspace CSS
+
+- Made passenger and driver portal entries explicit on the homepage and replaced generic signed-in My workspace with the database-role-specific dashboard name. Passenger navigation/header now identifies the passenger workspace.
+- Fixed missing workspace form styling in the driver AppShell. Refined light/dark semantic colors, spacing, headers, input focus/size, approval badges and availability states. Moved the add-vehicle form to Profile & vehicles while preserving availability controls and API calls. Compact account selection no longer inherits full-screen empty-state height.
+- Browser-checked the actual DriverDesk component with a temporary local-only fixture at 1440px desktop (dark) and 390px mobile (light); availability interaction succeeded, vehicle inputs measured at least 44px tall and no horizontal overflow. Removed the fixture before production build.
+- Validation: 50 frontend tests passed; TypeScript and production build passed. Backend logic and persisted roles unchanged. Independent specialist review found no blocking regression; coarse-pointer controls retain 44px targets. Hosted verification follows deployment; human review pending.
+
 ## 2026-10-11 08:50 IST - Verify deployed role separation
 
 - Implementation 256a97888e9b81dd7d0b01534a2e7f994819d589 deployed successfully on Vercel; Render OpenAPI exposes /me/role. GitHub Actions run 38107237139 passed both jobs, providing a third full automated pass after two local runs (148 backend, 50 frontend tests). Environment helper tests passed 3/3; npm production dependency audit found zero vulnerabilities.

@@ -35,7 +35,7 @@ Built from scratch for **DevDay Exchange Community Hackathon: Kochi, 10–11 Oct
 
 ## A short demo
 
-Use separate passenger and driver accounts; changing the URL cannot change an account's role.
+Use separate passenger and driver accounts; changing the URL cannot change an account's role. The homepage names both portal entries explicitly: passengers use `/dashboard` and drivers use `/driver`. A signed-in account sees its own named dashboard link. Driver vehicle registration lives under **Profile & vehicles**; the overview focuses on availability, fleet status and ride offers.
 
 1. Register a driver, add a vehicle, and have the designated operator review and approve both at `/admin`. Set both available.
 2. Register two passengers. Use `/request` for conversational intake or `/passenger` for ticket-guided intake. Confirm compatible upcoming arrivals and nearby drop-offs.

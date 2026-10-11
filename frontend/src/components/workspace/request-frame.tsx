@@ -13,7 +13,7 @@ function RequestNavigation({ onNavigate, area }: { onNavigate?: () => void; area
   return <div className="flex h-full flex-col gap-8 p-5">
     <Link href="/" className="flex items-center gap-3 text-xl font-semibold"><span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground"><Layers className="size-5" /></span>kootu<span className="text-primary">.</span></Link>
     <nav aria-label="Workspace" className="flex flex-col gap-2">
-      <p className="px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Workspace</p>
+      <p className="px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Passenger workspace</p>
       <Link href="/dashboard" aria-current={area === "dashboard" ? "page" : undefined} onClick={onNavigate} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium ${area === "dashboard" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"}`}><LayoutDashboard className="size-4" />Dashboard</Link>
       <Link href="/request" aria-current={area === "request" ? "page" : undefined} onClick={onNavigate} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium ${area === "request" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"}`}><Plane className="size-4" />Request a ride</Link>
       <Link href="/passenger" onClick={onNavigate} className="px-3 py-2 text-sm text-muted-foreground">Ticket-guided booking</Link>
@@ -31,7 +31,7 @@ function RequestLayout({ children, area }: { children: ReactNode; area: "request
     <Sheet open={open} onOpenChange={toggle}><SheetContent side="left" data-theme={theme} className="app1-dashboard w-72 p-0 md:hidden"><SheetTitle className="sr-only">Request navigation</SheetTitle><RequestNavigation area={area} onNavigate={toggle} /></SheetContent></Sheet>
     <SidebarInset className="min-w-0">
       <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 border-b bg-background px-4 sm:px-6">
-        <SidebarTrigger aria-label="Toggle navigation" /><h1 className="truncate text-lg font-semibold">{area === "dashboard" ? "Your dashboard" : "Request a ride"}</h1>
+        <SidebarTrigger aria-label="Toggle navigation" /><h1 className="truncate text-lg font-semibold">{area === "dashboard" ? "Passenger dashboard" : "Request a ride"}</h1>
         <div className="ml-auto flex shrink-0 items-center gap-2"><Button variant="ghost" size="icon" aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={toggleTheme}>{theme === "dark" ? <Sun /> : <Moon />}</Button>{process.env.NEXT_PUBLIC_AUTH_ENABLED === "true" && <AuthControls />}</div>
       </header>
       <main id="workspace" className="workspace request-workspace-content">{children}</main>

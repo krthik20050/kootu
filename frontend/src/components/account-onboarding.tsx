@@ -59,7 +59,7 @@ function AccountSession() {
     finally { saving.current = false; }
   }
   const target = preferred === "PASSENGER" || preferred === "DRIVER" ? `/onboarding?role=${preferred}` : "/onboarding";
-  return <><header className="site-header"><Link href="/" className="wordmark">kootu<span className="brand-dot" /></Link><AuthControls /></header><main className="workspace" style={{ maxWidth: "48rem" }}>
+  return <><header className="site-header"><Link href="/" className="wordmark">kootu<span className="brand-dot" /></Link><AuthControls /></header><main className="workspace account-setup">
     <p className="eyebrow">YOUR KOOTU ACCOUNT</p><h1>How will you travel?</h1>
     <p>Passenger and driver accounts have separate workspaces. Your choice is saved to your account and used every time you sign in.</p>
     {error && <div role="alert"><p>{error}</p>{ready !== userId && <button className="action" onClick={() => { setError(""); setAttempt(value => value + 1); }}>Try again</button>}</div>}
