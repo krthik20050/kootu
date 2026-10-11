@@ -1,5 +1,9 @@
 # Change log
 
+## 2026-10-11 09:53 IST - Verify Plan a ride repair live
+
+Implementation 7ae24dae97bdb4d49db891e34e24e2e9845c0f75 deployed successfully on Vercel; CI 38111301003 passed both frontend and backend jobs. Verified signed-in /request at desktop 1280px and phone 390px. Desktop input, upload and action-row edges match; chat/form overflow is visible rather than nested scrolling, and phone has no horizontal overflow. Exercised an unsaved draft through arrival, manual destination pin and review on the live page, then discarded it. Confirmed /passenger retains a single 680px desktop guided-intake column. Saved screenshots locally and left a fresh /request page open. No ride, profile or payment data was submitted. Human review pending.
+
 ## 2026-10-11 09:50 IST - Repair Plan a ride alignment across booking steps
 
 - Fixed missing flex/grid structure in the request assistant header, messages and navigation controls. Replaced fixed-height nested chat/form scrolling with natural document scrolling. Scoped booking CSS now aligns labels, inputs, compact ticket upload, review rows, paired fields and Back/Continue controls; mobile uses a single field column. No request, ticket, voice or backend API logic changed.
