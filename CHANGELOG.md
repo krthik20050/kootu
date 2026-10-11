@@ -1,5 +1,9 @@
 # Change log
 
+## 2026-10-11 09:20 IST - Live passenger demo verification
+
+Implementation 104eac3f5b5a08761232af3f0fa947eb0a99e388 deployed successfully; CI run 38109548135 passed both jobs (148 backend tests and all frontend tests). Verified the signed-in passenger /dashboard with reorganized top bar on desktop and at 390px, with no horizontal overflow. Both homepage portal links remain visible at mobile width. Verified a passenger visiting /driver stays on the driver URL with the explicit account-check and return/sign-in actions, without loading driver controls or redirecting. Driver-to-passenger and conflicting onboarding behavior are covered by regression tests. Kept the live passenger dashboard open for the demo. No account roles or ride data changed. Human review pending.
+
 ## 2026-10-11 09:17 IST - Preserve passenger portal intent
 
 - Fixed the cause of passenger URLs opening a driver dashboard: RoleBoundary and explicit onboarding links no longer silently redirect an already-assigned opposite role. A clear account-check screen keeps the requested portal visible and provides sign-out/sign-in for the requested role, with retry handling. Unassigned and signed-out entry preserve passenger/driver intent. Database roles and backend authorization are unchanged.
