@@ -48,3 +48,37 @@ def test_production_requires_https_frontend() -> None:
         Settings(app_env="production", _env_file=None)
     settings = Settings(app_env="production", frontend_url="https://kootu.example", _env_file=None)
     assert settings.frontend_url == "https://kootu.example"
+
+
+@pytest.mark.parametrize(
+    "origin,allowed", [("https://kootu.example", True), ("https://untrusted.example", False)]
+)
+def test_unexpected_upload_error_remains_readable_only_to_trusted_origin(origin, allowed):
+    from app.api import integrations
+    from app.core.auth import Identity, verify_token
+    from app.core.rate_limit import provider_budget
+
+    application = create_app(
+        Settings(app_env="test", frontend_url="https://kootu.example", _env_file=None)
+    )
+    application.dependency_overrides[verify_token] = lambda: Identity("synthetic-test")
+    application.dependency_overrides[provider_budget] = lambda: None
+    original = integrations.extract_ticket
+
+    def fail(*args):
+        raise RuntimeError("PRIVATE DOCUMENT DETAILS")
+
+    integrations.extract_ticket = fail
+    try:
+        with TestClient(application, raise_server_exceptions=False) as client:
+            response = client.post(
+                "/tickets/extract",
+                files={"file": ("ticket.pdf", b"%PDF-synthetic", "application/pdf")},
+                headers={"Origin": origin},
+            )
+        assert response.status_code == 500
+        assert response.json() == {"detail": "Internal server error"}
+        assert (response.headers.get("access-control-allow-origin") == origin) is allowed
+        assert "PRIVATE" not in response.text
+    finally:
+        integrations.extract_ticket = original

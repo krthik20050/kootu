@@ -54,3 +54,12 @@ describe("authenticated API client", () => {
     );
   });
 });
+
+
+it("distinguishes a slow server from a disconnected browser", async () => {
+  vi.stubEnv("NEXT_PUBLIC_API_URL", "https://api.example");
+  vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new DOMException("expired", "TimeoutError")));
+  await expect(apiRequest("/tickets/extract", "token")).rejects.toThrow("server took too long");
+  vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
+  await expect(apiRequest("/tickets/extract", "token")).rejects.toThrow("Could not reach kootu");
+});

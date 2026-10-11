@@ -47,7 +47,7 @@ export function VoicePreferences({ api, value, onChange, onBusy }: {
     const body = new FormData();
     body.set("file", file);
     const result = await api<TranscriptResponse>("/audio/transcribe", {
-      method: "POST", body, timeout: 180000,
+      method: "POST", body, timeout: 750000,
     });
     if (live.current) {
       const text = [latest.current.trim(), result.transcript.trim()].filter(Boolean).join("\n");
@@ -113,7 +113,7 @@ export function VoicePreferences({ api, value, onChange, onBusy }: {
       };
       recording.start(1000);
       setState("recording");
-      timer.current = setTimeout(() => stop(), 118000);
+      timer.current = setTimeout(() => stop(), 598000);
     } catch (error) {
       stop(true);
       operation.current = false;

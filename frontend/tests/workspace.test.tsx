@@ -74,7 +74,7 @@ describe("guided ride screens", () => {
     }) as Api;
     render(<Passenger api={api} />);
     await waitFor(() => expect((screen.getByLabelText("Upload Your Ticket") as HTMLInputElement).disabled).toBe(false));
-    await user.upload(screen.getByLabelText("Upload Your Ticket"), new File(["PDF"], "first.pdf", { type: "application/pdf" }));
+    await user.upload(screen.getByLabelText("Upload Your Ticket"), new File([new Uint8Array(6 * 1024 * 1024)], "first.pdf", { type: "application/pdf" }));
     await screen.findByText(/first.pdf/);
     await user.click(screen.getByRole("button", { name: "Next →" }));
     expect((screen.getByLabelText("Your name") as HTMLInputElement).value).toBe("Demo Traveller");

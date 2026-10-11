@@ -63,7 +63,10 @@ export async function apiRequest<T = unknown>(
       cache: "no-store",
       signal: AbortSignal.timeout(options.timeout || REQUEST_TIMEOUT_MS),
     });
-  } catch {
+  } catch (error) {
+    if (typeof error === "object" && error !== null && "name" in error &&
+      ["TimeoutError", "AbortError"].includes(String(error.name)))
+      throw new Error("The server took too long to respond. Try again; your details are still here.");
     throw new Error(
       "Could not reach kootu. Check your connection and try again.",
     );

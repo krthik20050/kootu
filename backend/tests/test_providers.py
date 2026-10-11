@@ -157,7 +157,7 @@ def test_invalid_ticket_rejected(document, kind):
         providers.ticket_content(document, kind)
 
 
-@pytest.mark.parametrize("document", [b"not audio", wav_bytes(121)], ids=["invalid", "too-long"])
+@pytest.mark.parametrize("document", [b"not audio", wav_bytes(601)], ids=["invalid", "too-long"])
 def test_invalid_or_long_audio_rejected(document):
     with pytest.raises(HTTPException) as caught:
         providers.transcribe_audio(
@@ -360,3 +360,49 @@ def test_arrival_timezone_and_luggage_are_validated():
         ExtractedFlight(arrival_at="2026-10-12T01:30:00")
     with pytest.raises(ValidationError):
         ExtractedFlight(luggage=-1)
+
+
+def test_digital_pdf_uses_embedded_text_without_native_rendering(monkeypatch):
+    from pypdf import PdfWriter
+    from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
+
+    writer = PdfWriter()
+    page = writer.add_blank_page(width=600, height=800)
+    font = DictionaryObject(
+        {
+            NameObject("/Type"): NameObject("/Font"),
+            NameObject("/Subtype"): NameObject("/Type1"),
+            NameObject("/BaseFont"): NameObject("/Helvetica"),
+        }
+    )
+    page[NameObject("/Resources")] = DictionaryObject(
+        {NameObject("/Font"): DictionaryObject({NameObject("/F1"): writer._add_object(font)})}
+    )
+    content = DecodedStreamObject()
+    content.set_data(
+        b"BT /F1 12 Tf 10 700 Td (DEMO FLIGHT TICKET AI123 ARRIVAL COK 11 OCT 2026 "
+        b"AT 10:30 NAME DEMO TRAVELLER PASSENGERS TWO) Tj ET"
+    )
+    page[NameObject("/Contents")] = writer._add_object(content)
+    output = io.BytesIO()
+    writer.write(output)
+
+    def unexpected(*args):
+        pytest.fail("Readable digital tickets must not enter native rendering")
+
+    monkeypatch.setattr(providers.pdfium, "PdfDocument", unexpected)
+    result = providers.ticket_content(output.getvalue(), "application/pdf")
+    assert result[0]["type"] == "text"
+    assert "AI123" in result[0]["text"]
+    assert "DEMO TRAVELLER" in result[0]["text"]
+
+
+def test_ten_minute_dictation_is_bounded_and_keeps_every_frame():
+    parts = providers.audio_segments(wav_bytes(600))
+    assert len(parts) == 21
+    frames = 0
+    for part in parts:
+        with wave.open(io.BytesIO(part)) as audio:
+            assert audio.getnframes() / audio.getframerate() <= 29
+            frames += audio.getnframes()
+    assert frames == 600 * 8000

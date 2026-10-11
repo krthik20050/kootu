@@ -1,5 +1,12 @@
 # Change log
 
+## 2026-10-11 05:59 IST - PDF upload connection errors and larger intake limits
+
+- Reproduced a failure in the actual upload endpoint's error path: Starlette's outer error handler returned HTTP 500 without CORS headers, causing browsers to show the generic network message. Added the configured exact-origin headers to unexpected-error responses only; untrusted origins remain rejected and private exception details remain hidden. Added upload regression tests for both origins.
+- Read digital ticket PDF text first to avoid unnecessary native rendering; scanned/mixed tickets keep the vision rendering path. Increased ticket/audio upload bounds from 5 to 20 MB, dictation from two to ten minutes, and ticket timeout from 45 to 90 seconds. Voice retains lossless 29-second provider chunks (at most 21), and the client allows 750 seconds for all chunks. Distinguish abort/timeouts from network failures while preserving drafts and retry audio.
+- Updated integration/API research and setup docs, generated contracts and tests. Validation: 123 backend tests passed in an isolated disposable PostgreSQL/PostGIS database; 24 frontend tests and production build passed. Ruff/format, lint/types and contract checks verified before commit. Larger-upload test uses a 6 MB PDF fixture; digital-PDF test proves native rendering is skipped, and a ten-minute WAV recovers every frame in 21 bounded segments.
+- Live diagnostics: API health 200, trusted-origin preflight 200 and readiness database/auth/ticket/transcription configured; Google routing remains missing. The user reported the failure on a PDF, but did not supply the document; the exact document/provider exception and new authenticated live extraction remain unverified. No private Clerk user-directory data read: automatic approval review rejected that unnecessary diagnostic lookup; continued with public checks and synthetic fixtures. Human review pending. Deployment verification follows.
+
 ## 2026-10-11 04:01 IST - Guided ticket booking and inline dictation
 
 - Replaced the long passenger form with ticket upload, arrival review and destination/instructions steps. Removed provider explanations, consent checkboxes, WAV upload and separate transcript acceptance controls. The comment box has an inline microphone; stopping dictation appends editable text. Saved arrivals remain accessible, and adding another arrival clears the previous draft. Brief confetti follows successful persistence and respects reduced motion.

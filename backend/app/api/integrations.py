@@ -33,7 +33,10 @@ def locations(
 
 
 @router.post(
-    "/tickets/extract", response_model=TicketResponse, dependencies=[Depends(provider_budget)]
+    "/tickets/extract",
+    response_model=TicketResponse,
+    dependencies=[Depends(provider_budget)],
+    description="Extract tickets up to 20 MB using PDF text or vision for scans.",
 )
 def ticket(
     request: Request,
@@ -42,7 +45,9 @@ def ticket(
 ) -> dict:
     try:
         result = extract_ticket(
-            request.app.state.settings, read_bounded(file, 5 * 1024 * 1024), file.content_type or ""
+            request.app.state.settings,
+            read_bounded(file, 20 * 1024 * 1024),
+            file.content_type or "",
         )
         return {"details": result.model_dump(), "confirmation_required": True}
     finally:
@@ -50,7 +55,10 @@ def ticket(
 
 
 @router.post(
-    "/audio/transcribe", response_model=TranscriptResponse, dependencies=[Depends(provider_budget)]
+    "/audio/transcribe",
+    response_model=TranscriptResponse,
+    dependencies=[Depends(provider_budget)],
+    description="Transcribe WAV dictation up to ten minutes, split into short provider requests.",
 )
 def audio(
     request: Request,
@@ -62,7 +70,7 @@ def audio(
 ) -> dict:
     try:
         result = transcribe_audio(
-            request.app.state.settings, read_bounded(file, 5 * 1024 * 1024), language
+            request.app.state.settings, read_bounded(file, 20 * 1024 * 1024), language
         )
         return {**result, "confirmation_required": True}
     finally:

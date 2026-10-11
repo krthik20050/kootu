@@ -18,8 +18,8 @@ export function UploadAssist({ api, onTicket, onBusy, disabled = false }: {
   async function upload(file?: File) {
     if (operation.current || !file) return;
     setError("");
-    if (!file.size || file.size > 5 * 1024 * 1024) {
-      setError("Choose a PDF, JPG or PNG ticket under 5 MB.");
+    if (!file.size || file.size > 20 * 1024 * 1024) {
+      setError("Choose a PDF, JPG or PNG ticket under 20 MB.");
       return;
     }
     operation.current = true;
@@ -29,7 +29,7 @@ export function UploadAssist({ api, onTicket, onBusy, disabled = false }: {
       const body = new FormData();
       body.set("file", file);
       const result = await api<TicketResponse>("/tickets/extract", {
-        method: "POST", body, timeout: 45000,
+        method: "POST", body, timeout: 90000,
       });
       onTicket(result.details);
       setFilename(file.name);

@@ -1,7 +1,7 @@
 /** Encode decoded browser audio as mono 16 kHz PCM WAV for Sarvam. */
 export function encodeWav(audio: AudioBuffer): ArrayBuffer {
-  if (!Number.isFinite(audio.duration) || audio.duration <= 0 || audio.duration > 120)
-    throw new Error("Record a nonempty dictation of up to two minutes.");
+  if (!Number.isFinite(audio.duration) || audio.duration <= 0 || audio.duration > 600)
+    throw new Error("Record a nonempty dictation of up to ten minutes.");
   const rate = 16000;
   const length = Math.floor(audio.duration * rate);
   const output = new ArrayBuffer(44 + length * 2);

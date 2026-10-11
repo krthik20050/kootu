@@ -18,7 +18,7 @@ describe("Sarvam WAV conversion", () => {
     expect(view.getInt16(46, true)).toBe(32767);
     expect(view.getInt16(48, true)).toBe(-32768);
   });
-  it.each([0, 121, NaN])("rejects invalid or long decoded recordings (%s)", (duration) => {
+  it.each([0, 601, NaN])("rejects invalid or long decoded recordings (%s)", (duration) => {
     expect(() => encodeWav(audio(duration))).toThrow();
   });
   it("accepts dictation longer than 30 seconds", () => {

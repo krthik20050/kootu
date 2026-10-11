@@ -104,7 +104,22 @@ def pdf_ticket_content(document: bytes) -> list[dict]:
         reader = PdfReader(io.BytesIO(document))
         if reader.is_encrypted or not 1 <= len(reader.pages) <= 3:
             raise HTTPException(422, "Use an unencrypted ticket PDF of one to three pages")
-        # Render every page so scanned pages and visual arrival/departure labels survive.
+        # Digital tickets already contain text. Avoid native rasterization for these
+        # files; scans (or a mix of scanned/text pages) still use the vision path.
+        try:
+            pages = [
+                (page.extract_text(extraction_mode="layout") or "").strip() for page in reader.pages
+            ]
+        except (ValueError, KeyError, TypeError, AttributeError, PdfReadError):
+            pages = []
+        if pages and all(len(text) >= 80 for text in pages):
+            if sum(len(text) for text in pages) > 30000:
+                raise HTTPException(422, "Use the ticket pages rather than a longer document")
+            return [
+                {"type": "text", "text": f"Ticket page {index + 1}:\n{text}"}
+                for index, text in enumerate(pages)
+            ]
+        # Render every page of a scan so visual arrival/departure labels survive.
         content = []
         with pdf_lock, pdfium.PdfDocument(document) as pdf:
             for index in range(len(pdf)):
@@ -217,8 +232,8 @@ def audio_segments(document: bytes) -> list[bytes]:
             frames = audio.getnframes()
             rate = audio.getframerate()
             channels, width = audio.getnchannels(), audio.getsampwidth()
-            if frames / rate > 120:
-                raise HTTPException(422, "Please keep a single dictation within two minutes")
+            if frames / rate > 600:
+                raise HTTPException(422, "Please keep a single dictation within ten minutes")
             pcm = audio.readframes(frames)
             if frames <= 0 or len(pcm) != frames * channels * width:
                 raise HTTPException(422, "The recording is empty or incomplete. Try again")

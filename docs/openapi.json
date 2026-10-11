@@ -1538,6 +1538,7 @@
     },
     "/audio/transcribe": {
       "post": {
+        "description": "Transcribe WAV dictation up to ten minutes, split into short provider requests.",
         "operationId": "audio_audio_transcribe_post",
         "requestBody": {
           "content": {
@@ -2392,6 +2393,7 @@
     },
     "/tickets/extract": {
       "post": {
+        "description": "Extract tickets up to 20 MB using PDF text or vision for scans.",
         "operationId": "ticket_tickets_extract_post",
         "requestBody": {
           "content": {

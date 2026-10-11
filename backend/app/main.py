@@ -49,7 +49,14 @@ async def validation_error_handler(request: Request, error: RequestValidationErr
 async def unexpected_error_handler(request: Request, error: Exception) -> JSONResponse:
     # Do not log the exception message, request body, token, or query string.
     logger.error("Unhandled application error type=%s", type(error).__name__)
-    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+    response = JSONResponse(status_code=500, content={"detail": "Internal server error"})
+    # ServerErrorMiddleware sits outside CORSMiddleware. Preserve the same exact
+    # origin policy so the browser can read unexpected failures instead of hiding them.
+    origin = request.headers.get("origin")
+    if origin == request.app.state.settings.frontend_url:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Vary"] = "Origin"
+    return response
 
 
 async def provider_error_handler(request: Request, error: httpx.RequestError) -> JSONResponse:
