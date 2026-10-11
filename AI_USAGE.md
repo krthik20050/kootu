@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 07:03 IST - Live-provider lifecycle verification
+
+Codex used a temporary local synthetic verification harness with real Groq extraction and Geoapify search/routing, in a separate disposable PostgreSQL/PostGIS database. Verified upload details, buffered timing, booking idempotency, matching, privacy, driver acceptance, manifest, start/completion and fleet release. Corrected the harness import path; an initial early-start rejection was expected backend behavior, and the elapsed-buffer rerun passed. Current hosted readiness and CI passed. Browser retry reached Google sign-in; no credentials were entered by Codex. Original-ticket and actual Clerk-account booking verification remain pending; human review pending.
+
 ## 2026-10-11 06:59 IST - Arrival fix release verification
 
 Codex pushed `8fa37df`, verified both CI jobs, Render's exact implementation commit and Vercel READY/stable alias. Public passenger and backend readiness checks returned HTTP 200. Cancelled a stalled PowerShell asset-inspection request and used a bounded curl page check. Original ticket and signed-in hosted lifecycle remain human verification; human review pending.

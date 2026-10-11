@@ -1,5 +1,11 @@
 # Change log
 
+## 2026-10-11 07:03 IST - Verify booking lifecycle with live providers
+
+- Ran a synthetic PDF through the actual local upload endpoint with live Groq, then searched a public Aluva destination with live Geoapify. Verified extracted flight/airport/arrival/party counts, landing plus 30-minute pickup, idempotent booking for two synthetic parties, matching with real road-distance verification, outsider privacy, driver acceptance/manifest, trip start/completion and fleet release.
+- All data lived in a uniquely named disposable local PostgreSQL/PostGIS database, removed afterward. Local test identities replaced Clerk only in the in-process verification app; production authentication/database were unchanged. No private ticket was sent. The first lifecycle attempt correctly refused trip start before pickup readiness; the complete rerun used an elapsed buffer and passed. Corrected the standalone harness import path before execution.
+- Rechecked hosted readiness (all configuration checks true), the live implementation commit and successful CI for both implementation and release documentation. Browser sign-in retry reached Google's credential form. The original PDF and real signed-in hosted booking remain blocked on completing sign-in and supplying the document; this run does not claim those checks passed.
+
 ## 2026-10-11 06:59 IST - Arrival fix hosted verification
 
 - Pushed implementation `8fa37df`; [both CI jobs passed](https://github.com/krthik20050/kootu/actions/runs/38101860223). Render deployment `dep-db5ebljrjlhs73anium0` is live at that exact commit. Vercel deployment `dpl_8QdwXs78n9p5UqKWzZPQJXrSUmeU` reached READY and aliased kootu-five.vercel.app.
