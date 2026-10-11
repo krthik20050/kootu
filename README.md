@@ -188,7 +188,7 @@ Authentication implementation checkpoint `4796756` passed [GitHub CI](https://gi
 
 All local app/provider/Clerk/Supabase administration settings are now collected in `.environment/.env`. Edit that ignored file, then run `.\backend\.venv\Scripts\python scripts/sync_env.py` from the root to generate the scoped runtime files. See [.environment/README.md](.environment/README.md). The sync command rejects duplicate/missing names and refuses to clear saved values with empty entries. Restart local apps after syncing. Hosted settings still require a separate approved sync.
 
-Passenger dashboard: `/dashboard` uses authenticated ride/group APIs for upcoming rides, progress, vehicle assignment and history, with refresh, matching, cancellation and an edit-preview link. Driver name/pickup instructions are unavailable in the API; preview edits do not save bookings. See [frontend notes](frontend/README.md).
+Passenger dashboard: `/dashboard` uses authenticated ride/group APIs for upcoming rides, progress, vehicle assignment and history, with refresh, matching, cancellation and an edit-preview link. Driver name/pickup instructions are unavailable in the API; draft edits do not update original bookings. See [frontend notes](frontend/README.md).
 
 The `/dashboard` preview supports light and dark themes using the header toggle, with a saved browser preference and system-theme default.
 
@@ -201,3 +201,5 @@ On `/request`, “Scan ticket” opens a camera capture dialog beside “Record 
 Mobile `/request` chat now includes step navigation, tap-to-edit answers, arrival-date shortcuts and larger composer controls.
 
 The `/request` drop-off input now shows Google Maps address suggestions as you type, using the existing backend geocoding search; selecting a suggestion stores its map coordinates.
+
+Chat submission: `/request` now sends confirmed flight/drop-off inputs and final-review pickup details to POST `/ride-requests`, with retry-safe request identifiers. Existing rides can seed a new draft but are not updated.

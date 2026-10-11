@@ -104,6 +104,7 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
           accountName={accountName}
           disabled={busy}
           initialRide={editRide}
+          onSaved={() => { void load().then(apply).catch(caught => setError(message(caught))); }}
         />
         <aside className="ride-list" aria-labelledby="rides-title">
           <div className="aside-title">

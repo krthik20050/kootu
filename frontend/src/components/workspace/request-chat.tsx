@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Check, ChevronRight } from "lucide-react";
-import type { LocationResponse, ProfileResponse, RequestResponse } from "@/lib/api/generated";
+import Link from "next/link";
+import type { LocationResponse, ProfileResponse, RequestResponse, RideRequestInput } from "@/lib/api/generated";
 import { message, type Api } from "./shared";
 import { TicketCamera } from "./ticket-camera";
 import { VoiceRecorder } from "./voice-recorder";
@@ -30,12 +31,14 @@ export function RequestChat({
   accountName,
   disabled,
   initialRide,
+  onSaved,
 }: {
   api: Api;
   profile: ProfileResponse | null;
   accountName: string;
   disabled: boolean;
   initialRide?: RequestResponse;
+  onSaved?: () => void;
 }) {
   const [draft, setDraft] = useState<Draft>({
     displayName: profile?.display_name || accountName,
@@ -53,6 +56,23 @@ export function RequestChat({
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const feed = useRef<HTMLDivElement | null>(null);
+  const [airport, setAirport] = useState(initialRide?.airport || "COK");
+  const [pickupTime, setPickupTime] = useState(initialRide ? new Date(initialRide.ready_at).toLocaleTimeString("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit" }) : "");
+  const [passengers, setPassengers] = useState(initialRide?.passengers ?? 1);
+  const [luggage, setLuggage] = useState(initialRide?.luggage ?? 1);
+  const [maxWait, setMaxWait] = useState(initialRide?.max_wait_minutes ?? 30);
+  const [womenOnly, setWomenOnly] = useState(initialRide?.women_only ?? false);
+  const [wheelchairs, setWheelchairs] = useState(initialRide?.wheelchair_spaces ?? 0);
+  const [childSeats, setChildSeats] = useState(initialRide?.child_seats ?? 0);
+  const [pets, setPets] = useState(initialRide?.pet_friendly ?? false);
+  const [notes, setNotes] = useState(initialRide?.notes || "");
+  const [confirmed, setConfirmed] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [created, setCreated] = useState<RequestResponse | null>(null);
+  const submission = useRef<{ fingerprint: string; id: string } | null>(null);
+  const saveLock = useRef(false);
+  const formDisabled = disabled || saving || !!created;
+
 
   const question = questions[stepIndex];
   const doneCount = Math.min(stepIndex, questions.length);
@@ -110,6 +130,41 @@ export function RequestChat({
     setLocations([]); setActiveLocation(-1); setSearching(false); setManualPin(false); setError(""); setNotice("");
   }
 
+  async function saveRequest(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (saveLock.current || formDisabled || !confirmed) return;
+    setError(""); setNotice("");
+    const latitude = Number(draft.latitude);
+    const longitude = Number(draft.longitude);
+    if (!draft.latitude || !draft.longitude || !Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
+      setError("Select a drop-off suggestion or enter a valid map pin."); return;
+    }
+    if (!pickupTime || !draft.flightDate) { setError("Enter the arrival date and pickup-ready time."); return; }
+    if (wheelchairs > passengers || childSeats > passengers) { setError("Required spaces cannot exceed your passenger count."); return; }
+    const ready = new Date(`${draft.flightDate}T${pickupTime}:00+05:30`);
+    if (!Number.isFinite(ready.getTime())) { setError("Enter a valid pickup-ready time."); return; }
+    if (ready.getTime() < Date.now() - 5 * 60_000 || ready.getTime() > Date.now() + 30 * 86_400_000) {
+      setError("Pickup-ready time must be within the next 30 days, and cannot be in the past."); return;
+    }
+    const details = {
+      airport: airport.toUpperCase(), flight_number: draft.flightNumber, flight_date: draft.flightDate,
+      ready_at: ready.toISOString(), max_wait_minutes: maxWait,
+      destination_name: draft.destinationName, destination: { latitude, longitude },
+      passengers, luggage, women_only: womenOnly, wheelchair_spaces: wheelchairs,
+      child_seats: childSeats, pet_friendly: pets, notes, flight_details_confirmed: true as const,
+    };
+    const fingerprint = JSON.stringify(details);
+    if (submission.current?.fingerprint !== fingerprint) submission.current = { fingerprint, id: crypto.randomUUID() };
+    const payload: RideRequestInput = { ...details, client_request_id: submission.current.id };
+    saveLock.current = true; setSaving(true);
+    try {
+      const result = await api<RequestResponse>("/ride-requests", { method: "POST", body: payload });
+      setCreated(result);
+      onSaved?.();
+    } catch (caught) { setError(message(caught)); }
+    finally { saveLock.current = false; setSaving(false); }
+  }
+
   function handleContinue(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (question?.key === "destinationName" && (!draft.latitude || !draft.longitude)) {
@@ -135,7 +190,7 @@ export function RequestChat({
 
       <nav className="chat-step-nav" aria-label="Ride request steps">
         {["Flight", "Arrival", "Drop-off"].map((label, index) => (
-          <button key={label} type="button" disabled={disabled || index > stepIndex} aria-current={index === stepIndex ? "step" : undefined} onClick={() => { setStepIndex(index); setError(""); setNotice(""); }}>
+          <button key={label} type="button" disabled={formDisabled || index > stepIndex} aria-current={index === stepIndex ? "step" : undefined} onClick={() => { setStepIndex(index); setError(""); setNotice(""); }}>
             <span className="chat-step-number">{index < doneCount ? <Check size={12} /> : index + 1}</span>{label}
             {index < 2 && <ChevronRight size={12} aria-hidden="true" />}
           </button>
@@ -150,7 +205,7 @@ export function RequestChat({
         {questions.slice(0, doneCount).map((item, index) => (
           <div className="chat-turn" key={item.key}>
             <div className="chat-message chat-message-bot"><span className="chat-avatar" aria-hidden="true">k</span><p>{item.prompt}</p></div>
-            <div className="chat-message chat-message-user"><button type="button" className="chat-answer-edit" disabled={disabled} aria-label={`Edit ${item.key === "flightNumber" ? "flight number" : item.key === "flightDate" ? "arrival date" : "drop-off"}: ${answerFor(item.key)}`} onClick={() => { setStepIndex(index); setError(""); setNotice(""); }}><span>{answerFor(item.key)}</span><small>Edit</small></button></div>
+            <div className="chat-message chat-message-user"><button type="button" className="chat-answer-edit" disabled={formDisabled} aria-label={`Edit ${item.key === "flightNumber" ? "flight number" : item.key === "flightDate" ? "arrival date" : "drop-off"}: ${answerFor(item.key)}`} onClick={() => { setStepIndex(index); setError(""); setNotice(""); }}><span>{answerFor(item.key)}</span><small>Edit</small></button></div>
           </div>
         ))}
         {question && (
@@ -169,8 +224,8 @@ export function RequestChat({
 
       {question ? (
         <form className="request-chat-answer" onSubmit={handleContinue}>
-          <fieldset className="chat-answer-fields" disabled={disabled}>
-          {initialRide && <p className="chat-notice">Editing a preview of your saved request. Changes here are not saved to your booking.</p>}
+          <fieldset className="chat-answer-fields" disabled={formDisabled}>
+          {initialRide && <p className="chat-notice">Started from a saved request. Submitting creates a new request; it does not update the original.</p>}
           {question.key === "flightNumber" && (
             <label className="chat-input-label">Flight number<input autoComplete="off" required pattern="[A-Za-z0-9]{2,3}[0-9]{1,4}" placeholder="AI123" value={draft.flightNumber} onChange={(event) => setValue("flightNumber", event.target.value.toUpperCase().replaceAll(" ", ""))} /></label>
           )}
@@ -213,7 +268,7 @@ export function RequestChat({
           )}
           </fieldset>
 
-          <VoiceRecorder disabled={disabled} actions={<TicketCamera api={api} disabled={disabled} onTicket={(details) => {
+          <VoiceRecorder disabled={formDisabled} actions={<TicketCamera api={api} disabled={formDisabled} onTicket={(details) => {
             setDraft((current) => ({
               ...current,
               flightNumber: details.flight_number || current.flightNumber,
@@ -224,9 +279,9 @@ export function RequestChat({
           }} />} />
 
           <div className="request-chat-controls">
-            <button type="button" className="chat-back" disabled={stepIndex === 0 || disabled} onClick={() => { setError(""); setNotice(""); setStepIndex((current) => Math.max(0, current - 1)); }}>← Back</button>
+            <button type="button" className="chat-back" disabled={stepIndex === 0 || formDisabled} onClick={() => { setError(""); setNotice(""); setStepIndex((current) => Math.max(0, current - 1)); }}>← Back</button>
             <div className="chat-continue-actions">
-                <button className="chat-send" disabled={disabled || (question.key === "destinationName" && (searching || !draft.latitude || !draft.longitude))}>
+                <button className="chat-send" disabled={formDisabled || (question.key === "destinationName" && (searching || !draft.latitude || !draft.longitude))}>
                   {question.key === "destinationName" ? "Review details" : "Continue"} <span aria-hidden="true">→</span>
                 </button>
             </div>
@@ -235,18 +290,39 @@ export function RequestChat({
           {notice && <p className="chat-notice" role="status">{notice}</p>}
         </form>
       ) : (
-        <div className="request-chat-review">
-          <p className="chat-notice" id="chat-preview-notice">Preview only. Saving ride requests is not enabled in this flow.</p>
+        <form className="request-chat-review" onSubmit={event => void saveRequest(event)}>
+          <p className="chat-notice">Check your arrival and drop-off, then confirm the pickup details below.</p>
           <dl>{questions.map((item) => (
-            <div key={item.key}><dt>{item.prompt}</dt><dd>{answerFor(item.key)}</dd><button type="button" disabled={disabled} onClick={() => setStepIndex(questions.findIndex((candidate) => candidate.key === item.key))}>Change</button></div>
+            <div key={item.key}><dt>{item.prompt}</dt><dd>{answerFor(item.key)}</dd><button type="button" disabled={formDisabled} onClick={() => setStepIndex(questions.findIndex((candidate) => candidate.key === item.key))}>Change</button></div>
           ))}</dl>
+          {initialRide && <p className="chat-notice">This creates a new request. An existing active booking for the same airport and arrival date must be cancelled first.</p>}
+          <fieldset className="chat-booking-fields" disabled={formDisabled}>
+            <legend>Pickup details</legend>
+            <div className="form-row">
+              <label className="chat-input-label">Airport code<input required pattern="[A-Z]{3}" maxLength={3} value={airport} onChange={event => setAirport(event.target.value.toUpperCase())} /></label>
+              <label className="chat-input-label">Pickup-ready time (IST)<input required type="time" value={pickupTime} onChange={event => setPickupTime(event.target.value)} /><small>On {draft.flightDate}, India time (UTC+05:30). Include time for baggage collection.</small></label>
+            </div>
+            <div className="form-row">
+              <label className="chat-input-label">Passengers<input required type="number" min={1} max={8} value={passengers} onChange={event => setPassengers(Number(event.target.value))} /></label>
+              <label className="chat-input-label">Bags<input required type="number" min={0} max={12} value={luggage} onChange={event => setLuggage(Number(event.target.value))} /></label>
+            </div>
+            <label className="chat-input-label">Maximum wait (minutes)<input required type="number" min={5} max={120} value={maxWait} onChange={event => setMaxWait(Number(event.target.value))} /></label>
+            <details className="chat-booking-needs"><summary>Accessibility and preferences</summary>
+              <label className="chat-booking-check"><input type="checkbox" checked={womenOnly} onChange={event => setWomenOnly(event.target.checked)} />Women-only group</label>
+              <div className="form-row"><label className="chat-input-label">Wheelchair spaces<input required type="number" min={0} max={Math.min(2, passengers)} value={wheelchairs} onChange={event => setWheelchairs(Number(event.target.value))} /></label><label className="chat-input-label">Child seats<input required type="number" min={0} max={Math.min(4, passengers)} value={childSeats} onChange={event => setChildSeats(Number(event.target.value))} /></label></div>
+              <label className="chat-booking-check"><input type="checkbox" checked={pets} onChange={event => setPets(event.target.checked)} />Travelling with a pet</label>
+              <label className="chat-input-label">Notes (optional)<textarea maxLength={500} value={notes} onChange={event => setNotes(event.target.value)} /></label>
+            </details>
+            <label className="chat-booking-check"><input type="checkbox" required checked={confirmed} onChange={event => setConfirmed(event.target.checked)} />I confirm the flight number, arrival date, airport and pickup details are correct.</label>
+          </fieldset>
+          {created && <div role="status" className="chat-notice">Request saved · {created.flight_number} to {created.destination_name}. <Link href="/dashboard">View your dashboard →</Link></div>}
           <div className="request-chat-controls">
-            <button type="button" className="chat-back" disabled={disabled} onClick={() => setStepIndex((current) => Math.max(0, current - 1))}>← Back</button>
-            <button type="button" className="chat-send" disabled aria-describedby="chat-preview-notice">Save request</button>
+            <button type="button" className="chat-back" disabled={formDisabled} onClick={() => setStepIndex((current) => Math.max(0, current - 1))}>← Back</button>
+            <button type="submit" className="chat-send" disabled={formDisabled || !confirmed}>{saving ? "Saving…" : created ? "Request saved" : "Send ride request"}</button>
           </div>
           {error && <p className="chat-error" role="alert">{error}</p>}
           {notice && <p className="chat-notice" role="status">{notice}</p>}
-        </div>
+        </form>
       )}
 
 

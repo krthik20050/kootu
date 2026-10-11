@@ -1,5 +1,10 @@
 # AI usage record
 
+## 2026-10-11 05:39 IST - Submit chat ride requests
+
+Codex implemented typed chat-to-ride-request submission, final-review inputs for required missing details, validation, confirmation, retry idempotency, saved state and journey refresh. Kept the three chat questions and collected extra required fields only on review; did not fabricate pickup time or submit a real booking during development. Frontend lint/typecheck passed; no tests or live API booking checks run. Human review pending.
+
+
 ## 2026-10-11 05:32 IST - Passenger dashboard features
 
 Codex implemented the passenger dashboard using existing authenticated ride/group endpoints, with real metrics/history, status progress, vehicle details, matching/cancellation/refresh and chat preview editing. Reused the theme/frame and added dashboard auth return support. Missing driver/pickup fields are labelled unavailable; preview edits do not change saved requests. Frontend typecheck passed and lint rerun after correction. No tests or live browser/API checks run. Human review pending.

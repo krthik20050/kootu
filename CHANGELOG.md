@@ -1,5 +1,13 @@
 # Change log
 
+## 2026-10-11 05:39 IST - Submit chat ride requests
+
+- Changed: Mapped chat flight/date/drop-off and coordinates into typed POST `/ride-requests`. Final review collects airport, pickup-ready time in IST on the arrival date, party/bag counts, maximum wait, optional requirements and explicit confirmation. Added stable retry UUIDs, submission locking, validation/error feedback, success/dashboard link and saved-journey refresh.
+- Why: User requested sending processed chat inputs to the backend, superseding preview-only submission behavior.
+- Validation: Frontend lint/typecheck passed and diff whitespace checked. No tests or live booking requests run.
+- Limitations: Requires authenticated/configured backend. Pickup-ready time must be supplied, not guessed from a flight number. Creating from an existing ride does not update it; backend rejects duplicate active arrivals. Voice stays local and is not transcribed into answers.
+
+
 ## 2026-10-11 05:32 IST - Passenger dashboard features
 
 - Changed: Replaced the sample dashboard route with authenticated upcoming rides, status timeline, group counts/departure, assigned vehicle, history and recent updates. Added request/refresh/match actions, inline cancellation confirmation and edit-preview links that prefill the existing three-field chat from an owned request. Shared responsive navigation/theme with `/request`; allowlisted dashboard sign-in returns.

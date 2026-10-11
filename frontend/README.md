@@ -10,7 +10,7 @@ Authentication uses dedicated `/sign-in` and `/sign-up` pages with opaque Clerk 
 
 ### Passenger dashboard
 
-Visit `/dashboard` for your authenticated passenger dashboard: upcoming rides, ride progress, group passenger counts/departure, assigned vehicle, completed/cancelled history and recent group events. Refresh runs manually and every 15 seconds while visible. Waiting requests can be matched; eligible requests can be cancelled after confirmation. “Edit preview” opens the existing request chat prefilled from an owned request; it does not save booking changes. Driver names/contact and pickup instructions are not exposed by the current API and are labelled unavailable. No sample metrics are shown. The original supplied App1 component remains available as source but is no longer mounted at this route.
+Visit `/dashboard` for your authenticated passenger dashboard: upcoming rides, ride progress, group passenger counts/departure, assigned vehicle, completed/cancelled history and recent group events. Refresh runs manually and every 15 seconds while visible. Waiting requests can be matched; eligible requests can be cancelled after confirmation. “Edit preview” opens a new request draft prefilled from an owned request; it does not update the original booking. Driver names/contact and pickup instructions are not exposed by the current API and are labelled unavailable. No sample metrics are shown. The original supplied App1 component remains available as source but is no longer mounted at this route.
 
 The dashboard header has a light/dark mode toggle. It follows your system preference until you choose a mode, then remembers that choice in browser storage. The preference is shared with `/request` and applies to cards and mobile navigation.
 
@@ -23,3 +23,7 @@ The chat composer includes “Record voice”: allow microphone access, record u
 On mobile, the chat uses larger touch targets and a compact composer with camera and voice actions. Tap a completed step or answer bubble to edit it; arrival date has Today/Tomorrow shortcuts using the browser's local date. The conversation scrolls to each new question and respects reduced-motion settings.
 
 Drop-off suggestions appear automatically after 3 typed characters and a 400ms pause. Select a Google Maps result to store its coordinates; keyboard arrows/Enter work too. This uses the existing authenticated backend `/locations/search` Google Geocoding endpoint (India), requiring backend `GOOGLE_MAPS_API_KEY` and Geocoding API access. Manual pin entry remains available.
+
+### Submitting a ride request
+
+The three chat answers now feed POST `/ride-requests`. Final review collects the airport (default COK), pickup-ready time in IST on the selected arrival date, passengers (default 1), bags (default 1), maximum wait (default 30 minutes), optional accessibility/preferences and confirmation. Values remain editable before submission. The frontend maps the address to Google/manual coordinates, converts the confirmed time to ISO UTC, and reuses a UUID for unchanged retries. Success refreshes saved journeys and links to the dashboard. Opening an existing ride creates a new submission draft; it does not update the original, and duplicate active arrivals are rejected. Local voice recordings are not sent as notes.
