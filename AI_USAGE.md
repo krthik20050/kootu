@@ -1,5 +1,9 @@
 # AI usage record
 
+## 2026-10-11 07:35 IST - Final deployed recheck
+
+Codex verified final deployment e3f3c73 and both successful CI jobs. Hosted native itinerary-time recovery now advances; replacing a failed flight lookup with a 6 MB itinerary clears the stale error, restores extracted fields and advances again. Captured clean local screenshots of ticket review and destination with inline voice. No production test booking/profile save. Original private PDF and actual phone microphone/GPS remain unverified. Human review pending.
+
 ## 2026-10-11 07:31 IST - Hosted large-file and real voice verification
 
 Codex verified authenticated hosted 6/19 MB fictional PDF uploads, extracted review, Next and destination search; anonymous backend proxy remains 401. Found stale flight error after replacing an itinerary and native date-input automation not committing state; cleared errors on successful extraction and added native input support. Verified real Sarvam on 63 seconds of generated fictional speech without database access. 40 frontend tests, lint/build/types and implementation CI passed; runtime dependency audit is clean, development glob-chain warnings remain documented. Original private ticket/phone recording and final repair hosted verification remain pending. No production synthetic ride save. Human review pending.

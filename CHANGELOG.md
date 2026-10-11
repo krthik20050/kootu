@@ -1,5 +1,11 @@
 # Change log
 
+## 2026-10-11 07:35 IST - Final hosted verification
+
+- Implementation e3f3c73 is READY on Vercel deployment dpl_CkGa9Q3RFRQzexhdxXBKqpjCRJw8 and https://kootu-five.vercel.app. Both CI jobs passed: https://github.com/krthik20050/kootu/actions/runs/38103826205 (142 backend, 40 frontend tests plus lint/types/build/contracts).
+- Real signed-in browser recheck: synthetic PDF extraction; unavailable ZZ9999 flight recovery; native printed landing input then Next to destination; another unavailable-flight warning replaced by a 6 MB itinerary; old error cleared and extracted AI123/arrival/counts/seat/gate restored; Next succeeded again. Saved local screenshots of clean ticket review and destination with inline microphone. Multiple background refresh cycles completed without a connection warning during this final session.
+- Prior 19 MB hosted PDF, real destination search, 63-second real Sarvam and isolated real-provider booking/matching/driver lifecycle checks remain valid. No synthetic production ride/profile was saved. Original private ticket, phone microphone/GPS and multilingual dictation remain unverified; matching is a bounded heuristic rather than guaranteed globally optimal dispatch. Development dependency audit warnings remain as documented above.
+
 ## 2026-10-11 07:31 IST - Verify large uploads and repair recovery feedback
 
 - Implementation 06579c7 is live on the stable Vercel alias (deployment dpl_9VqeT3ND2UuYmoaovx86nAEvzJqu), with both CI jobs successful (run 38103509849). Real Clerk session accepted 6 MB and 19 MB fictional PDFs through the same-origin route, showed progress/extracted fields and advanced to destination. Real address search returned selectable Aluva results; no synthetic booking/profile save occurred. Anonymous proxied /me remains HTTP 401.
