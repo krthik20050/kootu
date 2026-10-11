@@ -18,6 +18,7 @@ from app.models.domain import (
 )
 from app.schemas.integrations import Coordinates
 from app.services.integrations import RoutingProvider
+from app.services.locations import clear_location
 from app.services.matching import Candidate, VehicleLimits, build_candidate, departure_for, utc
 
 
@@ -317,6 +318,7 @@ def dissolve_group(session: Session, group: RideGroup, kind: str) -> None:
     if driver:
         driver.available = driver.verification_status == "APPROVED"
     group.status = "CANCELLED"
+    clear_location(group)
     record(session, group.id, kind)
 
 

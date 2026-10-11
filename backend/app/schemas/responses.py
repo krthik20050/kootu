@@ -70,6 +70,14 @@ class EventResponse(BaseModel):
     created_at: datetime
 
 
+class DriverLocationResponse(BaseModel):
+    coordinates: Coordinates
+    accuracy_metres: float
+    captured_at: datetime
+    updated_at: datetime
+    stale: bool
+
+
 class GroupResponse(BaseModel):
     id: str
     airport: str
@@ -82,6 +90,7 @@ class GroupResponse(BaseModel):
     women_only: bool
     vehicle: VehicleResponse | None
     events: list[EventResponse]
+    driver_location: DriverLocationResponse | None = None
 
 
 class MatchResponse(BaseModel):

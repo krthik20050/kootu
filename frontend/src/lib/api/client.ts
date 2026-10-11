@@ -36,7 +36,7 @@ export async function apiRequest<T = unknown>(
   path: `/${string}`,
   token?: string,
   options: {
-    method?: "GET" | "POST" | "PATCH";
+    method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
     body?: object | FormData;
     timeout?: number;
   } = {},
@@ -78,6 +78,7 @@ export async function apiRequest<T = unknown>(
       typeof error?.detail === "string" ? error.detail : undefined,
     );
   }
+  if (response.status === 204) return undefined as T;
   return response.json();
 }
 

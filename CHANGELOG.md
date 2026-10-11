@@ -1,5 +1,11 @@
 # Change log
 
+## 2026-10-11 06:43 IST - Geoapify routing and trip location sharing
+
+- Replaced the default Google routing/search selection with a server-only Geoapify adapter, bounded five-minute cache and process request pacing. Configured the supplied key in the central local env and authorized Render private env, without committing values. Google remains an explicit optional adapter. Added provider attribution and documentation.
+- Added consented foreground driver GPS updates, assigned-driver write authorization, member-only group reads, coordinate/time validation and update throttling. Passenger cards show accuracy/age and key-free Maps links; stale locations disable navigation. Stop, cancellation and completion clear the latest coordinate. Migration 005 applied to Supabase after a schema-only metadata backup; existing RLS remains in force.
+- Checks: 139 backend tests in a separate disposable database; 30 frontend tests, lint/types and webpack production build; Ruff and contract generation. Live Geoapify public search returned two results; sample airport route returned 19,593 metres/1,506 seconds. Hosted rollout verification recorded separately below when complete. Browser background GPS is unsupported; actual phone movement/permission and local route accuracy require human testing. Limits/cache pacing are per API process; multiple replicas need coordinated rate limiting. Human review pending.
+
 ## 2026-10-11 06:42 IST - Recover local provider configuration
 
 - Recovered existing Sarvam, Groq and Aviationstack credentials from the team backend Render environment into ignored `.environment/.env`; ran the existing sync command for component environment files.

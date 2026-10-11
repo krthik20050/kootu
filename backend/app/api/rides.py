@@ -6,10 +6,11 @@ from app.core.auth import current_profile
 from app.core.database import get_session
 from app.core.rate_limit import provider_budget
 from app.models.domain import Driver, Profile, RideGroup, RideMember, RideRequest, Vehicle, now
-from app.schemas.requests import TripStatusInput
+from app.schemas.requests import DriverLocationInput, TripStatusInput
 from app.schemas.responses import GroupResponse, ManifestResponse, MatchResponse, RequestResponse
-from app.services.matching import departure_for
-from app.services.providers import GoogleRouting
+from app.services.geoapify import routing_for
+from app.services.locations import clear_location
+from app.services.matching import departure_for, utc
 from app.services.rides import (
     can_view_group,
     dissolve_group,
@@ -66,7 +67,7 @@ def match_request(
     # Persist a newly created identity before releasing the read transaction for routing.
     session.commit()
     group = propose_match(
-        session, request_id, request.app.state.settings, GoogleRouting(request.app.state.settings)
+        session, request_id, request.app.state.settings, routing_for(request.app.state.settings)
     )
     session.flush()
     return {
@@ -182,6 +183,7 @@ def trip_status(
         row.status = body.status
         row.version += 1
     if body.status == "COMPLETED":
+        clear_location(group)
         driver = session.scalar(
             select(Driver)
             .where(Driver.id == group.driver_id)
@@ -198,3 +200,48 @@ def trip_status(
         vehicle.available = True
     record(session, group.id, "TRIP_STATUS_CHANGED")
     return group_view(group, session, profile)
+
+
+@router.put("/ride-groups/{group_id}/driver-location", response_model=GroupResponse)
+def update_driver_location(
+    group_id: str,
+    body: DriverLocationInput,
+    profile: Profile = Depends(current_profile),
+    session: Session = Depends(get_session, scope="function"),
+) -> dict:
+    group = locked_group(session, group_id)
+    driver = session.get(Driver, group.driver_id) if group.driver_id else None
+    if not driver or driver.profile_id != profile.id:
+        raise HTTPException(404, "Assigned trip not found")
+    if group.status not in {"ASSIGNED", "IN_PROGRESS"}:
+        raise HTTPException(409, "Location sharing is only available for an active trip")
+    if group.driver_location_captured_at and body.captured_at <= utc(
+        group.driver_location_captured_at
+    ):
+        raise HTTPException(409, "A newer driver location is already saved")
+    if (
+        group.driver_location_updated_at
+        and (now() - utc(group.driver_location_updated_at)).total_seconds() < 10
+    ):
+        raise HTTPException(
+            429, "Wait before sending another location", headers={"Retry-After": "10"}
+        )
+    group.driver_latitude = body.coordinates.latitude
+    group.driver_longitude = body.coordinates.longitude
+    group.driver_accuracy_metres = body.accuracy_metres
+    group.driver_location_captured_at = body.captured_at
+    group.driver_location_updated_at = now()
+    return group_view(group, session, profile)
+
+
+@router.delete("/ride-groups/{group_id}/driver-location", status_code=204)
+def stop_driver_location(
+    group_id: str,
+    profile: Profile = Depends(current_profile),
+    session: Session = Depends(get_session, scope="function"),
+) -> None:
+    group = locked_group(session, group_id)
+    driver = session.get(Driver, group.driver_id) if group.driver_id else None
+    if not driver or driver.profile_id != profile.id:
+        raise HTTPException(404, "Assigned trip not found")
+    clear_location(group)

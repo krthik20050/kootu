@@ -10,6 +10,7 @@ import type {
   VehicleResponse,
 } from "@/lib/api/generated";
 import { localTime, message, readable, type Api } from "./shared";
+import { DriverLocationShare } from "./driver-location";
 
 export function DriverDesk({ api }: { api: Api }) {
   const [driver, setDriver] = useState<DriverResponse | null>(null);
@@ -439,6 +440,7 @@ export function DriverDesk({ api }: { api: Api }) {
                         </button>
                       </div>
                     )}
+                  {group && ["ASSIGNED", "IN_PROGRESS"].includes(group.status) && <DriverLocationShare api={api} groupId={group.id} />}
                   {stops[offer.group_id] && (
                     <ol className="manifest">
                       {stops[offer.group_id].map((stop) => (

@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy import select, text
 
-from app.models.domain import RideRequest
+from app.models.domain import RideGroup, RideRequest
 
 router = APIRouter(tags=["health"])
 
@@ -34,7 +34,9 @@ def ready(request: Request) -> JSONResponse:
         "database": False,
         "authentication": bool(settings.clerk_issuer),
         "routing": bool(
-            settings.google_maps_api_key and settings.google_maps_api_key.get_secret_value()
+            (settings.geoapify_api_key and settings.geoapify_api_key.get_secret_value())
+            if settings.routing_provider == "geoapify"
+            else (settings.google_maps_api_key and settings.google_maps_api_key.get_secret_value())
         ),
         "ticket_extraction": bool(
             settings.groq_api_key
@@ -65,6 +67,7 @@ def ready(request: Request) -> JSONResponse:
                 )
                 # Table names alone do not detect a backend deployed before its migration.
                 connection.execute(select(RideRequest).limit(0))
+                connection.execute(select(RideGroup).limit(0))
                 checks["database"] = checks["database"] and bool(
                     connection.scalar(
                         text(

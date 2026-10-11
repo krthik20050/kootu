@@ -9,3 +9,5 @@ Checks: `python -m ruff check .`, `python -m ruff format --check .`, `python -m 
 The matching hardening release requires migration `202610110003_matching_integrity.sql` before startup. Optional `DISPATCH_HORIZON_MINUTES` defaults to 30; advance requests remain waiting outside it. See the [matching research and risk register](../docs/backend-research-and-plan.md). Public response types are unchanged.
 
 After changing API contracts, run `python export_contracts.py` and commit the generated frontend types and OpenAPI snapshot together. External API configuration is indexed in [integrations](../integrations/README.md).
+
+Routing now defaults to Geoapify (`GEOAPIFY_API_KEY`, `ROUTING_PROVIDER=geoapify`). Apply driver-location migration `202610110005_driver_location.sql` before deploying. See [provider and location-sharing guide](../integrations/geoapify/README.md).

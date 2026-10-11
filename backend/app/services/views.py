@@ -11,6 +11,7 @@ from app.models.domain import (
     TripEvent,
     Vehicle,
 )
+from app.services.locations import location_view
 
 
 def request_view(item: RideRequest, session: Session) -> dict:
@@ -107,6 +108,7 @@ def group_view(item: RideGroup, session: Session, viewer: Profile) -> dict:
         "women_only": bool(members and members[0].women_only),
         "vehicle": vehicle_view(vehicle) if vehicle else None,
         "events": [{"kind": event.kind, "created_at": event.created_at} for event in events],
+        "driver_location": location_view(item),
     }
 
 

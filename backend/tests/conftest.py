@@ -40,6 +40,7 @@ def client(database_url):
     application = create_app(
         Settings(
             app_env="test",
+            routing_provider="google",
             database_url=SecretStr(database_url),
             bootstrap_admin_subject="operator",
             _env_file=None,

@@ -48,7 +48,9 @@ def test_migration_runner_is_idempotent_and_detects_changed_history(
     migrate.main()
     migrate.main()
     with client.app.state.engine.connect() as connection:
-        assert connection.scalar(text("SELECT count(*) FROM kootu_migrations")) == 5
+        assert connection.scalar(text("SELECT count(*) FROM kootu_migrations")) == len(
+            list((Path(__file__).resolve().parents[2] / "database/migrations").glob("*.sql"))
+        )
     monkeypatch.setattr(
         migrate.hashlib,
         "sha256",

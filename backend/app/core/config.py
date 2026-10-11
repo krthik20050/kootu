@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     clerk_audience: str = ""
     bootstrap_admin_subject: str = ""
     google_maps_api_key: SecretStr | None = None
+    routing_provider: Literal["geoapify", "google"] = "geoapify"
+    geoapify_api_key: SecretStr | None = None
     groq_api_key: SecretStr | None = None
     groq_model: str = "qwen/qwen3.8-27b"
     sarvam_api_key: SecretStr | None = None

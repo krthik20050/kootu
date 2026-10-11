@@ -86,6 +86,11 @@ class RideGroup(Base):
     driver_id: Mapped[str | None] = mapped_column(ForeignKey("drivers.id"))
     vehicle_id: Mapped[str | None] = mapped_column(ForeignKey("vehicles.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    driver_latitude: Mapped[float | None] = mapped_column(Float)
+    driver_longitude: Mapped[float | None] = mapped_column(Float)
+    driver_accuracy_metres: Mapped[float | None] = mapped_column(Float)
+    driver_location_captured_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    driver_location_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class RideMember(Base):

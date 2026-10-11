@@ -7,7 +7,8 @@ from app.core.auth import Identity, verify_token
 from app.core.rate_limit import provider_budget
 from app.schemas.integrations import FlightArrivalResponse
 from app.schemas.responses import LocationResponse, TicketResponse, TranscriptResponse
-from app.services.providers import GoogleRouting, extract_ticket, flight_status, transcribe_audio
+from app.services.geoapify import routing_for
+from app.services.providers import extract_ticket, flight_status, transcribe_audio
 
 router = APIRouter(tags=["integrations"])
 
@@ -64,7 +65,7 @@ def locations(
     q: str = Query(min_length=3, max_length=160),
     identity: Identity = Depends(verify_token),
 ) -> list[dict]:
-    return GoogleRouting(request.app.state.settings).search(q)
+    return routing_for(request.app.state.settings).search(q)
 
 
 @router.post(

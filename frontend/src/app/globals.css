@@ -231,3 +231,6 @@ button:disabled { opacity: .5; cursor: wait; }
 @keyframes arrival-confetti { 0% { transform: translateY(0) rotate(0); opacity: 0; } 12% { opacity: 1; } 100% { transform: translateY(280px) rotate(280deg); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .arrival-confetti { display: none; } }
 @media (max-width: 680px) { .intake-title { margin-bottom: 24px; } .intake-progress { gap: 10px; } .intake-progress li { font-size: 12px; gap: 6px; } .workspace-grid.guided-intake.with-journeys { grid-template-columns: 1fr; } .upload-dropzone { min-height: 210px; } .step-actions .action { min-width: 120px; } }
+
+.location-sharing { margin-block: 1rem; padding-block: 1rem; border-top: 1px solid var(--border); }
+.location-sharing p { margin-block: .5rem; }

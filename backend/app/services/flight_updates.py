@@ -9,8 +9,9 @@ from sqlalchemy.orm import Session
 
 from app.core.config import Settings
 from app.models.domain import DriverOffer, RideGroup, RideMember, RideRequest, now
+from app.services.geoapify import routing_for
 from app.services.matching import departure_for, utc
-from app.services.providers import GoogleRouting, flight_status
+from app.services.providers import flight_status
 from app.services.rides import (
     dissolve_group,
     locked_group,
@@ -262,7 +263,7 @@ def maintain_rides(engine, settings: Settings) -> None:
                                 continue
                             row.match_attempted_at = now()
                         with Session(engine) as session:
-                            propose_match(session, request_id, settings, GoogleRouting(settings))
+                            propose_match(session, request_id, settings, routing_for(settings))
                             session.commit()
                     except Exception as error:
                         logger.warning("Automatic match failed type=%s", type(error).__name__)

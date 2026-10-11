@@ -76,3 +76,20 @@ class OfferInput(InputModel):
 
 class TripStatusInput(InputModel):
     status: Literal["IN_PROGRESS", "COMPLETED"]
+
+
+class DriverLocationInput(InputModel):
+    coordinates: Coordinates
+    accuracy_metres: float = Field(ge=0, le=10000, allow_inf_nan=False)
+    captured_at: AwareDatetime
+
+    @model_validator(mode="after")
+    def recent_location(self) -> "DriverLocationInput":
+        current = datetime.now(UTC)
+        if (
+            not current - timedelta(minutes=2)
+            <= self.captured_at
+            <= current + timedelta(seconds=30)
+        ):
+            raise ValueError("Send a recent device location with a correct timestamp")
+        return self

@@ -49,6 +49,20 @@ export type DriverInput = {
   "women_only_eligible"?: boolean;
 };
 
+export type DriverLocationInput = {
+  "coordinates": Coordinates;
+  "accuracy_metres": number;
+  "captured_at": string;
+};
+
+export type DriverLocationResponse = {
+  "coordinates": Coordinates;
+  "accuracy_metres": number;
+  "captured_at": string;
+  "updated_at": string;
+  "stale": boolean;
+};
+
 export type DriverResponse = {
   "id": string;
   "verification_status": "PENDING" | "APPROVED" | "REJECTED";
@@ -100,6 +114,7 @@ export type GroupResponse = {
   "women_only": boolean;
   "vehicle": VehicleResponse | null;
   "events": Array<EventResponse>;
+  "driver_location"?: DriverLocationResponse | null;
 };
 
 export type HTTPValidationError = {

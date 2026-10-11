@@ -214,6 +214,66 @@
         "title": "DriverInput",
         "type": "object"
       },
+      "DriverLocationInput": {
+        "additionalProperties": false,
+        "properties": {
+          "accuracy_metres": {
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Accuracy Metres",
+            "type": "number"
+          },
+          "captured_at": {
+            "format": "date-time",
+            "title": "Captured At",
+            "type": "string"
+          },
+          "coordinates": {
+            "$ref": "#/components/schemas/Coordinates"
+          }
+        },
+        "required": [
+          "coordinates",
+          "accuracy_metres",
+          "captured_at"
+        ],
+        "title": "DriverLocationInput",
+        "type": "object"
+      },
+      "DriverLocationResponse": {
+        "properties": {
+          "accuracy_metres": {
+            "title": "Accuracy Metres",
+            "type": "number"
+          },
+          "captured_at": {
+            "format": "date-time",
+            "title": "Captured At",
+            "type": "string"
+          },
+          "coordinates": {
+            "$ref": "#/components/schemas/Coordinates"
+          },
+          "stale": {
+            "title": "Stale",
+            "type": "boolean"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "coordinates",
+          "accuracy_metres",
+          "captured_at",
+          "updated_at",
+          "stale"
+        ],
+        "title": "DriverLocationResponse",
+        "type": "object"
+      },
       "DriverResponse": {
         "properties": {
           "available": {
@@ -572,6 +632,16 @@
               }
             ],
             "title": "Destination Cluster"
+          },
+          "driver_location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DriverLocationResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "events": {
             "items": {
@@ -2313,6 +2383,101 @@
           }
         ],
         "summary": "Release Group",
+        "tags": [
+          "rides"
+        ]
+      }
+    },
+    "/ride-groups/{group_id}/driver-location": {
+      "delete": {
+        "operationId": "stop_driver_location_ride_groups__group_id__driver_location_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "title": "Group Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Stop Driver Location",
+        "tags": [
+          "rides"
+        ]
+      },
+      "put": {
+        "operationId": "update_driver_location_ride_groups__group_id__driver_location_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "title": "Group Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DriverLocationInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Driver Location",
         "tags": [
           "rides"
         ]
