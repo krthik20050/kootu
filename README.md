@@ -200,3 +200,10 @@ Geoapify rollout `220d842` passed [GitHub CI](https://github.com/krthik20050/koo
 The homepage opens `/dashboard`, with real ride/group status and driver-location links. `/request` provides the conversational booking flow, current ticket extraction and voice-to-instructions transcription, Geoapify suggestions, and an IST clock picker. `/passenger` remains the existing ticket-guided flow and is available from the sidebar. Both use the unchanged authenticated API client, app-origin upload transport, backend services and generated contracts. A saved-request preview creates a new request; it never silently updates the original.
 
 For frontend PR integration, merge current main into the PR, retain current backend/contracts unless a separately verified API change is needed, resolve UI call sites against those contracts, and run frontend lint/typecheck/tests/build plus backend pytest/lint/contract checks. Require green GitHub web/API checks before merging; never resolve overlapping feature code by blindly selecting an entire side. Real-device microphone/GPS and signed-in hosted booking need separate end-to-end verification.
+
+
+### Driver dashboard integration
+
+`/driver` uses a monochrome responsive sidebar with shared light/dark preference. `/driver/profile` exposes real onboarding, operator approval status, vehicle registration and availability; `/driver/ride-requests` lists pending offers; `/driver/my-trips` retains manifest, location sharing and start/complete controls; `/driver/ride-history` shows completed/cancelled groups and closed offers. All use the existing authenticated API and role checks. Earnings/payments/receipts and online support tickets are not implemented and are clearly labelled unavailable. No sample identities, rides, notifications or fake profile-save messages are displayed.
+
+The regression suite includes a disposable-database ticket/voice → request → match → driver acceptance → manifest/location → completed-trip test. External providers are stubbed in this combined test; it does not claim live provider or physical microphone/GPS validation.

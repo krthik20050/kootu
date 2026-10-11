@@ -167,3 +167,12 @@ Codex pushed `220d842`, verified successful CI and Vercel/Render rollout, checke
 ## 2026-10-11 07:56 IST — browser contrast correction
 
 Codex browser inspection caught unreadable dark-mode link buttons and fixed the CSS cascade. Production rebuild passed. GitHub web/API checks and Vercel preview passed for 7e12571. Human review and physical microphone/GPS testing remain pending.
+
+
+## 2026-10-11 08:12 IST — remaining PR integration and repeated verification
+
+- User requested clearing remaining PRs and two to three verification passes. Codex reviewed PR #2, identified disconnected prototype behavior, resolved conflicts and integrated its visual shell with current driver operations while leaving backend implementation/contracts unchanged.
+- Added availability/lifecycle/error/polling UI tests and a media-to-trip API test with real disposable PostGIS, synthetic uploads and stubbed provider boundaries. Local checks: 143 backend tests and 46 frontend tests pass; lint/typecheck/build and backend contracts pass. Clean CI and deployed browser verification pending at this checkpoint.
+- Human review: integration requested; changes not yet human-reviewed. No fabricated live-device/provider test claims. Unsupported earnings and online support submission are disclosed rather than simulated.
+
+- Browser testing found driver subpage header sign-in returned to passenger chat. Codex extended the exact internal-route allowlist and tested unknown/traversal paths remain rejected.
