@@ -1,0 +1,22 @@
+.navigation { display:flex; height:100%; flex-direction:column; padding:28px 20px; gap:36px; }
+.brand { display:flex; align-items:baseline; gap:3px; padding:0 12px; font-size:30px; font-weight:750; letter-spacing:-1.8px; line-height:1; }
+.brand span { color:var(--primary); }
+.navigation nav { display:flex; flex-direction:column; gap:6px; }
+.navigation nav > p { margin:0 12px 12px; font-size:9px; letter-spacing:.1em; font-weight:600; color:var(--muted-foreground); }
+.navigation nav a { display:flex; align-items:center; gap:12px; min-height:44px; padding:11px 12px; border-radius:8px; font-size:13px; font-weight:500; color:var(--muted-foreground); }
+.navigation nav a svg { width:17px; height:17px; flex-shrink:0; }
+.navigation nav a:hover { color:var(--foreground); background:var(--muted); }
+.navigation nav a[aria-current=page] { color:var(--primary); background:var(--secondary); font-weight:650; }
+.note { margin-top:auto; padding:20px 12px 0; border-top:1px solid var(--border); }
+.note p { font-size:12px; line-height:1.7; color:var(--muted-foreground); margin:0; }
+.note strong { display:block; font-size:12px; font-weight:600; margin-bottom:7px; }
+.header { position:sticky; top:0; z-index:10; height:76px; min-height:76px; display:flex; align-items:center; justify-content:space-between; padding:0 36px; gap:20px; background:var(--card); border-bottom:1px solid var(--border); }
+.headerStart,.headerActions { display:flex; align-items:center; gap:16px; min-width:0; }
+.header h1 { font-size:14px; font-weight:550; white-space:nowrap; }
+.headerStart > span { width:1px; height:18px; background:var(--border); }
+.headerActions { gap:12px; flex-shrink:0; }
+.headerActions > span { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border:1px solid var(--border); border-radius:6px; font-size:10px; color:var(--muted-foreground); }
+.account { display:flex; align-items:center; padding-left:16px; margin-left:4px; border-left:1px solid var(--border); min-height:32px; }
+.content { padding:36px; }
+@media(max-width:1100px) { .header { padding:0 28px; }.content { padding:28px; } }
+@media(max-width:680px) { .header { padding:0 20px; height:68px; min-height:68px; gap:12px; }.headerStart { gap:10px; }.headerStart > span { display:none; }.header h1 { font-size:13px; }.headerActions { gap:6px; }.headerActions > span { display:none; }.account { padding-left:10px; margin-left:2px; }.content { padding:28px 20px; }.navigation { padding:28px 20px; } }

@@ -1,5 +1,12 @@
 # AI usage record
 
+## 2026-10-11 09:38 IST - Rebuild passenger overview layout
+
+- Replaced the passenger overview presentation with a scoped CSS-module layout: aligned booking/progress columns, consistent card padding, a compact summary strip and useful journey history. New accounts get real booking links and a three-step guide; group/driver panels appear only with an active request. Sidebar icons and the title/theme/account bar now follow consistent spacing. Request chat keeps its existing form styling.
+- Kept API loading, refresh, matching, edit-preview and confirmed cancellation behavior. Unmatched rides explicitly show pickup as not scheduled; driver-contact and direct-payment limitations remain visible. No backend, database-role, ticket or voice logic changed.
+- Validation: all 57 frontend tests passed, including new empty-account, failed-loading and match/cancel/history regressions; lint and production build passed. Inspected a temporary local presentation fixture at 1440px, 820px and 390px, including a long assigned destination and dark theme; no horizontal overflow. Removed that fixture before building. The first build encountered stale generated development types for the removed fixture; clearing only that generated cache resolved it.
+- Independent specialist agent reviewed functionality preservation; its pickup-time wording and contact-disclosure corrections were applied. Hosted verification follows deployment; human review pending. Local visual fixtures do not prove a real driver trip or payment collection.
+
 ## 2026-10-11 09:20 IST - Live passenger demo verification
 
 Implementation 104eac3f5b5a08761232af3f0fa947eb0a99e388 deployed successfully; CI run 38109548135 passed both jobs (148 backend tests and all frontend tests). Verified the signed-in passenger /dashboard with reorganized top bar on desktop and at 390px, with no horizontal overflow. Both homepage portal links remain visible at mobile width. Verified a passenger visiting /driver stays on the driver URL with the explicit account-check and return/sign-in actions, without loading driver controls or redirecting. Driver-to-passenger and conflicting onboarding behavior are covered by regression tests. Kept the live passenger dashboard open for the demo. No account roles or ride data changed. Human review pending.
