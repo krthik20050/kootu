@@ -18,6 +18,8 @@ def provider_budget(request: Request, identity: Identity = Depends(verify_token)
         if path == "/tickets/extract"
         else ("audio", 30)
         if path == "/audio/transcribe"
+        else ("flight", 30)
+        if path == "/flights/arrival"
         else ("match", 30)
         if path.endswith("/match")
         else ("location", 100)

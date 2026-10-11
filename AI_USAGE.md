@@ -100,3 +100,7 @@ Codex consolidated all ticket-derived passenger inputs into one shared draft so 
 ## 2026-10-11 06:25 IST - Ticket review experience
 
 Codex implemented honest progress feedback, automatic ticket-shaped review, expanded strictly validated extraction fields and implicit-submit prevention. Replaced confusing readiness input with arrival-driven pickup calculation, preserved shared drafts, and updated contracts/docs. Checks: 123 isolated backend and 27 frontend tests, lint/types/build, Ruff/format and contract consistency; synthetic browser review at desktop and 390px. Temporary preview was removed. Real ticket accuracy/provider E2E still requires human review; human review pending.
+
+## 2026-10-11 06:38 IST - Automatic 30-minute pickup calculation
+
+Codex removed arrival/local-time inputs, changed the landing buffer to 30 minutes, added authenticated flight-arrival fallback and stale-timing invalidation, and updated contracts/tests/guides. Validated this milestone separately from concurrent routing/driver-location edits: 130 isolated backend and 28 frontend tests, style, contracts, lint/types/build. Real flight-provider lookup remains human verification; human review pending.

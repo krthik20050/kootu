@@ -84,6 +84,10 @@ export type ExtractedFlight = {
   "ticket_number"?: string | null;
 };
 
+export type FlightArrivalResponse = {
+  "arrival_at": string;
+};
+
 export type GroupResponse = {
   "id": string;
   "airport": string;

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   GroupResponse,
+  FlightArrivalResponse,
   LocationResponse,
   MatchResponse,
   ProfileResponse,
@@ -15,6 +16,7 @@ import { VoicePreferences } from "./voice-preferences";
 import { ArrivalCelebration } from "./arrival-celebration";
 import { draftFromTicket, emptyPassengerDraft, readyFromArrival, type PassengerDraft } from "@/lib/ticket-draft";
 import { TicketReview } from "./ticket-review";
+import { DriverLocationPin } from "./driver-location";
 
 const active = new Set(["WAITING", "MATCHED", "ASSIGNED"]);
 
@@ -26,6 +28,7 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [extracting, setExtracting] = useState(false);
+  const [checkingFlight, setCheckingFlight] = useState(false);
   const [step, setStep] = useState(0);
   const [ticketRead, setTicketRead] = useState(false);
   const [draftVersion, setDraftVersion] = useState(0);
@@ -37,15 +40,14 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
   const [flightConfirmed, setFlightConfirmed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState(emptyPassengerDraft);
-  const { readyAt, arrivalAt, ticket, luggageCount, displayName, passengerCount, flight, destination, coordinates } = draft;
+  const { readyAt, ticket, luggageCount, displayName, passengerCount, flight, destination, coordinates } = draft;
   function patchDraft(patch: Partial<PassengerDraft>) {
     setDraft((current) => ({ ...current, ...patch }));
   }
-  const setArrivalAt = (arrivalAt: string) => patchDraft({ arrivalAt, readyAt: readyFromArrival(arrivalAt) });
   const setLuggageCount = (luggageCount: string) => patchDraft({ luggageCount });
   const setDisplayName = (displayName: string) => patchDraft({ displayName });
   const setPassengerCount = (passengerCount: string) => patchDraft({ passengerCount });
-  const setFlight = (flight: PassengerDraft["flight"]) => patchDraft({ flight });
+  const setFlight = (flight: PassengerDraft["flight"]) => patchDraft({ flight, readyAt: "" });
   const setDestination = (destination: string) => patchDraft({ destination });
   const setCoordinates = (coordinates: PassengerDraft["coordinates"]) => patchDraft({ coordinates });
   const [locations, setLocations] = useState<LocationResponse[]>([]);
@@ -150,11 +152,28 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
     return true;
   }
 
-  function advance() {
-    if (busy || extracting || loading || !profile) return;
+  async function advance() {
+    if (busy || extracting || checkingFlight || loading || !profile) return;
     if (!validateStep()) return;
     setError("");
-    if (step === 1) setFlightConfirmed(true);
+    if (step === 1) {
+      if (!readyAt) {
+        setCheckingFlight(true);
+        try {
+          const query = new URLSearchParams({ number: flight.number, flight_date: flight.date, airport: flight.airport });
+          const result = await api<FlightArrivalResponse>(`/flights/arrival?${query}`, { timeout: 45000 });
+          const readyAt = readyFromArrival(result.arrival_at);
+          if (!readyAt) throw new Error("We couldn’t confirm the flight’s arrival time. Please retry.");
+          patchDraft({ readyAt });
+        } catch (error) {
+          setError(message(error));
+          return;
+        } finally {
+          setCheckingFlight(false);
+        }
+      }
+      setFlightConfirmed(true);
+    }
     setStep(step + 1);
   }
 
@@ -193,7 +212,7 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
         !coordinates.latitude ||
         !coordinates.longitude
       )
-        throw new Error("Add your flight’s arrival time and choose a destination first.");
+        throw new Error("Confirm the flight details and choose a destination first.");
       await api<ProfileResponse>("/me", {
         method: "PATCH",
         body: {
@@ -265,7 +284,7 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
       <div className={`workspace-grid guided-intake ${step === 3 || showJourneys ? "with-journeys" : ""}`}>
         <section className="booking">
           <div hidden={step > 1}>
-            <UploadAssist key={draftVersion} api={api} disabled={busy || loading || !profile} onBusy={setExtracting}
+            <UploadAssist key={draftVersion} api={api} disabled={busy || checkingFlight || loading || !profile} onBusy={setExtracting}
               onTicket={(details) => {
                 setDraft(draftFromTicket(details, profile?.display_name || accountName));
                 setFlightConfirmed(false);
@@ -285,7 +304,7 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.nativeEvent.isComposing && event.target instanceof HTMLInputElement && event.target.type !== "checkbox") event.preventDefault();
             }}>
-            <fieldset data-step="1" hidden={step !== 1} disabled={busy || extracting || loading || !profile}>
+            <fieldset data-step="1" hidden={step !== 1} disabled={busy || extracting || checkingFlight || loading || !profile}>
               <legend className="sr-only">Your arrival</legend>
               <TicketReview details={ticket} airport={flight.airport} number={flight.number}>
               <label>Your name<input name="display_name" value={displayName ?? (profile?.display_name || accountName)} onChange={(event) => setDisplayName(event.target.value)} required maxLength={80} autoComplete="name" /></label>
@@ -293,11 +312,8 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
                 <label>Arrival airport<input value={flight.airport} onChange={(event) => { setFlightConfirmed(false); setFlight({ ...flight, airport: event.target.value.toUpperCase() }); }} required pattern="[A-Z]{3}" maxLength={3} /></label>
                 <label>Flight number<input value={flight.number} onChange={(event) => { setFlightConfirmed(false); setFlight({ ...flight, number: event.target.value.toUpperCase() }); }} required pattern="[A-Z0-9]{2,3}[0-9]{1,4}" placeholder="AI123" /></label>
               </div>
-              <div className="form-row">
-                <label>Flight date<input type="date" value={flight.date} onInput={(event) => { setFlightConfirmed(false); setFlight({ ...flight, date: event.currentTarget.value }); }} onChange={(event) => { setFlightConfirmed(false); setFlight({ ...flight, date: event.target.value }); }} required /></label>
-                <label>Arrival time · your local time<input type="datetime-local" value={arrivalAt} onInput={(event) => setArrivalAt(event.currentTarget.value)} onChange={(event) => setArrivalAt(event.target.value)} required aria-describedby="pickup-timing" /></label>
-              </div>
-              <p id="pickup-timing" className="quiet">{readyAt ? `Pickup planned for ${localTime(new Date(readyAt).toISOString())}, allowing 45 minutes after arrival.` : "Arrival time wasn’t found. Add it so we can plan pickup 45 minutes after landing."}</p>
+              <label>Flight date<input type="date" value={flight.date} onInput={(event) => { setFlightConfirmed(false); setFlight({ ...flight, date: event.currentTarget.value }); }} onChange={(event) => { setFlightConfirmed(false); setFlight({ ...flight, date: event.target.value }); }} required /></label>
+              <p className="quiet" role="status">{checkingFlight ? "Checking your flight’s arrival time…" : "Pickup is planned 30 minutes after landing. We’ll work out the time from your flight."}</p>
               <div className="form-row">
                 <label>Passengers<input name="passengers" type="number" min={1} max={6} value={passengerCount} onChange={(event) => setPassengerCount(event.target.value)} required /></label>
                 <label>Luggage pieces<input name="luggage" type="number" min={0} max={6} value={luggageCount} onChange={(event) => setLuggageCount(event.target.value)} required /></label>
@@ -319,6 +335,7 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
                 </div>
               </details>
               <VoicePreferences key={draftVersion} api={api} value={notes} onChange={setNotes} onBusy={setDictating} />
+              <p className="quiet">Address search and road estimates: <a href="https://www.geoapify.com/" target="_blank" rel="noreferrer">Powered by Geoapify</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a></p>
               <details className="ride-options">
                 <summary>Ride preferences & accessibility</summary>
                 <label>Maximum wait · minutes<input name="max_wait_minutes" type="number" min={5} max={120} defaultValue={30} required /></label>
@@ -333,8 +350,8 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
               </details>
             </fieldset>
             <div className="step-actions">
-              <button className="text-button" type="button" disabled={busy || dictating} onClick={() => setStep(step - 1)}>← Back</button>
-              {step === 1 ? <button className="action" key="next" type="button" disabled={busy || extracting || loading || !profile} onClick={(event) => { event.preventDefault(); advance(); }}>Next →</button>
+              <button className="text-button" type="button" disabled={busy || checkingFlight || dictating} onClick={() => setStep(step - 1)}>← Back</button>
+              {step === 1 ? <button className="action" key="next" type="button" disabled={busy || extracting || checkingFlight || loading || !profile} onClick={(event) => { event.preventDefault(); void advance(); }}>{checkingFlight ? "Checking flight…" : "Next →"}</button>
                 : <button key="save" type="submit" className="action" disabled={busy || extracting || dictating || loading || !profile || notes.length > 2000}>{busy ? "Saving…" : "Find my ride →"}</button>}
             </div>
           </form>
@@ -399,6 +416,7 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
                         </li>
                       ))}
                     </ol>
+                    {["ASSIGNED", "IN_PROGRESS"].includes(group.status) && <DriverLocationPin location={group.driver_location} />}
                   </div>
                 )}
                 <div className="entry-actions">

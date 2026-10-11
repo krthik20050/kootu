@@ -8,6 +8,10 @@ class Coordinates(BaseModel):
     longitude: float = Field(ge=-180, le=180, allow_inf_nan=False)
 
 
+class FlightArrivalResponse(BaseModel):
+    arrival_at: AwareDatetime
+
+
 class RouteEstimate(BaseModel):
     distance_metres: float = Field(ge=0, allow_inf_nan=False)
     duration_seconds: float = Field(ge=0, allow_inf_nan=False)

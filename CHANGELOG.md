@@ -1,5 +1,11 @@
 # Change log
 
+## 2026-10-11 06:38 IST - Automatic pickup timing without time inputs
+
+- Removed the arrival/local-time field from ticket review and changed the automatic pickup buffer from 45 to 30 minutes after landing. UTC instants preserve timezone offsets and overnight transitions. Ticket arrival supplies timing directly; changing flight number/date/airport clears stale timing.
+- Added authenticated, bounded /flights/arrival lookup when timing is missing or invalidated. It matches flight number, service date and airport, accepts only timezone-aware scheduled arrival, rejects unavailable/cancelled flights, and uses a separate 30-request hourly budget. The scheduled baseline avoids double-applying delays in existing flight polling. During lookup fields/progression are disabled; failure retains the draft for retry.
+- Affected passenger component/draft, integration route/schema/budget, generated contracts, tests and guides. Checks: 130 backend tests in an isolated source snapshot and disposable PostgreSQL/PostGIS database; 28 frontend tests; Ruff/format, contract generation, frontend lint/types/build. Concurrent routing/driver-location edits were preserved and excluded from this milestone. Provider live-flight plan availability remains a limitation; authenticated real-flight lookup requires human verification. Human review pending.
+
 ## 2026-10-11 06:25 IST - Ticket review and extraction feedback
 
 - Added accessible indeterminate upload/extraction progress and confirmed completion. Successful extraction opens a ticket-style review immediately below the progress bar, with route, airline and all supported printed details. Expanded extraction schema/prompt for boarding/departure times, seat, gate, terminals, cabin, allowance, reference and ticket number. Values remain unconfirmed; unknown values are not guessed. Supplementary details stay in the review draft and are not persisted in ride requests.
