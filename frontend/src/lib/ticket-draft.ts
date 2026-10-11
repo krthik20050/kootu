@@ -10,12 +10,21 @@ export function readyFromArrival(arrival?: string | null): string {
   return local.toISOString().slice(0, 16);
 }
 
+export function localArrival(arrival?: string | null): string {
+  if (!arrival) return "";
+  const time = new Date(arrival);
+  if (!Number.isFinite(time.getTime())) return "";
+  return new Date(time.getTime() - time.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+}
+
 
 export type PassengerDraft = {
   displayName: string | null;
   passengerCount: string;
   luggageCount: string;
   readyAt: string;
+  arrivalAt: string;
+  ticket: ExtractedFlight;
   flight: { airport: string; number: string; date: string };
   destination: string;
   coordinates: { latitude: string; longitude: string };
@@ -23,7 +32,7 @@ export type PassengerDraft = {
 
 export function emptyPassengerDraft(): PassengerDraft {
   return {
-    displayName: null, passengerCount: "1", luggageCount: "1", readyAt: "",
+    displayName: null, passengerCount: "1", luggageCount: "1", readyAt: "", arrivalAt: "", ticket: {},
     flight: { airport: "COK", number: "", date: "" },
     destination: "", coordinates: { latitude: "", longitude: "" },
   };
@@ -36,6 +45,8 @@ export function draftFromTicket(details: ExtractedFlight, fallbackName: string):
     passengerCount: details.passengers == null ? "" : String(details.passengers),
     luggageCount: details.luggage == null ? "" : String(details.luggage),
     readyAt: readyFromArrival(details.arrival_at),
+    arrivalAt: localArrival(details.arrival_at),
+    ticket: details,
     flight: {
       airport: details.arrival_airport || "",
       number: details.flight_number || "",

@@ -13,6 +13,7 @@ export function UploadAssist({ api, onTicket, onBusy, disabled = false }: {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [filename, setFilename] = useState("");
+  const [selectedFile, setSelectedFile] = useState("");
   const operation = useRef(false);
 
   async function upload(file?: File) {
@@ -23,6 +24,7 @@ export function UploadAssist({ api, onTicket, onBusy, disabled = false }: {
       return;
     }
     operation.current = true;
+    setSelectedFile(file.name);
     setBusy(true);
     onBusy?.(true);
     try {
@@ -43,7 +45,7 @@ export function UploadAssist({ api, onTicket, onBusy, disabled = false }: {
   }
 
   return (
-    <div className="ticket-upload">
+    <div className={`ticket-upload ${filename ? "has-ticket" : ""}`} aria-busy={busy}>
       <label className={`upload-dropzone ${busy ? "is-reading" : ""}`}>
         <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
           <path d="M14 7h14l7 7v27H14V7Z" stroke="currentColor" strokeWidth="2" />
@@ -55,7 +57,20 @@ export function UploadAssist({ api, onTicket, onBusy, disabled = false }: {
           accept="image/jpeg,image/png,application/pdf" disabled={busy || disabled}
           onChange={(event) => { void upload(event.target.files?.[0]); event.target.value = ""; }} />
       </label>
-      {filename && !busy && <p className="ticket-file" role="status">✓ {filename}</p>}
+      {(busy || filename) && <div className={`extraction-status ${busy ? "processing" : "complete"}`}>
+        <div className="extraction-heading" role="status">
+          <strong>{busy ? "Uploading and reading your ticket…" : "✓ Your ticket details are ready"}</strong>
+          <span>{busy ? selectedFile : filename}</span>
+        </div>
+        <div className="extraction-track" role="progressbar" aria-label="Ticket extraction"
+          aria-valuemin={0} aria-valuemax={100} aria-valuenow={busy ? undefined : 100}
+          aria-valuetext={busy ? "Uploading and extracting details" : "Details ready for review"}>
+          <span />
+        </div>
+        <p>{busy ? "We’re finding your flight, times and passenger details. This can take a moment."
+          : error ? "Your previous ticket is still here. Retry the new file or review these details."
+          : "Filled in below. Check the details and add anything missing."}</p>
+      </div>}
       {error && <p className="error" role="alert">{error} You can enter the details instead.</p>}
     </div>
   );

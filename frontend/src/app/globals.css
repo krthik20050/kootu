@@ -180,6 +180,36 @@ button:disabled { opacity: .5; cursor: wait; }
 .workspace .upload-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; height: 100%; }
 .upload-dropzone:has(input:disabled) { opacity: .65; cursor: wait; }
 .ticket-file { overflow-wrap: anywhere; color: var(--primary); font-size: 13px; }
+.has-ticket .upload-dropzone { min-height: 76px; flex-direction: row; border-radius: 12px; }
+.has-ticket .upload-dropzone svg { width: 28px; height: 28px; }
+.has-ticket .upload-dropzone > span { font-size: 15px; }
+.extraction-status { margin: 20px 0 28px; }
+.extraction-heading { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
+.extraction-heading strong { color: var(--primary); }
+.extraction-heading span { color: var(--muted-foreground); overflow-wrap: anywhere; max-width: 45%; }
+.extraction-track { height: 5px; margin: 12px 0; overflow: hidden; border-radius: 4px; background: oklch(90% .025 140); }
+.extraction-track > span { display: block; height: 100%; background: var(--primary); width: 100%; }
+.processing .extraction-track > span { width: 35%; animation: ticket-reading 1400ms ease-in-out infinite; }
+.extraction-status > p { color: var(--muted-foreground); font-size: 13px; line-height: 1.6; }
+@keyframes ticket-reading { from { transform: translateX(-100%); } to { transform: translateX(390%); } }
+.ticket-review { background: oklch(99% .01 95); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
+.ticket-review-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 26px; background: oklch(94% .025 130); }
+.ticket-review-header p { margin: 0; font-size: 14px; }
+.ticket-review-header .eyebrow { margin-bottom: 6px; font-size: 10px; letter-spacing: .12em; }
+.ticket-flight-number { font-size: 20px; font-weight: 600; color: var(--primary); overflow-wrap: anywhere; }
+.ticket-route { display: flex; align-items: center; justify-content: space-between; padding: 24px 26px; border-bottom: 1px dashed var(--border); }
+.ticket-route div { display: grid; gap: 8px; }
+.ticket-route small { font-size: 10px; letter-spacing: .12em; color: var(--muted-foreground); }
+.ticket-route strong { font-size: 36px; font-weight: 600; letter-spacing: -.04em; }
+.ticket-route > span { font-size: 26px; color: var(--primary); }
+.ticket-editable { padding: 8px 26px 20px; }
+.ticket-printed { padding: 22px 26px; border-top: 1px dashed var(--border); }
+.ticket-printed > .eyebrow { font-size: 10px; }
+.ticket-printed dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px 16px; }
+.ticket-printed dt { color: var(--muted-foreground); font-size: 12px; margin-bottom: 6px; }
+.ticket-printed dd { margin: 0; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) { .processing .extraction-track > span { animation: none; width: 50%; } }
+@media (max-width: 460px) { .ticket-review-header, .ticket-route, .ticket-printed { padding: 20px; } .ticket-editable { padding-inline: 20px; } .ticket-editable .form-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } .ticket-editable .form-row:has(input[type=date]) { grid-template-columns: minmax(0, 1fr); gap: 0; } .ticket-printed dl { grid-template-columns: repeat(2, minmax(0, 1fr)); } .extraction-heading { flex-direction: column; } .extraction-heading span { max-width: 100%; } .has-ticket .upload-dropzone small { display: none; } }
 .step-actions { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); }
 .step-actions button { min-height: 44px; }
 .instructions { margin-top: 30px; }

@@ -96,3 +96,7 @@ Codex checked live API health, readiness and CORS preflight; reproduced the uplo
 ## 2026-10-11 06:06 IST - Cross-step autofill consistency
 
 Codex consolidated all ticket-derived passenger inputs into one shared draft so one extraction updates values on every booking step together. Added regressions for next/back persistence, printed destination autofill, zero luggage and stale-field clearing; updated guides. 25 frontend tests, lint/types and production build passed. The original PDF retry remains deferred by the user; previous upload-fix deployment/CI and 123 backend regressions are verified. Human review pending.
+
+## 2026-10-11 06:25 IST - Ticket review experience
+
+Codex implemented honest progress feedback, automatic ticket-shaped review, expanded strictly validated extraction fields and implicit-submit prevention. Replaced confusing readiness input with arrival-driven pickup calculation, preserved shared drafts, and updated contracts/docs. Checks: 123 isolated backend and 27 frontend tests, lint/types/build, Ruff/format and contract consistency; synthetic browser review at desktop and 390px. Temporary preview was removed. Real ticket accuracy/provider E2E still requires human review; human review pending.

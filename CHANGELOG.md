@@ -1,5 +1,11 @@
 # Change log
 
+## 2026-10-11 06:25 IST - Ticket review and extraction feedback
+
+- Added accessible indeterminate upload/extraction progress and confirmed completion. Successful extraction opens a ticket-style review immediately below the progress bar, with route, airline and all supported printed details. Expanded extraction schema/prompt for boarding/departure times, seat, gate, terminals, cabin, allowance, reference and ticket number. Values remain unconfirmed; unknown values are not guessed. Supplementary details stay in the review draft and are not persisted in ride requests.
+- Removed the Ready to leave input. Arrival time drives the automatic 45-minute pickup buffer; missing arrival time is requested explicitly. Enter in text/date/number inputs no longer advances or submits the form; explicit Next/Find my ride controls remain keyboard accessible. Replacement clears old supplementary values; busy extraction disables progression.
+- Affected backend extraction schemas/providers, generated contracts, passenger draft/review/upload UI, responsive CSS, regression tests and guides. Validation: 123 isolated backend tests, 27 frontend tests, Ruff/format, contract check, frontend lint/types/build passed. Synthetic browser checks verified real file chooser, pending/completed progress, automatic review, Enter behavior, Next/Back and a 390px layout without horizontal overflow. Temporary preview removed before production build. Actual document accuracy and authenticated production extraction remain human verification tasks; no zero-error guarantee is claimed. Human review pending.
+
 ## 2026-10-11 06:06 IST - Shared autofill across booking steps
 
 - Consolidated name, flight/airport/date, pickup readiness, passenger/luggage counts, destination and destination pin into one passenger draft. One successful ticket extraction replaces all ticket-derived fields together, including fields displayed on later pages. Next/Back preserves the shared draft; a replacement clears unknown values and any stale map pin. Separate typed/dictated instructions remain editable and preserved while navigating.

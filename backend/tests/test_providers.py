@@ -61,6 +61,12 @@ def test_groq_structured_output_and_image(monkeypatch):
                                     "flight_number": "AI123",
                                     "flight_date": "2026-10-11",
                                     "arrival_airport": "COK",
+                                    "departure_airport": "DEL",
+                                    "boarding_at": "2026-10-11T07:00:00+05:30",
+                                    "seat": "12A",
+                                    "gate": "B4",
+                                    "baggage_allowance": "25 kg",
+                                    "booking_reference": "DEMO42",
                                 }
                             )
                         }
@@ -76,6 +82,10 @@ def test_groq_structured_output_and_image(monkeypatch):
         "image/png",
     )
     assert result.arrival_airport == "COK"
+    assert result.seat == "12A" and result.gate == "B4"
+    assert result.boarding_at.hour == 7
+    assert result.baggage_allowance == "25 kg" and result.luggage is None
+    assert result.booking_reference == "DEMO42"
 
 
 def test_sarvam_multipart_and_transcript(monkeypatch):

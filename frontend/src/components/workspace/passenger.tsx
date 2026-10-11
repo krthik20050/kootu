@@ -13,7 +13,8 @@ import { localTime, message, readable, type Api } from "./shared";
 import { UploadAssist } from "./upload-assist";
 import { VoicePreferences } from "./voice-preferences";
 import { ArrivalCelebration } from "./arrival-celebration";
-import { draftFromTicket, emptyPassengerDraft, type PassengerDraft } from "@/lib/ticket-draft";
+import { draftFromTicket, emptyPassengerDraft, readyFromArrival, type PassengerDraft } from "@/lib/ticket-draft";
+import { TicketReview } from "./ticket-review";
 
 const active = new Set(["WAITING", "MATCHED", "ASSIGNED"]);
 
@@ -36,11 +37,11 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
   const [flightConfirmed, setFlightConfirmed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState(emptyPassengerDraft);
-  const { readyAt, luggageCount, displayName, passengerCount, flight, destination, coordinates } = draft;
+  const { readyAt, arrivalAt, ticket, luggageCount, displayName, passengerCount, flight, destination, coordinates } = draft;
   function patchDraft(patch: Partial<PassengerDraft>) {
     setDraft((current) => ({ ...current, ...patch }));
   }
-  const setReadyAt = (readyAt: string) => patchDraft({ readyAt });
+  const setArrivalAt = (arrivalAt: string) => patchDraft({ arrivalAt, readyAt: readyFromArrival(arrivalAt) });
   const setLuggageCount = (luggageCount: string) => patchDraft({ luggageCount });
   const setDisplayName = (displayName: string) => patchDraft({ displayName });
   const setPassengerCount = (passengerCount: string) => patchDraft({ passengerCount });
@@ -150,6 +151,7 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
   }
 
   function advance() {
+    if (busy || extracting || loading || !profile) return;
     if (!validateStep()) return;
     setError("");
     if (step === 1) setFlightConfirmed(true);
@@ -175,7 +177,7 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (step !== 2) { advance(); return; }
+    if (step !== 2) return;
     if (busy || extracting || dictating || notes.length > 2000 || !validateStep()) return;
     const form = new FormData(event.currentTarget);
     const text = (key: string) => String(form.get(key) || "");
@@ -185,13 +187,13 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
       return;
     }
     await run(async () => {
-      const ready = new Date(text("ready_at"));
+      const ready = new Date(readyAt);
       if (
         !Number.isFinite(ready.getTime()) ||
         !coordinates.latitude ||
         !coordinates.longitude
       )
-        throw new Error("Choose your ready time and destination first.");
+        throw new Error("Add your flight’s arrival time and choose a destination first.");
       await api<ProfileResponse>("/me", {
         method: "PATCH",
         body: {
@@ -262,23 +264,30 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
       </ol>}
       <div className={`workspace-grid guided-intake ${step === 3 || showJourneys ? "with-journeys" : ""}`}>
         <section className="booking">
-          <div hidden={step !== 0}>
+          <div hidden={step > 1}>
             <UploadAssist key={draftVersion} api={api} disabled={busy || loading || !profile} onBusy={setExtracting}
               onTicket={(details) => {
                 setDraft(draftFromTicket(details, profile?.display_name || accountName));
                 setFlightConfirmed(false);
                 setLocations([]);
                 setTicketRead(true);
+                setStep(1);
               }} />
+          </div>
+          <div hidden={step !== 0}>
             <div className="step-actions">
               <button type="button" className="text-button" disabled={extracting || loading || !profile} onClick={() => setStep(1)}>Enter details instead</button>
               <button type="button" className="action" disabled={!ticketRead || extracting} onClick={() => setStep(1)}>Next →</button>
             </div>
             {requests.length > 0 && <button type="button" className="text-button" onClick={() => setShowJourneys(!showJourneys)}>{showJourneys ? "Hide saved arrivals" : "View saved arrivals"}</button>}
           </div>
-          <form noValidate ref={formRef} hidden={step === 0 || step === 3} onSubmit={(event) => void submit(event)}>
+          <form noValidate ref={formRef} hidden={step === 0 || step === 3} onSubmit={(event) => void submit(event)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.nativeEvent.isComposing && event.target instanceof HTMLInputElement && event.target.type !== "checkbox") event.preventDefault();
+            }}>
             <fieldset data-step="1" hidden={step !== 1} disabled={busy || extracting || loading || !profile}>
               <legend className="sr-only">Your arrival</legend>
+              <TicketReview details={ticket} airport={flight.airport} number={flight.number}>
               <label>Your name<input name="display_name" value={displayName ?? (profile?.display_name || accountName)} onChange={(event) => setDisplayName(event.target.value)} required maxLength={80} autoComplete="name" /></label>
               <div className="form-row">
                 <label>Arrival airport<input value={flight.airport} onChange={(event) => { setFlightConfirmed(false); setFlight({ ...flight, airport: event.target.value.toUpperCase() }); }} required pattern="[A-Z]{3}" maxLength={3} /></label>
@@ -286,13 +295,14 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
               </div>
               <div className="form-row">
                 <label>Flight date<input type="date" value={flight.date} onInput={(event) => { setFlightConfirmed(false); setFlight({ ...flight, date: event.currentTarget.value }); }} onChange={(event) => { setFlightConfirmed(false); setFlight({ ...flight, date: event.target.value }); }} required /></label>
-                <label>Ready to leave<input name="ready_at" type="datetime-local" value={readyAt} onInput={(event) => setReadyAt(event.currentTarget.value)} onChange={(event) => setReadyAt(event.target.value)} required /></label>
+                <label>Arrival time · your local time<input type="datetime-local" value={arrivalAt} onInput={(event) => setArrivalAt(event.currentTarget.value)} onChange={(event) => setArrivalAt(event.target.value)} required aria-describedby="pickup-timing" /></label>
               </div>
-              {ticketRead && readyAt && <p className="quiet">Pickup readiness starts 45 minutes after arrival. Adjust it for baggage or immigration.</p>}
+              <p id="pickup-timing" className="quiet">{readyAt ? `Pickup planned for ${localTime(new Date(readyAt).toISOString())}, allowing 45 minutes after arrival.` : "Arrival time wasn’t found. Add it so we can plan pickup 45 minutes after landing."}</p>
               <div className="form-row">
                 <label>Passengers<input name="passengers" type="number" min={1} max={6} value={passengerCount} onChange={(event) => setPassengerCount(event.target.value)} required /></label>
                 <label>Luggage pieces<input name="luggage" type="number" min={0} max={6} value={luggageCount} onChange={(event) => setLuggageCount(event.target.value)} required /></label>
               </div>
+              </TicketReview>
             </fieldset>
             <fieldset data-step="2" hidden={step !== 2} disabled={busy || extracting || loading || !profile}>
               <legend className="sr-only">Your ride</legend>
@@ -324,7 +334,7 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
             </fieldset>
             <div className="step-actions">
               <button className="text-button" type="button" disabled={busy || dictating} onClick={() => setStep(step - 1)}>← Back</button>
-              {step === 1 ? <button className="action" key="next" type="button" disabled={busy || loading || !profile} onClick={(event) => { event.preventDefault(); advance(); }}>Next →</button>
+              {step === 1 ? <button className="action" key="next" type="button" disabled={busy || extracting || loading || !profile} onClick={(event) => { event.preventDefault(); advance(); }}>Next →</button>
                 : <button key="save" type="submit" className="action" disabled={busy || extracting || dictating || loading || !profile || notes.length > 2000}>{busy ? "Saving…" : "Find my ride →"}</button>}
             </div>
           </form>

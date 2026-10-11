@@ -14,7 +14,7 @@ class RouteEstimate(BaseModel):
 
 
 class ExtractedFlight(BaseModel):
-    """Unconfirmed booking suggestions. Never includes PNR or ticket numbers."""
+    """Unconfirmed ticket details, returned for review without storing the document."""
 
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
@@ -26,3 +26,15 @@ class ExtractedFlight(BaseModel):
     arrival_at: AwareDatetime | None = None
     luggage: int | None = Field(default=None, ge=0, le=12, strict=True)
     destination_name: str | None = Field(default=None, min_length=3, max_length=160)
+    airline: str | None = Field(default=None, min_length=1, max_length=80)
+    departure_airport: str | None = Field(default=None, pattern=r"^[A-Z]{3}$")
+    departure_at: AwareDatetime | None = None
+    boarding_at: AwareDatetime | None = None
+    seat: str | None = Field(default=None, min_length=1, max_length=20)
+    gate: str | None = Field(default=None, min_length=1, max_length=20)
+    departure_terminal: str | None = Field(default=None, min_length=1, max_length=40)
+    arrival_terminal: str | None = Field(default=None, min_length=1, max_length=40)
+    cabin: str | None = Field(default=None, min_length=1, max_length=40)
+    baggage_allowance: str | None = Field(default=None, min_length=1, max_length=80)
+    booking_reference: str | None = Field(default=None, min_length=1, max_length=30)
+    ticket_number: str | None = Field(default=None, min_length=1, max_length=40)

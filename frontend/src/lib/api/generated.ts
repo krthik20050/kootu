@@ -70,6 +70,18 @@ export type ExtractedFlight = {
   "arrival_at"?: string | null;
   "luggage"?: number | null;
   "destination_name"?: string | null;
+  "airline"?: string | null;
+  "departure_airport"?: string | null;
+  "departure_at"?: string | null;
+  "boarding_at"?: string | null;
+  "seat"?: string | null;
+  "gate"?: string | null;
+  "departure_terminal"?: string | null;
+  "arrival_terminal"?: string | null;
+  "cabin"?: string | null;
+  "baggage_allowance"?: string | null;
+  "booking_reference"?: string | null;
+  "ticket_number"?: string | null;
 };
 
 export type GroupResponse = {
