@@ -11,7 +11,7 @@ export default function Home() {
     <a className="skip-link" href="#main">Skip to content</a>
     <header className={styles.header}>
       <Link href="/" className={styles.logo} aria-label="kootu home">kootu<span /></Link>
-      <nav className={styles.nav} aria-label="Main navigation"><Link href="/dashboard">Passenger portal</Link><Link href="/driver">Driver portal</Link><a href="#how-it-works">How it works</a></nav>
+      <nav className={styles.nav} aria-label="Main navigation"><Link href="/dashboard">Passenger portal</Link><Link href="/driver">Driver portal</Link></nav>
       <div className={styles.account}>{process.env.NEXT_PUBLIC_AUTH_ENABLED === "true" ? <HomeAccount /> : <Link href="/onboarding">Get started <ArrowUpRight size={16} aria-hidden="true" /></Link>}</div>
     </header>
     <main id="main">

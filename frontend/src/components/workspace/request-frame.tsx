@@ -30,9 +30,9 @@ function RequestLayout({ children, area }: { children: ReactNode; area: "request
     <aside className={`${collapsed ? "hidden" : "hidden md:block"} sticky top-0 h-svh w-60 shrink-0 border-r bg-card`}><RequestNavigation area={area} /></aside>
     <Sheet open={open} onOpenChange={toggle}><SheetContent side="left" data-theme={theme} className="app1-dashboard w-72 p-0 md:hidden"><SheetTitle className="sr-only">Request navigation</SheetTitle><RequestNavigation area={area} onNavigate={toggle} /></SheetContent></Sheet>
     <SidebarInset className="min-w-0">
-      <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 border-b bg-background px-4 sm:px-6">
-        <SidebarTrigger aria-label="Toggle navigation" /><h1 className="truncate text-lg font-semibold">{area === "dashboard" ? "Passenger dashboard" : "Request a ride"}</h1>
-        <div className="ml-auto flex shrink-0 items-center gap-2"><Button variant="ghost" size="icon" aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={toggleTheme}>{theme === "dark" ? <Sun /> : <Moon />}</Button>{process.env.NEXT_PUBLIC_AUTH_ENABLED === "true" && <AuthControls />}</div>
+      <header className="passenger-topbar">
+        <div className="passenger-topbar-start"><SidebarTrigger aria-label="Toggle navigation" /><div className="passenger-topbar-title"><span>PASSENGER WORKSPACE</span><h1>{area === "dashboard" ? "Overview" : "Request a ride"}</h1></div></div>
+        <div className="passenger-topbar-actions"><Link className="passenger-home-link" href="/">Home</Link><Button variant="ghost" size="icon" aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={toggleTheme}>{theme === "dark" ? <Sun /> : <Moon />}</Button><div className="passenger-account">{process.env.NEXT_PUBLIC_AUTH_ENABLED === "true" && <AuthControls />}</div></div>
       </header>
       <main id="workspace" className="workspace request-workspace-content">{children}</main>
     </SidebarInset>

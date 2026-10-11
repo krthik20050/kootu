@@ -1,5 +1,11 @@
 # Change log
 
+## 2026-10-11 09:17 IST - Preserve passenger portal intent
+
+- Fixed the cause of passenger URLs opening a driver dashboard: RoleBoundary and explicit onboarding links no longer silently redirect an already-assigned opposite role. A clear account-check screen keeps the requested portal visible and provides sign-out/sign-in for the requested role, with retry handling. Unassigned and signed-out entry preserve passenger/driver intent. Database roles and backend authorization are unchanged.
+- Reorganized the passenger top bar into workspace title/navigation and account controls; made both homepage portal entries visible on mobile. Passenger overview has an explicit passenger heading and clear primary ride action.
+- Validation: lint/types/build pass; initial complete frontend suite passed 51 tests, followed by all 8 focused role/onboarding tests including the added opposite-role registration and failed-sign-out retry cases. Independent specialist review found no blocker; recommended tests added. Hosted visual checks follow publication; human review pending.
+
 ## 2026-10-11 09:07 IST - Verify live passenger access and compact mobile summary
 
 Verified 3652f58 live on Vercel and CI run 38108862739 successful. The signed-in homepage shows Passenger dashboard, the Passenger portal link opens /dashboard, and desktop/mobile have no horizontal overflow. Driver controls were checked locally with the actual component and a removed fixture. Final mobile follow-up compacts summary cards into two columns and only shows edit guidance when a cancellable booking exists. Backend and authorization unchanged. Final lint/types/build passed; one parallel request-chat test hit its 5-second timeout, then the complete single-worker suite passed all 50 tests. Human review pending.

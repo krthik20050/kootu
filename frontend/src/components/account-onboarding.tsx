@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AuthControls } from "./auth-controls";
+import { PortalMismatch } from "./portal-mismatch";
 import { apiRequest } from "@/lib/api/client";
 import { signInHref } from "@/lib/auth-navigation";
 import { roleHome, type AccountRole } from "@/lib/roles";
@@ -27,6 +28,7 @@ function AccountSession() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
+  const [existingRole, setExistingRole] = useState<AccountRole | null>(null);
   const mounted = useRef(false);
   const saving = useRef(false);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
@@ -39,12 +41,15 @@ function AccountSession() {
         if (!token) throw new Error("Sign in again to continue.");
         const me = await apiRequest<{ role: AccountRole }>("/me", token);
         if (!active) return;
-        if (me.role !== "UNASSIGNED") router.replace(roleHome(me.role));
+        if (me.role !== "UNASSIGNED") {
+          if ((preferred === "PASSENGER" || preferred === "DRIVER") && preferred !== me.role) setExistingRole(me.role);
+          else router.replace(roleHome(me.role));
+        }
         else setReady(userId || null);
       } catch (caught) { if (active) setError(caught instanceof Error ? caught.message : "Unable to load your account."); }
     })();
     return () => { active = false; };
-  }, [isLoaded, isSignedIn, userId, getToken, router, attempt]);
+  }, [isLoaded, isSignedIn, userId, getToken, router, attempt, preferred]);
 
   async function choose(role: "PASSENGER" | "DRIVER") {
     if (saving.current) return;
@@ -59,6 +64,7 @@ function AccountSession() {
     finally { saving.current = false; }
   }
   const target = preferred === "PASSENGER" || preferred === "DRIVER" ? `/onboarding?role=${preferred}` : "/onboarding";
+  if (existingRole && (preferred === "PASSENGER" || preferred === "DRIVER") && existingRole !== preferred) return <PortalMismatch actual={existingRole} requested={preferred} />;
   return <><header className="site-header"><Link href="/" className="wordmark">kootu<span className="brand-dot" /></Link><AuthControls /></header><main className="workspace account-setup">
     <p className="eyebrow">YOUR KOOTU ACCOUNT</p><h1>How will you travel?</h1>
     <p>Passenger and driver accounts have separate workspaces. Your choice is saved to your account and used every time you sign in.</p>
