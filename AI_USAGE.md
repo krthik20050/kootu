@@ -92,3 +92,7 @@ At the user's direction Codex removed provider/consent and recording-panel clutt
 ## 2026-10-11 05:59 IST - Upload failure diagnosis
 
 Codex checked live API health, readiness and CORS preflight; reproduced the upload exception path losing browser CORS headers and fixed its exact-origin error response. Added text-first digital PDF intake, 20 MB file bounds, ten-minute segmented dictation and differentiated timeout errors, then updated tests/contracts/guides. 123 isolated backend and 24 frontend tests passed; production build passed, with lint/types/format/contracts checked before commit. Private Clerk directory lookup was rejected by automatic approval review and not retried; public/synthetic alternatives used. The user's original PDF and authenticated provider reproduction remain unavailable. Human review pending.
+
+## 2026-10-11 06:06 IST - Cross-step autofill consistency
+
+Codex consolidated all ticket-derived passenger inputs into one shared draft so one extraction updates values on every booking step together. Added regressions for next/back persistence, printed destination autofill, zero luggage and stale-field clearing; updated guides. 25 frontend tests, lint/types and production build passed. The original PDF retry remains deferred by the user; previous upload-fix deployment/CI and 123 backend regressions are verified. Human review pending.

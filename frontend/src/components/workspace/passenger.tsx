@@ -13,7 +13,7 @@ import { localTime, message, readable, type Api } from "./shared";
 import { UploadAssist } from "./upload-assist";
 import { VoicePreferences } from "./voice-preferences";
 import { ArrivalCelebration } from "./arrival-celebration";
-import { readyFromArrival } from "@/lib/ticket-draft";
+import { draftFromTicket, emptyPassengerDraft, type PassengerDraft } from "@/lib/ticket-draft";
 
 const active = new Set(["WAITING", "MATCHED", "ASSIGNED"]);
 
@@ -28,27 +28,25 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
   const [step, setStep] = useState(0);
   const [ticketRead, setTicketRead] = useState(false);
   const [draftVersion, setDraftVersion] = useState(0);
-  const [readyAt, setReadyAt] = useState("");
-  const [luggageCount, setLuggageCount] = useState("1");
   const [dictating, setDictating] = useState(false);
   const [savedId, setSavedId] = useState("");
   const [showJourneys, setShowJourneys] = useState(false);
   const formRef = useRef<HTMLFormElement | null>(null);
   const heading = useRef<HTMLHeadingElement | null>(null);
-  const [displayName, setDisplayName] = useState<string | null>(null);
-  const [passengerCount, setPassengerCount] = useState("1");
   const [flightConfirmed, setFlightConfirmed] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [flight, setFlight] = useState({
-    airport: "COK",
-    number: "",
-    date: "",
-  });
-  const [destination, setDestination] = useState("");
-  const [coordinates, setCoordinates] = useState({
-    latitude: "",
-    longitude: "",
-  });
+  const [draft, setDraft] = useState(emptyPassengerDraft);
+  const { readyAt, luggageCount, displayName, passengerCount, flight, destination, coordinates } = draft;
+  function patchDraft(patch: Partial<PassengerDraft>) {
+    setDraft((current) => ({ ...current, ...patch }));
+  }
+  const setReadyAt = (readyAt: string) => patchDraft({ readyAt });
+  const setLuggageCount = (luggageCount: string) => patchDraft({ luggageCount });
+  const setDisplayName = (displayName: string) => patchDraft({ displayName });
+  const setPassengerCount = (passengerCount: string) => patchDraft({ passengerCount });
+  const setFlight = (flight: PassengerDraft["flight"]) => patchDraft({ flight });
+  const setDestination = (destination: string) => patchDraft({ destination });
+  const setCoordinates = (coordinates: PassengerDraft["coordinates"]) => patchDraft({ coordinates });
   const [locations, setLocations] = useState<LocationResponse[]>([]);
   const [notes, setNotes] = useState("");
   const [womenOnly, setWomenOnly] = useState(false);
@@ -164,13 +162,7 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
     setDraftVersion((version) => version + 1);
     setTicketRead(false);
     setFlightConfirmed(false);
-    setFlight({ airport: "COK", number: "", date: "" });
-    setDisplayName(null);
-    setPassengerCount("1");
-    setLuggageCount("1");
-    setReadyAt("");
-    setDestination("");
-    setCoordinates({ latitude: "", longitude: "" });
+    setDraft(emptyPassengerDraft());
     setLocations([]);
     setNotes("");
     setWomenOnly(false);
@@ -273,14 +265,8 @@ export function Passenger({ api, accountName = "" }: { api: Api; accountName?: s
           <div hidden={step !== 0}>
             <UploadAssist key={draftVersion} api={api} disabled={busy || loading || !profile} onBusy={setExtracting}
               onTicket={(details) => {
-                setFlight({ airport: details.arrival_airport || "", number: details.flight_number || "", date: details.flight_date || "" });
+                setDraft(draftFromTicket(details, profile?.display_name || accountName));
                 setFlightConfirmed(false);
-                setDisplayName(details.display_name || profile?.display_name || accountName);
-                setPassengerCount(details.passengers ? String(details.passengers) : "");
-                setLuggageCount(details.luggage == null ? "" : String(details.luggage));
-                setReadyAt(readyFromArrival(details.arrival_at));
-                setDestination(details.destination_name || "");
-                setCoordinates({ latitude: "", longitude: "" });
                 setLocations([]);
                 setTicketRead(true);
               }} />

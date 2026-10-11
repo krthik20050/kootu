@@ -1,5 +1,11 @@
 # Change log
 
+## 2026-10-11 06:06 IST - Shared autofill across booking steps
+
+- Consolidated name, flight/airport/date, pickup readiness, passenger/luggage counts, destination and destination pin into one passenger draft. One successful ticket extraction replaces all ticket-derived fields together, including fields displayed on later pages. Next/Back preserves the shared draft; a replacement clears unknown values and any stale map pin. Separate typed/dictated instructions remain editable and preserved while navigating.
+- Updated frontend/lib/ticket-draft.ts, passenger component, cross-step regressions, README and intake guide. Validation: 25 frontend tests passed, including zero luggage, replacement clearing, all autofilled fields, destination on the later step and preservation of instructions/readiness across repeated Next/Back. Frontend lint/typecheck and production build passed. Backend unchanged; previous 123 backend tests and live/CI verification stand.
+- The upload error handling, 20 MB upload and ten-minute dictation change is deployed with passing CI (778b349). User has deferred retrying the original PDF, so its live extraction result remains unverified. Human review pending. Push/deployment verification follows for this state-only follow-up.
+
 ## 2026-10-11 05:59 IST - PDF upload connection errors and larger intake limits
 
 - Reproduced a failure in the actual upload endpoint's error path: Starlette's outer error handler returned HTTP 500 without CORS headers, causing browsers to show the generic network message. Added the configured exact-origin headers to unexpected-error responses only; untrusted origins remain rejected and private exception details remain hidden. Added upload regression tests for both origins.
